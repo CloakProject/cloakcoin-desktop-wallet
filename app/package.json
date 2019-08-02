@@ -1,0 +1,20 @@
+{
+  "name": "cloak-wallet",
+  "productName": "CloakWallet",
+  "version": "1.0.5-23",
+  "description": "Cloak cross-platform desktop wallet",
+  "main": "./main.prod.js",
+  "author": {
+    "name": "Cloak Team",
+    "email": "",
+    "url": ""
+  },
+  "scripts": {
+    "electron-rebuild": "node -r babel-register ../internals/scripts/ElectronRebuild.js",
+    "postinstall": "npm run electron-rebuild"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "bitcoin-core": "^2.0.0"
+  }
+}
