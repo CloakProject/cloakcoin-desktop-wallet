@@ -126,13 +126,13 @@ See the wiki page, [Module Structure — Two package.json Structure](https:/
 For an example app that uses this boilerplate and packages native dependencies, see [erb-sqlite-example](https://github.com/amilajack/erb-sqlite-example).
 
 <hr><br>
-## Contributing
 
+### Contributing
 
 You can add new languages here, and contribute to the translation of existing languages.
 
 New languages are usually added when they reach 80% or more completion, and not removed from the client unless they fall below 60% for several releases.
 
-## License
+### License
 This project is licensed under the MIT License. 
 
