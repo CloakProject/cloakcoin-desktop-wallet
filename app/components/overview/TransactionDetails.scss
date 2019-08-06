@@ -1,0 +1,38 @@
+@import "~/assets/styles/vars.scss";
+
+.container {
+  justify-content: flex-start;
+  padding: 2rem;
+
+  background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
+
+  color: $TRANSACTION_LIST_BODY_FONT_COLOR;
+
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+.title {
+  margin-top: 1.2rem;
+  margin-bottom: 1.5rem;
+
+  font-size: 1.2rem;
+  font-weight: 400;
+}
+
+.backButton {
+  font-size: 500;
+
+  .glyph {
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-right: 1.2rem;
+    position: relative;
+
+    &:before {
+      position: absolute;
+      top: -0.06rem;
+      content: '←';
+    }
+  }
+}

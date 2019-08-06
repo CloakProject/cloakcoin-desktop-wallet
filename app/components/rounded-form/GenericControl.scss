@@ -1,0 +1,11 @@
+@import "~/assets/styles/vars.scss";
+
+.control {
+  outline: none;
+
+  &.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+}

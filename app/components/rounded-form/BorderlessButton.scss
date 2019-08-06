@@ -1,0 +1,30 @@
+@import "~/assets/styles/vars.scss";
+
+.button {
+  color: $BASE_COLOR_PURPLE;
+  font-size: 0.62rem;
+  font-weight: 100;
+
+  display: flex;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  text-transform: uppercase;
+}
+
+// TODO: Remove after moving RoundedButtonWithPaste to BorderlessButton
+.icon {
+  font-size: 1.4rem;
+  font-weight: 100;
+}
+
+.icon:before {
+  content: '\e905';
+}

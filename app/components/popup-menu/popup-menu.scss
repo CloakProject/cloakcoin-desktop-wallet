@@ -1,0 +1,52 @@
+@import "~/assets/styles/vars.scss";
+
+.container {
+  position: absolute;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  z-index: 1000;
+  top: 2.1rem;
+}
+
+.menu {
+  position: relative;
+
+  padding: 0.3rem 1.3rem;
+  min-width: $POPUP_MENU_CONTAINER_WIDTH;
+  background-color: $POPUP_MENU_BACKGROUND_COLOR;
+
+  border-radius: 0.35rem;
+
+  box-shadow: 0.3125rem 0.3125rem 3.6875rem -0.125rem $BASE_COLOR_SHADOW;
+}
+
+.menuItem {
+  display: block !important;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid $BASE_COLOR_BORDER_GRAY;
+  user-select: none;
+
+  color: $POPUP_MENU_FONT_COLOR !important;
+  font-size: 0.65rem;
+  font-weight: 100;
+
+  &:hover {
+    color: $BASE_COLOR_PURPLE !important;
+  }
+
+  &.disabled {
+    color: $BASE_COLOR_FONT_GRAY !important;
+    pointer-events: none;
+  }
+
+  &.disabled:hover {
+    color: $BASE_COLOR_FONT_GRAY;
+  }
+
+  text-transform: uppercase;
+}
+
+.menuItem:last-child {
+  border-bottom: none;
+}

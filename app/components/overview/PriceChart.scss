@@ -1,0 +1,25 @@
+@import "~/assets/styles/vars.scss";
+
+.priceChart {
+    .chartWrapper {
+        width: 100% !important;
+        height: 100% !important;
+        margin-top: 50px;
+
+        text {
+            fill: white;
+        }
+    }
+
+    .customTooltip {
+        padding: 2px 5px;
+        border: 1px solid white;
+        opacity: 0.5;
+        top: 0 !important;
+
+        p {
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+    }
+}

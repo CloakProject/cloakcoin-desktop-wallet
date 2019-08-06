@@ -1,0 +1,18 @@
+@import "~/assets/styles/modal.scss";
+
+$newAddressModalWidth: 26rem;
+
+.inputLabel {
+  min-width: 2.8rem;
+}
+
+.newAddress {
+  width: $newAddressModalWidth - 2 * 2rem;
+  height: 10rem;
+  padding: 2rem;
+}
+
+.button {
+  float: right;
+  margin-left: 0.3rem;
+}

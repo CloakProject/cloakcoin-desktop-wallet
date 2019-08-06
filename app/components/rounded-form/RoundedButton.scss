@@ -1,0 +1,60 @@
+@import "./GenericControl.scss";
+
+.button {
+  cursor: pointer;
+
+  padding: 0.54rem 1.625rem;
+
+  background-color: transparent;
+  border: 1px solid $BASE_COLOR_BORDER_GRAY;
+  color: $BASE_COLOR_BUTTON_FONT_GRAY;
+
+  border-radius: 5rem;
+  user-select: none;
+  outline: none;
+
+  font-size: 0.6rem;
+  font-weight: 300;
+  text-transform: uppercase;
+
+  position: relative;
+
+  &.important {
+    background-color: $BASE_COLOR_PURPLE;
+    border: 1px solid $BASE_COLOR_PURPLE;
+    font-weight: 500;
+    color: $BASE_COLOR_WHITE;
+  }
+
+  &.large {
+    padding: 0.7rem 3rem;
+  }
+
+  .spinner {
+    width: 1.2rem;
+    position: absolute;
+    left: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .glyph {
+    top: 50%;
+    transform: translateY(-50%);
+    color: $BASE_COLOR_WHITE;
+    position: absolute;
+    left: 0;
+
+    &.add {
+      &:before {
+        position: absolute;
+        left: 0.6rem;
+        top: -0.42rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        content: '\e900';
+      }
+    }
+  }
+}
+

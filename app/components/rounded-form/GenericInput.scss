@@ -1,0 +1,70 @@
+@import "~/assets/styles/vars.scss";
+
+.container {
+  // Change to this value after moving all the inputs to the new system: height: 1.65rem;
+  height: 1.54rem;
+
+  display: flex;
+  overflow: visible;
+  text-align: left;
+
+  border: 1px solid $BASE_COLOR_BORDER_GRAY;
+  border-radius: 5rem;
+
+  > div {
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  padding-left: 0.55rem;
+  padding-right: 0.55rem;
+
+  &.hasError {
+    border: 1px solid $BASE_COLOR_LIGHT_RED;
+    box-shadow: 0 0 0.4rem $BASE_COLOR_LIGHT_RED;
+  }
+
+  &.large {
+    padding: 0.24rem 1.9rem;
+  }
+
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  overflow: hidden;
+}
+
+.label {
+  color: $BASE_COLOR_BUTTON_FONT_GRAY;
+
+  font-size: 0.61rem;
+  font-weight: 100;
+
+  padding-left: 0.4rem;
+  padding-right: 0.67rem;
+  border-right: 1px solid $BASE_COLOR_BORDER_GRAY;
+
+  user-select: none;
+  cursor: default;
+
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.addon {
+  color: $BASE_COLOR_PURPLE;
+  font-size: 0.62rem;
+  font-weight: 100;
+  text-transform: uppercase;
+}
+
+.error {
+  padding: 2px 6px;
+  color: $BASE_COLOR_LIGHT_RED;
+  font-size: 0.6rem;
+  height: 0.75rem;
+  white-space: nowrap;
+}

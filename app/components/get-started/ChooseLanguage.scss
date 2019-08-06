@@ -1,0 +1,63 @@
+@import './GetStarted.scss';
+
+.languageTiles {
+  display: flex;
+  flex-wrap: nowrap;
+  vertical-align: middle;
+  top: 40%;
+  transform: translateY(-50%);
+
+  .tile {
+    position: relative;
+    padding: 1rem;
+    font-size: 1rem;
+    cursor: default;
+    width: 10rem;
+    text-align: center;
+    border-radius: 0.3rem;
+    border: 1px solid $BASE_COLOR_BORDER_GRAY;
+    margin-right: 1rem;
+
+    .flag {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4rem;
+      height: 3rem;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 0.5rem;
+
+      &.en {
+        img {
+          left: 0rem;
+        }
+      }
+
+      &.eo {
+        img {
+        }
+      }
+
+      &.ko {
+        img {
+          left: -0.25rem;
+        }
+      }
+    }
+
+    img {
+      height: 3rem;
+      position: absolute;
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+    }
+
+  }
+
+  .tile:hover {
+    border: 1px solid #009dd7;
+    background: #009dd7;
+  }
+}

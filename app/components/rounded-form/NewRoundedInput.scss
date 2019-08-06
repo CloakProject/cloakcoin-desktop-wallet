@@ -1,0 +1,24 @@
+@import "~/assets/styles/vars.scss";
+
+.input {
+  font-size: 0.75rem;
+  color: $BASE_COLOR_WHITE;
+  background-color: transparent;
+  border: 0;
+  padding-left: 0.65rem;
+  padding-right: 0.7rem;
+  outline: 0;
+
+  &::placeholder {
+    color: $BASE_COLOR_FONT_GRAY_2;
+    font-size: 0.62rem;
+    font-family: $BASE_FONT_FAMILY;
+    font-weight: 100;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  &.withPlaceholder {
+    text-align: center;
+  }
+}

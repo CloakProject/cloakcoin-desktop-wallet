@@ -1,0 +1,45 @@
+@import "~/assets/styles/vars.scss";
+
+.container {
+  height: 100%;
+  justify-content: center;
+  position: relative;
+  -webkit-app-region: drag;
+}
+
+.header {
+  display: flex;
+  justify-content: center;
+  font-size: 1.3rem;
+  padding-bottom: 1.4rem;
+  line-height: 4rem;
+  user-select: none;
+
+  img {
+    height: 4rem;
+    margin-right: 0.5rem;
+  }
+
+}
+
+.reason {
+  color: $BASE_COLOR_PURPLE;
+  text-transform: uppercase;
+  text-align: center;
+  font-size: 0.65rem;
+  padding-bottom: 2rem;
+}
+
+.form {
+  text-align: center;
+  margin: 0 auto;
+  -webkit-app-region: no-drag;
+
+  .passwordInput {
+    max-width: 24rem;
+  }
+}
+
+.loginButton {
+  margin-top: 0.25rem;
+}

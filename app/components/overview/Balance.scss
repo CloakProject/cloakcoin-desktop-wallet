@@ -1,0 +1,119 @@
+@import "~/assets/styles/vars.scss";
+
+.balanceContainer {
+  position: relative;
+  align-items: center !important;
+
+
+  div {
+    background-color: $BALANCE_VALUE_CARD_COLOR;
+  }
+}
+
+.balanceWraper {
+  -webkit-app-region: no-drag;
+  margin: auto;
+
+  .balanceStatus, .rewardStatus {
+    float: left;
+    text-align: center;
+    margin-top: 30px;
+    margin-right: 30px;
+
+    img {
+      width: 20px;
+    }
+
+    p {
+      font-size: 20px;
+      margin: 0px 0px;
+      opacity: 0.5;
+    }
+  }
+
+  .balance {
+    margin-top: 30px;
+    margin-bottom: 0px;
+    font-size: 56px;
+    font-weight: bold;
+
+    .unit {
+      font-size: 32px;
+    }
+  }
+
+  .rewardStatus {
+    margin-top: 10px;
+    margin-right: 80px;
+
+    img {
+      width: 50px;
+    }
+  }
+}
+
+.transparentBalance {
+  width: calc(30% - 16px);
+  margin-right: 24px;
+  padding: 15px 15px;
+
+  .balanceWraper {
+    .balance {
+      color: $BALANCE_VALUE_TEXT_COLOR;
+    }
+  }
+}
+
+.rewardBalance {
+  width: calc(30% - 16px);
+  margin-right: 24px;
+  padding: 15px 15px;
+
+  .balanceWraper {
+    .balance {
+      color: $BALANCE_VALUE_TEXT_COLOR;
+    }
+  }
+}
+
+.totalBalance {
+  width: calc(30% - 16px);
+  padding: 15px 15px;
+}
+
+
+.balanceTitle {
+  display: flex;
+  text-align: left !important;
+  font-size: 20px;
+  color: white;
+
+  div {
+    flex: 1;
+  }
+
+  .rewardDate {
+    text-align: right;
+    opacity: 0.5;
+  }
+}
+
+.balanceValue {
+  display: flex;
+  position: relative;
+
+  text-align: left !important;
+  font-size: 2rem;
+  font-weight: 400;
+
+  .balanceDecimalPart {
+    position: absolute;
+    bottom: 12px;
+    font-size: 1.4rem;
+    vertical-align: text-top;
+  }
+}
+
+.hasUnconfirmedTransactionBalance {
+  color: $BALANCE_VALUE_UNCONFIRMED_COLOR;
+}
