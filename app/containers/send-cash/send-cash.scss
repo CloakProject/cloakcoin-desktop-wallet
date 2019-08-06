@@ -1,0 +1,198 @@
+@import "~/assets/styles/vars.scss";
+@import "~/assets/styles/generic-component.scss";
+
+.sendCashContainer {
+    padding: 30px 60px;
+    height: calc(100% - 150px);
+
+    .sendCashWrapper {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        padding: 35px 30px;
+        background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
+
+        p {
+            margin-top: 0px;
+            margin-bottom: 0px;
+            font-size: 20px;
+        }
+
+        .leftSide {
+            text-align: center;
+
+            img {
+                width: 90px;
+                opacity: 0.2;
+            }
+
+            p:nth-child(2) {
+                color: $SEND_COIN_TEXT_COLOR;
+                margin-top: 15px;
+            }
+
+            p:nth-child(3) {
+                margin-top: 30px;
+            }
+
+            p:nth-child(4) {
+                color: $BASE_COLOR_LIGHT_GREEN;
+            }
+
+            button {
+                width: 130px;
+                height: 32px;
+                background-color: $SEND_COIN_TEXT_COLOR;
+                color: white;
+                border: none;
+                border-radius: 3px;
+                margin-top: 110px;
+                margin-bottom: 40px;
+                font-size: 16px;
+            }
+        }
+
+        .rightSide {
+            flex: 1;
+            padding: 0px 60px;
+            
+            input {
+                height: 30px;
+            }
+
+            p {
+                margin-bottom: 8px;
+            }
+
+            .sendAddress {
+                .sendCtrl {
+                    text-align: right;
+                    img {
+                        cursor: pointer;
+                        width: 35px;
+                        opacity: 0.6;
+                        margin-left: 15px;
+                    }
+                }
+            }
+
+            .addressLabel {
+                margin-top: -15px;
+            }
+
+            .sendAmount {
+                margin-top: 5px;
+
+                .amoutInputWrapper {
+                    display: flex;
+
+                    .amoutInput {
+                        flex: 1;
+                    }
+
+                    .amountUnit {
+                        display: flex;
+                        flex: 1;
+
+                        span {
+                            margin-left: 20px;
+                            margin-right: 3px;
+                            margin-top: 8px;
+                            font-size: 20px;
+                        }
+
+                        div {
+                            position: relative;
+                            width: 29px;
+                            height: 29px;
+                            cursor: pointer;
+                            background-color: $SEND_COIN_RADIO_COLOR;
+                            border-radius: 50%;
+                            margin-top: 6px;
+                        }
+
+                        .active {
+                            &::before {
+                                content: ' ';
+                                position: absolute;
+                                width: 15px;
+                                height: 15px;
+                                top: 7px;
+                                left: 7px;
+                                border-radius: 50%;
+                                background-color: $SEND_COIN_RADIO_ACTIVE_COLOR;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .sendOption {
+                display: flex;
+                margin-top: 25px;
+
+                button {
+                    width: 110px;
+                    height: 28px;
+                    background-color: $SEND_COIN_BUTTON_COLOR;
+                    margin-right: 25px;
+                    border: none;
+                    color: white;
+                }
+
+                span {
+                    font-size: 20px;
+                    margin-right: 10px;
+                }
+
+                .checkmark {
+                    cursor: pointer;
+                    width: 18px;
+                    height: 18px;
+                    border: 1px solid rgba(255,255,255,0.5);
+                    text-align: center;
+                    margin-top: 5px;
+                    margin-right: 20px;
+                    img {
+                        width: 18px;
+                        height: 12px;
+                        margin-top: 1px
+                    }
+                }
+
+                .select_box{
+                    width: 50px;
+                    overflow: hidden;
+                    position: relative;
+                }
+
+                .select_box:nth-child(6) {
+                    margin-right: 20px;
+                }
+
+                .select_box:after{
+                    width: 0; 
+                    height: 0; 
+                    border-left: 6px solid transparent;
+                    border-right: 6px solid transparent;
+                    border-top: 6px solid white;
+                    position: absolute;
+                    top: 30%;
+                    right: 3px;
+                    content: "";
+                    z-index: 100;
+                    pointer-events: none;
+                }
+                .select_box select{
+                    width: 50px;
+                    border: 0;
+                    position: relative;
+                    z-index: 99;
+                    background: none;
+                    color: $BASE_COLOR_LIGHT_GREEN;
+                    font-size: 20px;
+                }
+            }
+        }
+    }
+}

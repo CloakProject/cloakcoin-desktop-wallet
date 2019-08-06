@@ -1,0 +1,54 @@
+@import "~/assets/styles/vars.scss";
+@import "~/assets/styles/tabs.scss";
+
+.tabs {
+  margin: 0 -2rem;
+}
+
+.tab {
+  margin: 0 1.7rem;
+}
+
+.selectedTabPanel {
+  margin: 2rem;
+}
+
+.settingsContainer {
+  padding: 3rem 2rem;
+  min-width: 30rem;
+}
+
+.wrapperContainer {
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.titleBar {
+  font-size: 1.25rem;
+  font-weight: 100;
+  margin-bottom: 1rem;
+}
+
+.form {
+  max-width: 23.75rem;
+}
+
+.inputLabel {
+  min-width: 5rem;
+}
+
+.buttonsRow {
+  display: flex;
+
+  > * {
+    margin-right: 0.8rem;
+  }
+}
+
+.localNodeButtons {
+  margin-bottom: 1rem;
+}
+
+.toggleLabel {
+  min-width: 6rem;
+}

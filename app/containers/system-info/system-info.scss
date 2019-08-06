@@ -1,0 +1,63 @@
+@import "~/assets/styles/generic-component.scss";
+@import "~/assets/styles/vars.scss";
+
+.systemInfoContainer {
+    padding: 0 2rem 0 1.5rem;
+    align-items: center !important;
+
+    min-height: $SYSTEM_INFO_BAR_HEIGHT;
+    height: $SYSTEM_INFO_BAR_HEIGHT;
+    min-width: 46rem;
+
+    background-color: $SYSTEM_INFO_BAR_BACKGROUND_COLOR;
+}
+
+.statusColumnWrapper {
+    display: inline-block;
+    margin-right: 1rem;
+
+    &:last-child{
+        margin-right: 0 !important;
+    }
+}
+
+.statusColoumnTitle {
+    margin-bottom: 0.4rem;
+    text-transform: uppercase;
+
+    font-size: 0.7rem;
+    color: $BASE_COLOR_GRAY;
+}
+
+.statusColoumnValue {
+    font-weight: 300;
+
+    i {
+        margin-right: 0.5rem;
+    }
+
+    span {
+        font-size: 0.9rem;
+        color: $BASE_COLOR_WHITE;
+    }
+}
+
+.nodeStatusContainer {
+  .nodeStatusIcon {
+    background: transparent !important;
+  }
+}
+
+.statusButtonsContainer {
+  margin-right: -1.4rem;
+}
+
+.walletInFileManagerButton {
+    @include roundedButton();
+}
+
+.installationFolderButton {
+    @include roundedButton();
+
+    margin-left: 1rem;
+}
