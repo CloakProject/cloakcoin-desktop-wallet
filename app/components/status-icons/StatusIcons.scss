@@ -1,0 +1,68 @@
+@import "~/assets/styles/vars.scss";
+
+.container {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  left: 0;
+  bottom: $SYSTEM_INFO_BAR_HEIGHT;
+  width: $NAVI_BAR_CONTAINER_WIDTH + 1.35rem;
+  height: 1.2rem;
+  display: flex;
+  background: $BASE_BACKGROUND_COLOR_DARK_BLUE;
+  border-top: 1px solid $BASE_COLOR_BORDER_BLUE;
+  padding: 0.7rem 0;
+
+  > div {
+    display: inline-block;
+    width: 25%;
+    border-right: 1px solid $BASE_COLOR_BORDER_BLUE;
+    padding: 0 1rem;
+    color: $BASE_COLOR_FONT_GRAY;
+    font-size: 1.1rem;
+
+    &.active {
+      color: $BASE_COLOR_LIGHT_GREEN;
+    }
+  }
+
+  .mining:before {
+    content: '\e914';
+    margin-left: 0.25rem;
+  }
+
+  .enigmaTransactions {
+    font-size: 1.3rem;
+  }
+
+  .enigmaTransactions:before {
+    content: '\e911';
+  }
+
+  .enigmaTransactions.active:before {
+    content: '\e912';
+  }
+
+  .operations {
+    cursor: pointer;
+    border: none !important;
+  }
+
+  .operations:before {
+    content: '\e915';
+    font-size: 1rem;
+    font-weight: 50;
+    margin-left: 0.19rem;
+  }
+
+}
+
+.operationsIconHint {
+  color: $BASE_COLOR_FONT_GRAY_2;
+  font-size: 0.5rem;
+
+  right: 0.6rem;
+  bottom: 0.6rem;
+  position: absolute;
+  cursor: default;
+  text-align: center;
+}

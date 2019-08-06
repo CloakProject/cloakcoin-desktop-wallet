@@ -1,0 +1,75 @@
+@import "../../assets/styles/vars.scss";
+
+$POP_UP_MENU_CONTAINER_WIDTH: 91.5%;
+
+.AddressDropdownPopupMenuContainer {
+    padding: 0.3rem 1.3rem;
+    width: $POP_UP_MENU_CONTAINER_WIDTH;
+    min-width: $POP_UP_MENU_CONTAINER_WIDTH;
+    max-height: 25rem;
+    overflow-y: scroll;
+
+    position: absolute;
+    left: -0.1rem;
+    top: 2.1rem;
+    background-color: $OWN_ADDRESSES_DROPDOWN_MENU_BACKGROUND_COLOR;
+
+    text-align: left;
+    border-radius: 0.35rem;
+
+    z-index: 1;
+}
+
+@mixin addressMenuImte() {
+    position: relative;
+    width: 96%;
+
+    padding: 0.8rem 0.5rem;
+    border-bottom: 1px solid $BASE_COLOR_BORDER_GRAY;
+
+    color: $BASE_COLOR_BUTTON_FONT_GRAY;
+    font-size: 0.7rem;
+
+    &:hover {
+        color: $BASE_COLOR_PURPLE;
+    }
+
+    cursor: pointer;
+}
+
+.menuItem {
+    @include addressMenuImte();
+}
+
+.lastMenuItem {
+    @include addressMenuImte();
+    border-bottom: none;
+}
+
+.disabledMenItem {
+    // Disable the cursor change and ':hover' effect
+    pointer-events:none;
+
+    color: $SEND_CASH_DROPDOWN_LIST_DISABLE_FONT_COLOR;
+
+    .itemRowBalance {
+        color: $SEND_CASH_DROPDOWN_LIST_DISABLE_FONT_COLOR;
+    }
+}
+
+.groupLastItem {
+    border-bottom: 1px solid $SEND_CASH_DROPDOWN_LIST_SEPARATED_LINE_COLOR;
+}
+
+.itemRowAddress {
+    max-width: 75%;
+    overflow: hidden;
+}
+
+.itemRowBalance {
+    position: absolute;
+    right: 0;
+
+    color: $BASE_COLOR_WHITE;
+    font-weight: 500;
+}
