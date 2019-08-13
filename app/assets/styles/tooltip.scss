@@ -1,0 +1,15 @@
+@import "~/assets/styles/vars.scss";
+
+.tooltip {
+  background: $BASE_BACKGROUND_COLOR_DARK_BLUE !important;
+  color: #a4abc7 !important;
+  opacity: 1 !important;
+  border-radius: 0.4rem;
+  font-size: 0.6rem;
+  font-family: inherit;
+  font-weight: 100;
+}
+
+.tooltip:after {
+	border-top: 0.5rem solid $BASE_BACKGROUND_COLOR_DARK_BLUE !important;
+}
