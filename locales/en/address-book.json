@@ -1,13 +1,11 @@
 {
-  "Address Book": "Address Book",
-  "Add new address": "Add new address",
-  "Edit address": "Edit address",
-  "Copy Address": "Copy Address",
-  "Remove Address": "Remove Address",
-  "Name": "Name",
-  "Address": "Address",
-  "You don't have any address records yet.": "You don't have any address records yet.",
+  "ADDRESS BOOK": "ADDRESS BOOK",
+  "ENIGMA Address 01": "ENIGMA Address 01",
+  "CLOAK Address": "CLOAK Address",
+  "Address 03": "Address 03",
   "New address": "New address",
-  "Edit": "Edit",
-  "Add": "Add"
+  "New ENIGMA address": "New ENIGMA address",
+  "Copy address": "Copy address",
+  "Show QR code": "Show QR code",
+  "Verify message": "Verify message"
 }

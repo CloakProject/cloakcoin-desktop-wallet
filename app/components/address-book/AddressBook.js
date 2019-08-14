@@ -1,24 +1,17 @@
 // @flow
 import React, { Component } from 'react'
 import cn from 'classnames'
-
-import { AddressBookState } from '~/reducers/address-book/address-book.reducer'
-import { PopupMenu, PopupMenuItem } from '~/components/popup-menu'
-import { RoundedButton } from '~/components/rounded-form'
-import NewAddressModal from './NewAddressModal'
-import AddressBookList from './AddressBookList'
-
 import styles from './AddressBook.scss'
+import DropdownSelect from '~/components/dropdown-select/DropdownSelect'
 import HLayout from '~/assets/styles/h-box-layout.scss'
 import VLayout from '~/assets/styles/v-box-layout.scss'
-
-const addressBookPopupMenuId = 'address-book-row-popup-menu-id'
+import addressbookImg from '~/assets/images/main/addressbook/addressbook.png';
 
 type Props = {
-  t: any,
-  actions: object,
-  popupMenu: object,
-	addressBook: AddressBookState
+  t: any
+  // actions: object,
+  // popupMenu: object,
+	// addressBook: AddressBookState
 }
 
 /**
@@ -27,61 +20,64 @@ type Props = {
  */
 export class AddressBook extends Component<Props> {
 	props: Props
-
-	componentDidMount() {
-    this.props.actions.loadAddressBook()
-	}
-
 	/**
-	 * @returns
+	 * @memberof AddressBook
 	 */
+
 	render() {
     const { t } = this.props
-
 		return (
-      /* Layout container */
-			<div
-        role="none"
-				className={cn(styles.container, HLayout.hBoxChild, VLayout.vBoxContainer)}
-				onKeyDown={() => {}}
-			>
-
-				{/* Top bar */}
-				<div className={cn(styles.header, HLayout.hBoxContainer)}>
-					<div className={styles.title}>{t(`Address Book`)}</div>
-
-          <div className={styles.buttonsContainer}>
-            <RoundedButton
-              className={styles.addAddressButton}
-              onClick={() => this.props.actions.openNewAddressModal()}
-              glyph="add"
-              important
-            >
-              {t(`Add new address`)}
-            </RoundedButton>
-          </div>
-
+			<div className={[styles.addressBookContainer, VLayout.vBoxChild, HLayout.hBoxContainer].join(' ')}>
+				<div className={styles.addressBookWrapper}>
+					<div className={styles.leftSide}>
+						<img src={addressbookImg} alt="img" />
+						<p>{t('ADDRESS BOOK')}</p>
+					</div>
+					<div className={styles.rightSide}>
+            <div className={styles.addressFilterContainer}>
+              <div className={styles.labelFilter}>
+                <DropdownSelect options={[{value: 'Label', label: 'Label'}]} />
+              </div>
+              <div className={styles.addressFilter}>
+                <DropdownSelect options={[{value: 'Address', label: 'Address'}]} />
+              </div>
+            </div>
+						<div className={styles.addressBook}>
+							<div>
+								<p>{t('ENIGMA Address 01')}</p>
+								<p>smYhhPyTAU724DkAPysHcegj5SPjPxMYnS6E4...</p>
+							</div>
+							<div>
+								<p>{t('CLOAK Address')}</p>
+								<p>C6qQ3syfTeRK4rA7wFox6gLJN1pZkSuofZ</p>
+							</div>
+							<div>
+								<p>{t('Address 03')}</p>
+								<p>C3vGyjauAJAAyBGnhdD8jKDCZEuy8L88J1</p>
+							</div>
+						</div>
+					</div>
 				</div>
-
-        <NewAddressModal />
-
-        <AddressBookList
-          items={this.props.addressBook.records}
-          onRowContextMenu={(e, record) => this.props.popupMenu.show(addressBookPopupMenuId, record, e.clientY, e.clientX)}
-        />
-
-				<PopupMenu id={addressBookPopupMenuId}>
-          <PopupMenuItem onClick={(e, record) => this.props.actions.openNewAddressModal(record)}>
-            {t(`Edit address`)}
-          </PopupMenuItem>
-          <PopupMenuItem onClick={(e, record) => this.props.actions.copyAddress(record)}>
-            {t(`Copy Address`)}
-          </PopupMenuItem>
-          <PopupMenuItem onClick={(e, record) => this.props.actions.confirmAddressRemoval(record)}>
-            {t(`Remove Address`)}
-          </PopupMenuItem>
-				</PopupMenu>
-
+				<div className={styles.addressBookButtons}>
+					<button	type="button">
+						{t(`New address`)}
+					</button>
+					<button	type="button">
+						{t(`New ENIGMA address`)}
+					</button>
+					<button	type="button">
+						{t(`Copy address`)}
+					</button>
+					<button	type="button">
+						{t(`Show QR code`)}
+					</button>
+					<button	type="button">
+						{t(`Verify message`)}
+					</button>
+          <button	type="button">
+						{t(`Delete`)}
+					</button>
+				</div>
 			</div>
 		)
 	}

@@ -14,11 +14,11 @@ import NaviBar from './navigation/navi-bar'
 import StatusIcons from '~/components/status-icons/StatusIcons'
 import SystemInfo from './system-info/system-info'
 import Overview from './overview/overview'
-import TransactionDetails from '~/components/overview/TransactionDetails'
-import OwnAddress from './own-addresses/own-addresses'
 import SendCash from './send-cash/send-cash'
+import ReceiveCash from './receive-cash/receive-cash'
+import transactionCash from './transaction-cash/transaction-cash'
+import EnigmaStats from './enigma-stats/enigma-stats'
 import Settings from './settings/settings'
-import SimplexPage from './SimplexPage'
 
 import AddressBookPage from './AddressBookPage'
 
@@ -75,14 +75,13 @@ class App extends React.Component<Props> {
 					<div className={cn(styles.layoutContent)}>
 						<Switch>
 							<Route exact path="/" render={() => (<Redirect to="/overview" />)} />
-
 							<Route exact path="/overview" component={Overview} />
-              <Route exact path="/overview/transaction-details" component={TransactionDetails} />
-							<Route exact path="/own-addresses" component={OwnAddress} />
 							<Route exact path="/send-cash" component={SendCash} />
-							<Route exact path="/settings" component={Settings} />
-							<Route exact path="/simplex" component={SimplexPage} />
+              <Route exact path="/receive-cash" component={ReceiveCash} />
+              <Route exact path="/transaction-cash" component={transactionCash} />
 							<Route exact path="/address-book" component={AddressBookPage} />
+              <Route exact path="/enigma-stats" component={EnigmaStats} />
+							<Route exact path="/settings" component={Settings} />
 						</Switch>
 					</div>
 				</div>

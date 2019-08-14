@@ -1,0 +1,36 @@
+@import "~/assets/styles/vars.scss";
+@import "~/assets/styles/generic-component.scss";
+
+.transactionCashContainer {
+    padding: 30px 60px;
+    height: calc(100% - 150px);
+
+    .txListWrapper {
+        width: 100%;
+        height: 100%;
+        background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
+        padding: 30px 30px;
+
+        .txFilterContainer {
+            width: 100%;
+            display: flex;
+
+            .dateField {
+                width: 21%;
+            }
+
+            .typeField {
+                width: 15%;
+            }
+
+            .addressField {
+                width: 46%;
+            }
+
+            .amountField {
+                width: 18%;
+                padding-left: 15px;
+            }
+        }
+    }
+}
