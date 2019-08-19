@@ -1,0 +1,96 @@
+@import "~/assets/styles/vars.scss";
+@import "~/assets/styles/section.scss";
+
+.transactionsList {
+  position: absolute;
+  width: calc(100% - 180px);
+  margin-top: 10px;
+
+
+    .dateField {
+        width: 21%;
+
+        span {
+            margin-left: 40px;
+        }
+    }
+
+    .typeField {
+        width: 15%;
+    }
+
+    .addressField {
+        width: 46%;
+        
+        span {
+            margin-left: 40px;
+        }
+    }
+
+    .amountField {
+        width: 18%;
+        padding-left: 15px;
+    }
+
+    .tableHeader {
+        display: flex;
+        padding-bottom: 20px;
+        border-bottom: 1px solid $TRANSACTION_HEADER_TABLE_COLOR;
+        font-size: 20px;
+    }
+
+    .transactionListWrapper {
+        padding-top: 30px;
+        .txItem {
+            display: flex;
+            margin-bottom: 5px;
+
+            p {
+                margin-top: 0px;
+                margin-bottom: 0px;
+                font-size: 18px;
+            }
+            .grey {
+                opacity: 0.5;
+            }
+
+            .txInfo {
+                display: flex;
+
+                img {
+                    width: 25px;
+                    margin-right: 15px;
+                }
+
+                p {
+                    font-size: 20px;
+                }
+            }
+
+            .addressField {
+                p {
+                    padding-left: 40px;
+                }
+            }
+
+            .txValue {
+                display: flex;
+                text-align: left;
+                font-size: 20px;
+                align-items: center;
+
+                div {
+                    flex: 1;
+                    text-align: right;
+                    button {
+                        background-color: $RECEIVE_COIN_BUTTON_COLOR;
+                        border: none;
+                        padding: 4px 18px;
+                        font-size: 12px;
+                        margin-bottom: 5px;
+                    }
+                }
+            }
+        }
+    }
+}

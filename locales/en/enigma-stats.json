@@ -1,0 +1,14 @@
+{
+    "ENIGMA STATS": "ENIGMA STATS",
+    "ENIGMA Cloaking": "ENIGMA Cloaking and receive activity this session",
+    "Enigma Send Activity": "Enigma send activity. Failed sends will be cleared when the wallet is closed",
+    "Type": "Type",
+    "Initiated on": "Initiated on",
+    "Total": "Total",
+    "Participants": "Participants",
+    "Acquired": "Acquired",
+    "Signed": "Signed",
+    "Status": "Status",
+    "Tx id": "Tx id",
+    "See": "See"
+}

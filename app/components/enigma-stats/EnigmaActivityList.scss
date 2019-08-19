@@ -1,0 +1,53 @@
+@import "~/assets/styles/vars.scss";
+@import "~/assets/styles/section.scss";
+
+.enigmaActivityList {
+  margin-top: 10px;
+
+    .tableHeader {
+        display: flex;
+        padding: 10px 40px;
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+        text-align: left;
+        color: $BASE_COLOR_LIGHT_GREEN;
+
+        img {
+            width: 10px;
+            margin-bottom: 2px;
+            margin-left: 5px;
+        }
+    }
+
+    .typeField, .totalField, .acquiredField, .signedField, .statusField, .txIdField {
+        width: 11%;
+    }
+
+    .dateField, .participantField {
+        width: 17%;
+    }
+
+    .txIdField {
+        text-align: center;
+    }
+
+    .enigmaActivityListWrapper {
+        padding: 10px 40px;
+
+        .enigmaItem {
+            display: flex;
+            text-align: left;
+            margin-bottom: 5px;
+
+            .txIdField {
+                button {
+                    cursor: pointer;
+                    width: 80px;
+                    color: white;
+                    background-color: $ENIGMA_STATS_TX_ID_SEE_BUTTON_COLOR;
+                    border: none;
+                    border-radius: 3px;
+                }
+            }
+        }
+    }
+}

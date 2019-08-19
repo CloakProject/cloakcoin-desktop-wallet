@@ -27,6 +27,7 @@ $BASE_COLOR_LIGHT_RED: #e20063;
 $BASE_COLOR_LIGHT_BLUE: #009ed8;
 $BASE_COLOR_PERSIMMON_COLOR: #ec5228;
 $BASE_COLOR_TOOLBAR_COLOR: #252c49;
+$BASE_COLOR_INPUT_COLOR: #778595;
 
 $BASE_COLOR_INFO: #009dd7;
 $BASE_COLOR_SUCCESS: #00d492;
@@ -96,16 +97,25 @@ $OWN_ADDRESSES_DROPDOWN_MENU_BACKGROUND_COLOR: $BASE_COLOR_GRAY_2;
  // ------------------------------------------------------------------------------------------------------
 // Send cash
 // ------------------------------------------------------------------------------------------------------
-$SEND_CASH_TOGGLE_BUTTON_BACKGROUND_COLOR: $BASE_COLOR_DARK_BLUE_2;
-$SEND_CASH_TOGGLE_BUTTON_SWITCHER_COLOR: $BASE_COLOR_PURPLE;
-$SEND_CASH_TOGGLE_BUTTON_TEXT_COLOR: $BASE_COLOR_GRAY;
-$SEND_CASH_PROGRESS_BAR_BACKGROUND_IMAGE: linear-gradient(45deg, rgba(0, 158, 216, 1.0) 10%, rgba(164, 104, 241, 1.0));
-$SEND_CASH_INPUT_TOOL_TIPS_BACKGROUND_COLOR: rgba(55, 62, 88, 0.88);
-$SEND_CASH_DROPDOWN_LIST_DISABLE_FONT_COLOR: #5a5f6f;
-$SEND_CASH_DROPDOWN_LIST_SEPARATED_LINE_COLOR: $TITLE_BAR_BUTTONS_MINIMIZE_COLOR;
-
+$SEND_COIN_TEXT_COLOR: #ff4200;
+$SEND_COIN_RADIO_COLOR: #2b3743;
+$SEND_COIN_RADIO_ACTIVE_COLOR: #ff2300;
+$SEND_COIN_BUTTON_COLOR: #3c5060;
 // ------------------------------------------------------------------------------------------------------
+// Receive cash
+$RECEIVE_COIN_TEXT_COLOR: #b4d434;
+$RECEIVE_COIN_BUTTON_COLOR: #a1bf5e;
+$RECEIVE_COIN_RECEIVE_ADDRESS_BG_COLOR: #223140;
+// ------------------------------------------------------------------------------------------------------
+// Transactions cash
+$TRANSACTION_HEADER_TABLE_COLOR: #577d32;
+//-------------------------------------------------------------------------------------------------------
 // Address book
+// ------------------------------------------------------------------------------------------------------
+// ENIGMA STATS
+$ENIGMA_STATS_INFO_BACKGROUND_COLOR: #101c2a;
+$ENIGMA_STATS_INFO_BOUND_COLOR: #4e702f;
+$ENIGMA_STATS_TX_ID_SEE_BUTTON_COLOR: #2d4558;
 // ------------------------------------------------------------------------------------------------------
 $ADDRESS_BOOK_LIST_BACKGROUND_COLOR: rgb(29, 36, 64);
 $ADDRESS_BOOK_LIST_HEADER_FONT_COLOR: $BASE_COLOR_FONT_GRAY;
