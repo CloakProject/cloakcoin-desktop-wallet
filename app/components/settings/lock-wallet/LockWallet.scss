@@ -1,0 +1,99 @@
+@import "~/assets/styles/vars.scss";
+
+.lockWalletContainer {
+    img {
+        width: 90px;
+        opacity: 0.3;
+    }
+
+    .lockPage {
+        text-align: center;
+
+        img {
+            margin-bottom: 40px;
+        }
+
+        p {
+            font-size: 20px;
+        }
+
+        p:nth-child(2) {
+            color: $SEND_COIN_TEXT_COLOR;
+            margin-bottom: 30px;
+        }
+
+        button {
+            width: 200px;
+            height: 40px;
+            background-color: $RECEIVE_COIN_BUTTON_COLOR;
+            border: none;
+            border-radius: 3px;
+            font-size: 18px;
+            color: rgba(0, 0, 0, 0.8);
+            margin-top: 60px;
+        }
+    }
+
+    .unlockPage {
+        text-align: center;
+
+        img {
+            margin-bottom: 20px;
+        }
+
+        input {
+            height: 25px;
+        }
+
+        .description {
+            width: 325px;
+            margin: 0 auto;
+            font-size: 18px;
+
+            p:nth-child(1) {
+                color: $RECEIVE_COIN_BUTTON_COLOR;
+                font-size: 20px;
+            }
+        }
+
+        .passphraseInput {
+            .passphrase {
+                margin-top: 30px;
+                margin-bottom: 10px;
+            }
+
+            .checkboxInput {
+                display: flex;
+                align-items: center;
+                padding: 0px 5px;
+                
+                .checkmark {
+                    cursor: pointer;
+                    width: 18px;
+                    height: 18px;
+                    border: 1px solid rgba(255,255,255,0.5);
+                    text-align: center;
+                    margin-top: 5px;
+                    margin-right: 20px;
+                    img {
+                        width: 18px;
+                        height: 12px;
+                        margin-top: 1px;
+                        opacity: 1;
+                    }
+                }
+            }
+            
+            button {
+                width: 200px;
+                height: 40px;
+                background-color: $SEND_COIN_TEXT_COLOR;
+                border: none;
+                border-radius: 3px;
+                font-size: 18px;
+                color: white;
+                margin-top: 40px;
+            }
+        }
+    }
+}

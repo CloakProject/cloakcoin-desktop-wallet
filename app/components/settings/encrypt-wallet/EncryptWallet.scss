@@ -1,0 +1,71 @@
+@import "~/assets/styles/vars.scss";
+
+.encryptWalletContainer {
+    img {
+        width: 90px;
+        opacity: 0.3;
+    }
+
+    .encryptedPage {
+        text-align: center;
+
+        p {
+            color: #a1bf5e;
+            font-size: 20px;
+            margin-top: 80px;
+        }
+    }
+
+    .encryptPage {
+        text-align: center;
+
+        img {
+            margin-bottom: 20px;
+        }
+
+        input {
+            height: 25px;
+        }
+
+        .description {
+            width: 325px;
+            margin: 0 auto;
+            font-size: 18px;
+            
+            span {
+                color: $SEND_COIN_TEXT_COLOR;
+            }
+        }
+
+        .encryptWalletInput {
+            .newPassword {
+                margin-top: 30px;
+                margin-bottom: 10px;
+
+                p {
+                    text-align: left;
+                    margin-bottom: 5px;
+                }
+            }
+
+            .confirmPassword {
+                margin-bottom: 10px;
+
+                p {
+                    text-align: left;
+                    margin-bottom: 5px;
+                }
+            }
+
+            button {
+                width: 150px;
+                height: 32px;
+                background-color: $RECEIVE_COIN_BUTTON_COLOR;
+                border: none;
+                border-radius: 3px;
+                font-size: 18px;
+                color: rgba(0, 0, 0, 0.8);
+            }
+        }
+    }
+}
