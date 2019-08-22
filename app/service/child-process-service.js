@@ -6,7 +6,7 @@ import log from 'electron-log'
 import { spawn } from 'child_process'
 import { remote } from 'electron'
 import ps from 'ps-node'
-import { take, filter, switchMap } from 'rxjs/operators'
+import { take, filter, switchMap, mergeMap } from 'rxjs/operators'
 import { race } from 'rxjs'
 import { ofType } from 'redux-observable'
 
@@ -59,20 +59,41 @@ export class ChildProcessService {
     return nameMap[processStatus] || t(`Unknown`)
   }
 
-  getObservable({processName, onSuccess, onFailure, action$}) {
+  getStartObservable({processName, onSuccess, onFailure, action$}) {
     const actions = this.getSettingsActions()
 
     const observable = race(
       action$.pipe(
         ofType(actions.childProcessStarted),
         filter(action => action.payload.processName === processName),
-          take(1),
-        switchMap(() => onSuccess)
+        take(1),
+        mergeMap(() => onSuccess)
       ),
       action$.pipe(
         ofType(actions.childProcessFailed),
         filter(action => action.payload.processName === processName),
-          take(1),
+        take(1),
+        switchMap(() => onFailure)
+      )
+    )
+
+    return observable
+  }
+
+  getStopObservable({processName, onSuccess, onFailure, action$}) {
+    const actions = this.getSettingsActions()
+
+    const observable = race(
+      action$.pipe(
+        ofType(actions.childProcessMurdered),
+        filter(action => action.payload.processName === processName),
+        take(1),
+        mergeMap(() => onSuccess)
+      ),
+      action$.pipe(
+        ofType(actions.childProcessMurderFailed),
+        filter(action => action.payload.processName === processName),
+        take(1),
         switchMap(() => onFailure)
       )
     )
@@ -114,21 +135,25 @@ export class ChildProcessService {
   }
 
   getLogFilePath(processName: string) {
-    const command = childProcessCommands[processName]
-    return  path.join(getAppDataPath(), `${command}.log`)
+    const logFileName = `${processName.toLowerCase()}.log`
+    return  path.join(getAppDataPath(), logFileName)
   }
 
 	/**
-   * Restarts a child process by name using killProcess() and execProcess() methods.
+   * Restarts a child process by name using killProcess() and startProcess() methods.
    *
-	 * @param {options} execProcess() options
+	 * @param {options} startProcess() options
 	 * @memberof ChildProcessService
 	 */
   async restartProcess(options) {
-    log.info(`Restarting ${options.processName} process.`)
+    const { processName } = options
+    log.info(`Restarting ${processName} process.`)
 
-    await this.killProcess(options.processName)
-    await this.execProcess(options)
+    log.debug(`Stopping ${processName}`)
+    await this.stopProcess(options.processName)
+
+    log.debug(`Starting ${processName}`)
+    await this.startProcess(options)
   }
 
 	/**
@@ -139,29 +164,39 @@ export class ChildProcessService {
 	 * @param {function} outputHandler If returns true the process is considered started.
 	 * @memberof ChildProcessService
 	 */
-  async execProcess({processName, args = [], outputHandler, spawnOptions = {}, waitUntilReady}) {
+  async startProcess({processName, args = [], outputHandler, shutdownFunction = null, spawnOptions = {}, waitUntilReady}) {
     const childProcessInfo = remote.getGlobal('childProcesses')[processName]
     const actions = this.getSettingsActions()
-
-    await this.killProcess(processName)
 
     const childProcess = this::spawnProcess(processName, args, spawnOptions)
 
     childProcessInfo.instance = childProcess
+    childProcessInfo.shutdown = shutdownFunction
 
     this::initLogging(childProcess, processName)
 
-    childProcess.on('error', err => {
-      log.error(`Process ${processName} has failed!`)
-      getStore().dispatch(actions.childProcessFailed(processName, err.toString()))
-    })
+    childProcessInfo.waitForCompletion = new Promise((resolve, reject) => {
 
-    childProcess.on('close', code => {
-      if (!childProcessInfo.isGettingKilled) {
-        const errorMessage =  t(`Process {{processName}} unexpectedly exited with code {{code}}.`, { processName, code })
-        getStore().dispatch(actions.childProcessFailed(processName, errorMessage))
-      }
-      childProcessInfo.isGettingKilled = false
+      childProcess.on('error', err => {
+        log.error(`Process ${processName} has failed!`)
+        getStore().dispatch(actions.childProcessFailed(processName, err.toString()))
+        reject(t(`Child process ${processName} has failed`))
+      })
+
+      childProcess.on('close', code => {
+        if (childProcessInfo.isGettingKilled) {
+          log.debug(`Sending process murdered action for ${processName}`)
+          getStore().dispatch(actions.childProcessMurdered(processName))
+          resolve()
+        } else {
+          const errorMessage =  t(`Process {{processName}} unexpectedly exited with code {{code}}.`, { processName, code })
+          getStore().dispatch(actions.childProcessFailed(processName, errorMessage))
+          reject(errorMessage)
+        }
+
+        childProcessInfo.isGettingKilled = false
+      })
+
     })
 
     await this::initAndWaitForFirstOutput(childProcess, outputHandler)
@@ -175,9 +210,33 @@ export class ChildProcessService {
       }
     }
 
+    log.debug(`Child process ${processName} started`)
     getStore().dispatch(actions.childProcessStarted(processName))
-    childProcessInfo.pid = await this.getPid(childProcessCommands[processName])
+    childProcessInfo.pid = childProcess.pid || await this.getPid(processName)
+  }
 
+  markProcessAsGettingKilled(processName: ChildProcessName) {
+    const childProcessInfo = remote.getGlobal('childProcesses')[processName]
+    childProcessInfo.isGettingKilled = true
+  }
+
+  async stopProcess(processName: ChildProcessName) {
+    const childProcessInfo = remote.getGlobal('childProcesses')[processName]
+
+    if (childProcessInfo.shutdown === null) {
+      return this.killProcess(processName)
+    }
+
+    this.markProcessAsGettingKilled(processName)
+
+    try {
+      await childProcessInfo.shutdown()
+    } catch(err) {
+      log.error(`Can't shutdown child process ${processName}`, err)
+      return this.killProcess(processName)
+    }
+
+    return childProcessInfo.waitForCompletion
   }
 
 	/**
@@ -191,23 +250,23 @@ export class ChildProcessService {
 	 */
   async killProcess(processName: ChildProcessName) {
     const actions = this.getSettingsActions()
+    const childProcessInfo = remote.getGlobal('childProcesses')[processName]
 
-    try {
-      const pid = await this.getPid(childProcessCommands[processName])
+    if (childProcessInfo.pid) {
+      childProcessInfo.isGettingKilled = true
 
-      if (pid) {
-        const childProcessInfo = remote.getGlobal('childProcesses')[processName]
-        childProcessInfo.isGettingKilled = true
-        await this.killPid(pid)
-      } else {
-        log.warn(`Process ${processName} isn't running`)
+      try {
+        await this.killPid(childProcessInfo.pid)
+      } catch(err) {
+        log.error(`Process murder failed`, err)
+        getStore().dispatch(actions.childProcessMurderFailed(processName, err.message))
       }
 
-      getStore().dispatch(actions.childProcessMurdered(processName))
-    } catch(err) {
-      log.error(`Process murder failed`, err)
-      getStore().dispatch(actions.childProcessMurderFailed(processName, err.message))
+    } else {
+      log.warn(`Process ${processName} isn't running`)
     }
+
+    getStore().dispatch(actions.childProcessMurdered(processName))
   }
 
 	/**
@@ -235,11 +294,10 @@ export class ChildProcessService {
 	async getPid(processName: string) {
 		return new Promise((resolve, reject) => {
 			let process
+      const command = childProcessCommands[processName]
 
 			ps.lookup(
-				{
-					command: processName
-				},
+				{ command },
 				(err, resultList) => {
 					if (err) {
 						reject(err)
@@ -257,7 +315,6 @@ export class ChildProcessService {
 			)
 		})
 	}
-
 
   /**
    * Returns a polling function calling checker until it returns true

@@ -201,7 +201,7 @@
     "url-loader": "^1.0.1",
     "vinyl-fs": "^3.0.3",
     "webpack": "^4.8.3",
-    "webpack-bundle-analyzer": "^3.3.2",
+    "webpack-bundle-analyzer": "^2.13.1",
     "webpack-cli": "^3.1.1",
     "webpack-dev-server": "^3.1.4",
     "webpack-merge": "^4.1.2"
@@ -223,7 +223,9 @@
     "electron-log": "^2.2.17",
     "electron-settings": "^3.2.0",
     "emittery": "^0.4.1",
+    "extract-zip": "^1.6.7",
     "font-awesome": "^4.7.0",
+    "fs-extra": "^8.1.0",
     "generate-password": "^1.4.1",
     "get-port": "^4.0.0",
     "history": "^4.7.2",
@@ -267,7 +269,7 @@
     "redux-observable": "^1.0.0",
     "request-promise-native": "^1.0.5",
     "round-to": "^3.0.0",
-    "rxjs": "^6.2.1",
+    "rxjs": "^6.3.3",
     "source-map-support": "^0.5.6",
     "write-json-file": "^3.0.2"
   },

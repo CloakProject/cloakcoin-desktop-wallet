@@ -19,9 +19,6 @@ let instance = null
 const configFolderName = 'CloakCoin'
 const configFileName = 'CloakCoin.conf'
 const configFileContents = [
-  `testnet=1`,
-  `port=18233`,
-  `rpcport=18232`,
   `rpcuser=resuser`,
   `rpcpassword=%generatedPassword%`,
   ``
@@ -66,7 +63,7 @@ export class CloakService {
 	 */
   checkAndCreateConfig(): Object {
     const configFolder = this.getDataPath()
-    const configFile = path.join(configFolder, configFileName)
+    const configPath = path.join(configFolder, configFileName)
 
     if (!fs.existsSync(configFolder)) {
       fs.mkdirSync(configFolder)
@@ -74,13 +71,19 @@ export class CloakService {
 
     let cloakNodeConfig
 
-    if (fs.existsSync(configFile)) {
-      cloakNodeConfig = PropertiesReader(configFile).path()
-      log.info(`The Cloak config file ${configFile} exists and does not need to be created.`);
+    if (fs.existsSync(configPath)) {
+      cloakNodeConfig = PropertiesReader(configPath).path()
+      log.info(`The Cloak config file ${configPath} exists and does not need to be created.`);
     } else {
-      cloakNodeConfig = this.createConfig(configFile)
-      log.info(`The Cloak config file ${configFile} was successfully created.`);
+      cloakNodeConfig = this.createConfig(configPath)
+      log.info(`The Cloak config file ${configPath} was successfully created.`);
     }
+
+    if (!cloakNodeConfig.rpcport) {
+      cloakNodeConfig.rpcport = cloakNodeConfig.testnet ? 19661 : 29661
+    }
+
+    cloakNodeConfig.configPath = configPath
 
     return cloakNodeConfig
   }

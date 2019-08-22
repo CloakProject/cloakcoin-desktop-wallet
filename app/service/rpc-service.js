@@ -1,7 +1,5 @@
 // @flow
 import path from 'path'
-import * as fs from 'fs'
-import { promisify } from 'util'
 import log from 'electron-log'
 import { Decimal } from 'decimal.js'
 import { v4 as uuid } from 'uuid'
@@ -13,7 +11,6 @@ import { toastr } from 'react-redux-toastr'
 
 import { translate } from '~/i18next.config'
 import { getExportDir, moveFile } from '~/utils/os'
-import { DECIMAL } from '~/constants/decimal'
 import { getStore } from '~/store/configureStore'
 import { AddressBookService } from './address-book-service'
 import { BlockchainInfo, DaemonInfo, SystemInfoActions } from '../reducers/system-info/system-info.reducer'
@@ -64,54 +61,54 @@ export const getClientInstance = () => {
  * @class RpcService
  */
 export class RpcService {
-	/**
-	 * Creates an instance of RpcService.
+  /**
+   * Creates an instance of RpcService.
    *
-	 * @memberof RpcService
-	 */
-	constructor() {
-		if (!instance) {
-			instance = this
-		}
+   * @memberof RpcService
+   */
+  constructor() {
+    if (!instance) {
+      instance = this
+    }
 
-		return instance
-	}
+    return instance
+  }
 
-	/**
-	 * Encrypts the wallet with a passphrase.
+  /**
+   * Encrypts the wallet with a passphrase.
    *
-	 * @memberof RpcService
-	 */
+   * @memberof RpcService
+   */
   encryptWallet(password: string) {
     const client = getClientInstance()
     return client.command('encryptwallet', password)
   }
 
-	/**
-	 * Encrypts the wallet with a passphrase.
+  /**
+   * Encrypts the wallet with a passphrase.
    *
-	 * @memberof RpcService
-	 */
+   * @memberof RpcService
+   */
   sendWalletPassword(password: string, timeoutSec: number) {
     const client = getClientInstance()
     return client.command('walletpassphrase', password, timeoutSec)
   }
 
-	/**
-	 * Encrypts the wallet with a passphrase.
+  /**
+   * Encrypts the wallet with a passphrase.
    *
-	 * @memberof RpcService
-	 */
+   * @memberof RpcService
+   */
   changeWalletPassword(oldPassword: string, newPassword: string) {
     const client = getClientInstance()
     return client.command('walletpassphrasechange', oldPassword, newPassword)
   }
 
-	/**
-	 * Requests Cloak node running status and memory usage.
-	 *
-	 * @memberof RpcService
-	 */
+  /**
+   * Requests Cloak node running status and memory usage.
+   *
+   * @memberof RpcService
+   */
   requestDaemonInfo() {
     const client = getClientInstance()
 
@@ -127,28 +124,39 @@ export class RpcService {
       })
   }
 
-	/**
-	 * Request the wallet information.
-	 *
-	 * @memberof RpcService
-	 */
+  getInfo() {
+    const client = getClientInstance()
+
+    client.getInfo()
+      .then((info: DaemonInfo) => {
+        getStore().dispatch(SystemInfoActions.gotDaemonInfo(info))
+        return Promise.resolve()
+      })
+      .catch(err => {
+        // TODO: move the prefix to toastr error title in the epic #114
+        const errorPrefix = t(`Unable to get Cloak local node info`)
+        getStore().dispatch(SystemInfoActions.getDaemonInfoFailure(`${errorPrefix}: ${err}`, err.code))
+      })
+  }
+
+  /**
+   * Request the wallet information.
+   *
+   * @memberof RpcService
+   */
   requestWalletInfo() {
     const client = getClientInstance()
 
     const commandList = [
-      { method: 'z_gettotalbalance' },
-      { method: 'z_gettotalbalance', parameters: [0] }
+      { method: 'getbalance' },
+      { method: 'getbalance', parameters: ['*', 0] }
     ]
 
     from(client.command(commandList))
     .pipe(
          map(result => ({
-           transparentBalance: Decimal(result[0].transparent),
-           enigmaBalance: Decimal(result[0].enigma),
-           totalBalance: Decimal(result[0].total),
-           transparentUnconfirmedBalance: Decimal(result[1].transparent),
-           enigmaUnconfirmedBalance: Decimal(result[1].enigma),
-           totalUnconfirmedBalance: Decimal(result[1].total)
+           balance: Decimal(result[0]),
+           unconfirmedBalance: Decimal(result[1])
          }))
     )
     .subscribe(
@@ -164,22 +172,21 @@ export class RpcService {
     )
   }
 
-	/**
-	 * Request wallet transactions.
-	 *
-	 * @memberof RpcService
-	 */
+  /**
+   * Request wallet transactions.
+   *
+   * @memberof RpcService
+   */
   requestTransactionsDataFromWallet() {
     const client = getClientInstance()
 
     const queryPromiseArr = [
       this::getPublicTransactionsPromise(client),
-      this::getEnigmaTransactionsPromise(client)
     ]
 
     const combineQueryPromise = Promise.all(queryPromiseArr)
       .then(result => {
-        const combinedTransactionsList = [...result[0], ...result[1]]
+        const combinedTransactionsList = [...result[0]]
         const sortedByDateTransactions = combinedTransactionsList.sort((trans1, trans2) => (
           new Date(trans2.timestamp) - new Date(trans1.timestamp)
         ))
@@ -201,11 +208,11 @@ export class RpcService {
       )
   }
 
-	/**
-	 * Request blockchain information.
-	 *
-	 * @memberof RpcService
-	 */
+  /**
+   * Request blockchain information.
+   *
+   * @memberof RpcService
+   */
   requestBlockchainInfo() {
     const client = getClientInstance()
 
@@ -242,8 +249,8 @@ export class RpcService {
    * @memberof RpcService
    */
   getBlockchainSynchronizedPercentage(tempDate: Date) {
-    // TODO: Get the start date right after ZCash release - from first block!!!
-    const startDate = new Date('28 Oct 2016 02:00:00 GMT')
+    // TODO: Get the start date right after CloakCoin release - from first block!!!
+    const startDate = new Date('31 May 2014 11:52:35 GMT')
     const nowDate = new Date()
 
     const fullTime = nowDate.getTime() - startDate.getTime()
@@ -265,45 +272,46 @@ export class RpcService {
     return 100
   }
 
-	/**
-	 * @param {boolean} [isEnigma]
-	 * @returns {Observable<any>}
-	 * @memberof RpcService
-	 */
-	createNewAddress(isEnigma?: boolean): Observable<any> {
-		const client = getClientInstance()
-		const createNewAddressPromise = client.command([{ method: isEnigma ? `z_getnewaddress` : `getnewaddress` }])
+  /**
+   * @param {boolean} [isEnigma]
+   * @returns {Observable<any>}
+   * @memberof RpcService
+   */
+  createNewAddress(isEnigma?: boolean): Promise<any> {
+    const client = getClientInstance()
+    return client.command(isEnigma ? 'getnewstealthaddress' : 'getnewaddress')
+  }
 
-		return from(createNewAddressPromise).pipe(
-			map(result => result[0]),
-			catchError(error => {
-				log.debug(`There was an error creating a new address: ${error}`)
-				return of('')
-			})
-		)
-	}
+  /**
+   * @interface IReceptions
+   * @property {string} toAddress
+   * @property {Decimal} amountToSend
+   */
+  /**
+   * @param receiptions Array<IReceptions>
+   * @param {boolean} isEnigma
+   * @returns {Observable<any>}
+   * @memberof RpcService
+   */
+  sendCash(receiptions, isEnigma?: boolean) {
+    const client = getClientInstance()
 
-	/**
-	 * @param {string} fromAddress
-	 * @param {string} toAddress
-	 * @param {Decimal} amountToSend
-	 * @returns {Observable<any>}
-	 * @memberof RpcService
-	 */
-	sendCash(fromAddress: string, toAddress: string, amountToSend: Decimal) {
-		const client = getClientInstance()
-
-    const commandParameters= [
-      fromAddress,
-      [{ address: toAddress, amount: amountToSend.sub(DECIMAL.transactionFee) }]
-    ]
-
-    // Confirmations number, important!
-    if (fromAddress.toLowerCase().startsWith('r') && toAddress.toLowerCase().startsWith('r')) {
-      commandParameters.push(0)
+    let fromAccount = ""
+    if (isEnigma) {
+      fromAccount += "|enigma"
     }
 
-    const command = client.command([{ method: `z_sendmany`, parameters: commandParameters }])
+    const toPairs = {}
+    receiptions.forEach(x => {
+      toPairs[x.toAddress] = x.amountToSend
+    })
+
+    const commandParameters= [
+      fromAccount,
+      toPairs
+    ]
+
+    const command = client.command([{ method: `sendmany`, parameters: commandParameters }])
 
     command.then(([result])=> {
       if (typeof(result) === 'string') {
@@ -316,125 +324,91 @@ export class RpcService {
     .catch(err => (
       getStore().dispatch(SendCashActions.sendCashFailure(err.toString()))
     ))
-	}
+  }
 
-	/**
-	 * @param {boolean} sortByGroupBalance
-	 * @param {boolean} disableTheEnigmaAddress
-	 * @returns {Observable<any>}
-	 * @memberof RpcService
-	 */
-	getWalletAddressAndBalance(sortByGroupBalance?: boolean, disableTheEnigmaAddress?: boolean): Observable<any> {
-		const client = getClientInstance()
+  /**
+   * @param {boolean} sortByGroupBalance
+   * @returns {Observable<any>}
+   * @memberof RpcService
+   */
+  getWalletAddressAndBalance(sortByGroupBalance?: boolean): Observable<any> {
+    const client = getClientInstance()
 
-		const promiseArr = [
-			this::getWalletAllPublicAddresses(client),
-			this::getWalletPublicAddressesWithUnspentOutputs(client),
-			this::getWalletEnigmaAddresses(client)
-		]
+    const promiseArr = [
+      this::getWalletAllPublicAddresses(client),
+      this::getWalletPublicAddressesWithUnspentOutputs(client),
+    ]
 
-		const queryPromise = Promise.all(promiseArr)
-			.then(result => {
+    const queryPromise = Promise.all(promiseArr)
+      .then(result => {
         let plainPublicUnspentAddresses: string[] = []
 
-				const PublicAddressesResult = result[0][0]
-				const PublicAddressesUnspendResult = result[1][0]
-				const enigmaAddressesResult = result[2][0]
+        const PublicAddressesResult = result[0][0]
+        const PublicAddressesUnspendResult = result[1][0]
 
-				const publicAddressResultSet = new Set()
-				const enigmaAddressResultSet = new Set()
+        const publicAddressResultSet = new Set()
 
-				if (Array.isArray(PublicAddressesResult)) {
-					const publicAddresses = PublicAddressesResult.map(tempValue => tempValue.address)
-					for (let index = 0; index < publicAddresses.length; index += 1) {
-						publicAddressResultSet.add(publicAddresses[index])
-					}
-				}
+        if (Array.isArray(PublicAddressesResult)) {
+          const publicAddresses = [] // PublicAddressesResult.map(tempValue => tempValue.address)
+          for (let index = 0; index < PublicAddressesResult.length; index += 1) {
+            publicAddressResultSet.add(PublicAddressesResult[index].address)
+            publicAddresses.push(PublicAddressesResult[index].address)
+          }
+        }
 
-				if (Array.isArray(PublicAddressesUnspendResult)) {
-					plainPublicUnspentAddresses = PublicAddressesUnspendResult.map(tempValue => tempValue.address)
-					for (let index = 0; index < plainPublicUnspentAddresses.length; index += 1) {
-						publicAddressResultSet.add(plainPublicUnspentAddresses[index])
-					}
-				}
+        if (Array.isArray(PublicAddressesUnspendResult)) {
+          plainPublicUnspentAddresses = [] // PublicAddressesUnspendResult.map(tempValue => tempValue.address)
+          for (let index = 0; index < PublicAddressesUnspendResult.length; index += 1) {
+            if(('spendable' in PublicAddressesUnspendResult[index] && PublicAddressesUnspendResult[index].spendable)){
+              publicAddressResultSet.add(PublicAddressesUnspendResult[index].address)
+            } else {
+              const addressToRemove = PublicAddressesUnspendResult[index].address
+              publicAddressResultSet.delete(addressToRemove) // Remove any addresses that aren't spendable
+            }
+          }
+        }
 
-				if (Array.isArray(enigmaAddressesResult)) {
-					for (let index = 0; index < enigmaAddressesResult.length; index += 1) {
-						enigmaAddressResultSet.add(enigmaAddressesResult[index])
-					}
-				}
-
-				const combinedAddresses = [...Array.from(publicAddressResultSet), ...Array.from(enigmaAddressesResult)]
-					.map(addr => ({
-						balance: Decimal('0'),
-						confirmed: false,
-						address: addr,
+        const combinedAddresses = [...Array.from(publicAddressResultSet)]
+          .map(addr => ({
+            balance: Decimal('0'),
+            confirmed: false,
+            address: addr,
             isUnspent: plainPublicUnspentAddresses.includes(addr),
-						disabled: false
-					}))
-          .filter(item => !(item.address.startsWith('rr') || item.address.startsWith('rs')))
+            disabled: false
+          }))
 
-				log.debug(`Fetching the balances for the combined addresses: ${combinedAddresses}`)
-				return this::getAddressesBalance(client, combinedAddresses)
-			})
-			.then(addresses => {
-				let addressList = null
+        log.debug(`Fetching the balances for the combined addresses: ${combinedAddresses}`)
+        return this::getAddressesBalance(client, combinedAddresses)
+      })
+      .then(addresses => {
+        const addressList = addresses
 
-				// Sort for each groups
-				if (sortByGroupBalance) {
-					const publicAddresses = []
-					const enigmaAddresses= []
+        // Show the error to user
+        const errorAddressItems = addressList.filter(tempAddressItem => tempAddressItem.balance === null && tempAddressItem.errorMessage)
 
-					for (let index = 0; index < addresses.length; index += 1) {
-						const tempAddressItem = addresses[index];
-						if (tempAddressItem.address.startsWith('z')) {
-							enigmaAddresses.push(tempAddressItem)
-						} else {
-							publicAddresses.push(tempAddressItem)
-						}
-					}
-
-					publicAddresses.sort((item1, item2) => item2.balance.sub(item1.balance))
-					enigmaAddresses.sort((item1, item2) => item2.balance.sub(item1.balance))
-
-					addressList = [...publicAddresses, ...enigmaAddresses]
-				} else {
-					addressList = addresses
-				}
-
-				// Show the error to user
-				const errorAddressItems = addressList.filter(tempAddressItem => tempAddressItem.balance === null && tempAddressItem.errorMessage)
-
-				if (errorAddressItems && errorAddressItems.length > 0) {
+        if (errorAddressItems && errorAddressItems.length > 0) {
           const errorMessages = errorAddressItems.map(tempAddressItem => `"${tempAddressItem.errorMessage}"`)
-					const uniqueErrorMessages = Array.from(new Set(errorMessages)).join(', ')
+          const uniqueErrorMessages = Array.from(new Set(errorMessages)).join(', ')
           const errorKey = `Error fetching balances for {{errorCount}} out of {{addressCount}} addresses. Error messages included: {{errorMessages}}.`
           toastr.error(t(`Address balance error`), t(errorKey, errorAddressItems.length, addressList.length, uniqueErrorMessages.toString()))
-				}
+        }
 
-				if (disableTheEnigmaAddress) {
-					const isEnigmaAddress = (tempAddress: string) => tempAddress.startsWith('z')
-					const processedAddressList = addressList.map(tempAddressItem => isEnigmaAddress(tempAddressItem.address) ? { ...tempAddressItem, disabled: true } : tempAddressItem)
-					log.debug(`The processed address list: ${processedAddressList}`)
-					return processedAddressList
-				}
+        return addressList
+      })
+      .catch(error => {
+        log.debug(`An error occurred when fetching the wallet addresses and balances: ${error}`)
+        return []
+      })
 
-				return addressList
-			})
-			.catch(error => {
-				log.debug(`An error occurred when fetching the wallet addresses and balances: ${error}`)
-				return []
-			})
-
-		return from(queryPromise).pipe(take(1))
-	}
+    return from(queryPromise).pipe(take(1))
+  }
 
 
-	/**
+  /**
    * Request own addresses with balances.
    *
-	 * @memberof RpcService
-	 */
+   * @memberof RpcService
+   */
   requestOwnAddresses() {
     this.getWalletAddressAndBalance(false).subscribe(result => {
       getStore().dispatch(OwnAddressesActions.gotOwnAddresses(result))
@@ -443,163 +417,83 @@ export class RpcService {
     })
   }
 
-	/**
-   * Request known local node operations.
-   *
-	 * @memberof RpcService
-	 */
-  requestOperations() {
-		const client = getClientInstance()
+  /**
+   * @param {string} transactionId
+   * @memberof RpcService
+   */
+  getTransactionDetails(transactionId: string) {
+    const client = getClientInstance()
+    const queryPromise = client.command([{ method: 'gettransaction', parameters: [transactionId] }])
 
-    client.command('z_listoperationids').then(operationIds => (
-      client.command('z_getoperationstatus', operationIds)
-    )).then(operations => {
-      getStore().dispatch(SystemInfoActions.gotOperations(operations))
-      return Promise.resolve()
-    }).catch(err => {
-      // TODO: move the prefix to toastr error title in the epic #114
-      const errorPrefix = t(`Unable to get operations`)
-      return getStore().dispatch(SystemInfoActions.getOperationsFailure(`${errorPrefix}: ${err}`, err.code))
-    })
-  }
+    return from(queryPromise).pipe(
+      map(results => results[0]),
+      map(result => {
+        if (result.name === 'RpcError') {
+          return result.message
+        }
 
-	/**
-   * Request merge all mined coins operation.
-   *
-	 * @memberof RpcService
-	 */
-  mergeAllMinedCoins(zAddress: string) {
-    const command = getClientInstance().command('z_shieldcoinbase', '*', zAddress)
-    this::performMergeCoinsCommand(command)
-  }
-
-	/**
-   * Request merge all C-address coins operation.
-   *
-	 * @memberof RpcService
-	 */
-  mergeAllRAddressCoins(zAddress: string) {
-    const command = getClientInstance().command('z_mergetoaddress', ['ANY_TADDR'], zAddress)
-    this::performMergeCoinsCommand(command)
-  }
-
-	/**
-   * Request merge all E-address coins operation.
-   *
-	 * @memberof RpcService
-	 */
-  mergeAllZAddressCoins(zAddress: string) {
-    const command = getClientInstance().command('z_mergetoaddress', ['ANY_ZADDR'], zAddress)
-    this::performMergeCoinsCommand(command)
-  }
-
-	/**
-   * Request merge all coins operation.
-   *
-	 * @memberof RpcService
-	 */
-  mergeAllCoins(zAddress: string) {
-    const command = getClientInstance().command('z_mergetoaddress', ['*'], zAddress)
-    this::performMergeCoinsCommand(command)
-  }
-
-	/**
-	 * @param {string} transactionId
-	 * @memberof RpcService
-	 */
-	getTransactionDetails(transactionId: string) {
-		const client = getClientInstance()
-		const queryPromise = client.command([{ method: 'gettransaction', parameters: [transactionId] }])
-
-		return from(queryPromise).pipe(
-			map(results => results[0]),
-			map(result => {
-				if (result.name === 'RpcError') {
-					return result.message
-				}
-
-				const tempObj = {}
-				Object.keys(result.details[0]).reduce((accumulator, key) => {
+        const tempObj = {}
+        Object.keys(result.details[0]).reduce((accumulator, key) => {
           const modified = { ...accumulator }
 
-					if (key === 'amount') {
-						modified[`details[0].${key}`] = Decimal(result.details[0][`${key}`])
-					} else {
-						modified[`details[0].${key}`] = result.details[0][`${key}`]
-					}
+          if (key === 'amount') {
+            modified[`details[0].${key}`] = Decimal(result.details[0][`${key}`])
+          } else {
+            modified[`details[0].${key}`] = result.details[0][`${key}`]
+          }
 
-					return modified
-				}, tempObj)
+          return modified
+        }, tempObj)
 
-				const detailResult = { ...result, amount: Decimal(result.amount), ...tempObj }
-				delete detailResult.details
-				delete detailResult.vjoinsplit
-				delete detailResult.walletconflicts
+        const detailResult = { ...result, amount: Decimal(result.amount), ...tempObj }
+        delete detailResult.details
+        delete detailResult.vjoinsplit
+        delete detailResult.walletconflicts
 
-				log.debug(`Transaction details: ${detailResult}`)
+        log.debug(`Transaction details: ${detailResult}`)
 
-				return detailResult
-			}),
-			catchError(error => {
-				log.debug(`An error occurred while fetching transcation details: ${error}`)
-				return of(error.message)
-			})
-		)
-	}
-
-	/**
-   * Export private keys to a file.
-   *
-	 * @memberof RpcService
-	 */
-  exportPrivateKeys(filePath) {
-    return this::exportFileWithMethod('z_exportwallet', filePath)
-  }
-
-	/**
-   * Import private keys from a file.
-   *
-	 * @memberof RpcService
-   * @returns {Observable}
-	 */
-  importPrivateKeys(filePath) {
-    const client = getClientInstance()
-
-    const importFileName = uuid().replace(/-/g, '')
-    const importFilePath = path.join(getExportDir(), importFileName)
-
-    const observable = from(
-      promisify(fs.copyFile)(filePath, importFilePath)
-        .then(() => (
-          client.command('z_importwallet', importFilePath)
-            .finally(() => promisify(fs.unlink)(importFilePath))
-        ))
+        return detailResult
+      }),
+      catchError(error => {
+        log.debug(`An error occurred while fetching transcation details: ${error}`)
+        return of(error.message)
+      })
     )
-
-    return observable
   }
 
-	/**
+  /**
    * Backup wallet to a file.
    *
-	 * @memberof RpcService
+   * @memberof RpcService
    * @returns {Observable}
-	 */
+   */
   backupWallet(filePath) {
     return this::exportFileWithMethod('backupwallet', filePath)
   }
 
+
+	/**
+	 * Stops the Cloak daemon
+   *
+	 * @memberof RpcService
+	 */
+  stop() {
+    const client = getClientInstance()
+    return client.command('stop')
+  }
+
 }
 
-/* RPC Service private methods */
+/* RPC Service stealth methods */
 
 /**
  * @param {Client} client
  * @returns {Promise<any>}
  * @memberof RpcService
  */
-function getWalletEnigmaAddresses(client: Client): Promise<any> {
-  return client.command([{ method: 'z_listaddresses' }])
+// eslint-disable-next-line no-unused-vars
+function getWalletStealthAddresses(client: Client): Promise<any> {
+  return client.command([{ method: 'liststealthaddresses' }])
 }
 
 /**
@@ -632,8 +526,8 @@ async function getPublicTransactionsPromise(client: Client) {
     { method: 'listtransactions', parameters: ['', 200] }
   ]
 
-  const noAddressMessage = t(`Z address is not listed in the wallet`)
-  const publicAddressMessage = t(`R (Public)`)
+  const noAddressMessage = t(`E address is not listed in the wallet`)
+  const publicAddressMessage = t(`C (Public)`)
 
   return client.command(command)
     .then(result => result[0])
@@ -659,61 +553,6 @@ async function getPublicTransactionsPromise(client: Client) {
       return []
     })
 
-}
-
-/**
- * Private method. Returns enigma transactions array.
- *
- * @param {Client} client
- * @returns {Promise<any>}
- * @memberof RpcService
- */
-async function getEnigmaTransactionsPromise(client: Client) {
-  const getWalletZAddressesCmd = () => [{ method: 'z_listaddresses' }]
-  const getWalletZReceivedTransactionsCmd = (zAddress) => [{ method: 'z_listreceivedbyaddress', parameters: [zAddress, 0] }]
-  const getWalletTransactionCmd = (transactionId) => [{ method: 'gettransaction', parameters: [transactionId] }]
-
-  // First, we get all the enigma addresses, and then for each one, we get all their transactions
-  const enigmaAddresses = await client.command(getWalletZAddressesCmd()).then(tempResult => tempResult[0])
-
-  if (Array.isArray(enigmaAddresses) && enigmaAddresses.length > 0) {
-    let queryResultWithAddressArr = []
-    for (let index = 0; index < enigmaAddresses.length; index += 1) {
-      const tempAddress = enigmaAddresses[index];
-
-      /* eslint-disable-next-line no-await-in-loop */
-      const addressTransactions = await client.command(getWalletZReceivedTransactionsCmd(tempAddress)).then(tempResult => tempResult[0])
-
-      if (Array.isArray(addressTransactions) && addressTransactions.length > 0) {
-        const addressTransactionsWithEnigmaAddress = addressTransactions.map(tran => Object.assign({}, tran, { address: tempAddress }))
-        queryResultWithAddressArr = [...queryResultWithAddressArr, ...addressTransactionsWithEnigmaAddress]
-      }
-    }
-
-    const tempTransactionsList = queryResultWithAddressArr.map(result => ({
-      type: t(`T (Enigma)`),
-      category: 'receive',
-      confirmations: 0,
-      amount: Decimal(result.amount),
-      timestamp: 0,
-      destinationAddress: result.address,
-      transactionId: result.txid
-    }))
-
-    // At this moment, we got all transactions for each enigma address, but each one of them is missing the `confirmations` and `time`,
-    // we need to get that info by viewing the detail of the transaction, and then put it back !
-    for (let index = 0; index < tempTransactionsList.length; index += 1) {
-      const tempTransaction = tempTransactionsList[index];
-      /* eslint-disable-next-line no-await-in-loop */
-      const transactionDetails = await client.command(getWalletTransactionCmd(tempTransaction.transactionId)).then(tempResult => tempResult[0])
-      tempTransaction.confirmations = transactionDetails.confirmations
-      tempTransaction.timestamp = transactionDetails.time
-    }
-
-    return tempTransactionsList
-  }
-
-  return []
 }
 
 /**
@@ -818,21 +657,6 @@ function getAddressesBalance(client: Client, addressRows: AddressRow[]): Promise
 
   return promise
 }
-
-/**
- * Private method. Handles merge coins commands by dispatching success and failure messages.
- *
- * @param {Promise<any>} commandPromise Result of client.command
- * @memberof RpcService
- */
-function performMergeCoinsCommand(commandPromise: Promise<any>) {
-    commandPromise.then((result) => (
-      getStore().dispatch(OwnAddressesActions.mergeCoinsOperationStarted(result.opid))
-    )).catch(err => (
-      getStore().dispatch(OwnAddressesActions.mergeCoinsFailure(err.toString()))
-    ))
-}
-
 
 /**
  * Private method. Used to export private keys or backup the wallet to a file.

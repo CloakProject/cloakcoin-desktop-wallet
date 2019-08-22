@@ -21,19 +21,19 @@ const childProcess = new ChildProcessService()
  */
 let instance = null
 
-const walletFolderName = 'testnet3'
+// Uncomment for testnet
+// const walletFolderName = 'testnet3'
+
+const walletFolderName = ''
 const configFolderName = 'CloakCoin'
 const configFileName = 'CloakCoin.conf'
 const configFileContents = [
-  `testnet=1`,
-  `port=18233`,
-  `rpcport=18232`,
   `rpcuser=resuser`,
   `rpcpassword=%generatedPassword%`,
   ``
 ].join(EOL)
 
-const cloakcoindArgs = ['-printtoconsole', '-rpcthreads=8']
+const cloakcoindArgs = ['-enigma', '-daemon']
 
 
 /**
@@ -80,7 +80,7 @@ export class CloakService {
     return path.join(this.getDataPath(), walletFolderName)
   }
 
-	/**
+  /**
    * Checks if Cloak node config is present and creates one if it doesn't.
    *
 	 * @memberof CloakService
@@ -88,7 +88,7 @@ export class CloakService {
 	 */
   checkAndCreateConfig(): Object {
     const configFolder = this.getDataPath()
-    const configFile = path.join(configFolder, configFileName)
+    const configPath = path.join(configFolder, configFileName)
 
     if (!fs.existsSync(configFolder)) {
       fs.mkdirSync(configFolder)
@@ -96,14 +96,19 @@ export class CloakService {
 
     let cloakNodeConfig
 
-    if (fs.existsSync(configFile)) {
-      
-      NodeConfig = PropertiesReader(configFile).path()
-      log.info(`The Cloak config file ${configFile} exists and does not need to be created.`)
+    if (fs.existsSync(configPath)) {
+      cloakNodeConfig = PropertiesReader(configPath).path()
+      log.info(`The Cloak config file ${configPath} exists and does not need to be created.`)
     } else {
-      cloakNodeConfig = this.createConfig(configFile)
-      log.info(`The Cloak config file ${configFile} was successfully created.`)
+      cloakNodeConfig = this.createConfig(configPath)
+      log.info(`The Cloak config file ${configPath} was successfully created.`)
     }
+
+    if (!cloakNodeConfig.rpcport) {
+      cloakNodeConfig.rpcport = cloakNodeConfig.testnet ? 18132 : 8132
+    }
+
+    cloakNodeConfig.configPath = configPath
 
     return cloakNodeConfig
   }
@@ -114,16 +119,17 @@ export class CloakService {
 	 * @memberof CloakService
 	 */
 	async start() {
-    await this::startOrRestart(true)
+    await this::startOrRestart({start: true})
 	}
 
 	/**
    * Restarts cloakcoind
    *
+   * @param {boolean} start
 	 * @memberof CloakService
 	 */
 	async restart() {
-    await this::startOrRestart(false)
+    await this::startOrRestart({start: false})
 	}
 
 	/**
@@ -132,7 +138,8 @@ export class CloakService {
 	 * @memberof CloakService
 	 */
 	async stop() {
-    await childProcess.killProcess('NODE')
+    const client = getClientInstance()
+    return client.stop()
 	}
 
 	/**
@@ -161,14 +168,23 @@ export class CloakService {
  * @param {boolean} start Starts if true, restarts otherwise
  * @memberof CloakService
  */
-async function startOrRestart(start: boolean) {
+async function startOrRestart({start}) {
+  const caller = start ? childProcess.startProcess : childProcess.restartProcess
+
   const args = cloakcoindArgs.slice()
 
   const walletName = config.get('wallet.name', 'wallet')
   args.push(`-wallet=${walletName}.dat`)
-  const caller = start ? childProcess.execProcess : childProcess.restartProcess
+
+  const miningAddress = config.get('miningAddress', false)
+
+  if (miningAddress) {
+    args.push(`-mineraddress=${miningAddress}`)
+  }
 
   const exportDir = getExportDir()
+
+  log.info(`Export Dir: ${exportDir}`)
 
   try {
     await verifyDirectoryExistence(exportDir)
@@ -186,8 +202,9 @@ async function startOrRestart(start: boolean) {
   await caller.bind(childProcess)({
     processName: 'NODE',
     args,
+    shutdownFunction: async () => this.stop(),
     outputHandler: this::handleOutput,
-    waitUntilReady: childProcess.createReadinessWaiter(this::checkRpcAvailability)
+    waitUntilReady: childProcess.createReadinessWaiter(this::getRpcAvailabilityChecker())
   })
 }
 
@@ -203,20 +220,23 @@ function handleOutput(data: Buffer) {
   }
 }
 
-async function checkRpcAvailability() {
-  const client = getClientInstance()
+function getRpcAvailabilityChecker() {
+  const checker = async () => {
+    const client = getClientInstance()
 
-  if (!this.isDoneLoading) {
-    return false
+    if (!this.isDoneLoading) {
+      return false
+    }
+
+    try {
+      await client.getInfo()
+      log.debug(`The local node has successfully accepted an RPC call`)
+      return true
+    } catch (err) {
+      log.debug(`The local node hasn't accepted an RPC check call`)
+      return false
+    }
   }
 
-  try {
-    await client.getInfo()
-    log.debug(`The local node has successfully accepted an RPC call`)
-    return true
-  } catch (err) {
-    log.debug(`The local node hasn't accepted an RPC check call`)
-    return false
-  }
-
+  return checker
 }

@@ -1,16 +1,17 @@
 // @flow
 import bs58check from 'bs58check'
+import bech32 from 'bech32'
 import * as Joi from 'joi'
+import { remote } from 'electron'
 
-import { i18n } from '~/i18next.config'
+import { i18n } from '../i18next.config'
 
 /**
  * ES6 singleton
  */
 let instance = null
 
-const rAddrLeadingBytes = [0x1C0C, 0x1B97]
-const zAddrLeadingBytes = [0x16B6, 0x16B2]
+const cAddrLeadingBytes = [27]
 
 /**
  * Validates Cloak addresses
@@ -46,20 +47,33 @@ export default class ValidateAddressService {
 
     const getLeadingBytes = () => {
       try {
-        const decoded = bs58check.decode(address).slice(0, 2).readInt16BE(0)
+        const decoded = bs58check.decode(address).slice(0, 1).readInt16BE(0)
         return decoded
       } catch(err) {
-        return 0x0000
+        return 0x00
       }
     }
 
-    if (address.startsWith('r')) {
-      isValid = address.length === 35 && rAddrLeadingBytes.includes(getLeadingBytes())
-    } if (address.startsWith('z')) {
-      isValid = address.length === 95 && zAddrLeadingBytes.includes(getLeadingBytes())
+    const getBech32Prefix = () => {
+      try {
+        const decoded = bech32.decode(address)
+        return decoded.prefix
+      } catch(err) {
+        return null
+      }
+    }
+
+    if (address.startsWith('C')) {
+      isValid = address.length === 34 && cAddrLeadingBytes.includes(getLeadingBytes())
+    } if (address.startsWith('s')) {
+      isValid = address.length === this.getSAddressLength() && ['s'].includes(getBech32Prefix())
     }
 
     return isValid
+  }
+
+  getSAddressLength() {
+    return 102
   }
 
 	/**
@@ -72,37 +86,40 @@ export default class ValidateAddressService {
       base: joi.string(),
       name: 'cloakAddress',
       language: {
-        rZ: this.t(`has to begin with C- for a transparent address or E- for a enigma one`),
-        rLength: this.t(`C-addresses are 35 characters long, not {{length}}`, { length: `{{l}}` }),
-        zLength: this.t(`E-addresses are 95 characters long, not {{length}}`, { length: `{{l}}` }),
+        cs: this.t(`has to begin with C- for a cloak address or s- for a enigma one`),
+        cLength: this.t(`C-addresses are 34 characters long, not {{length}}`, { length: `{{l}}` }),
+        sLength: this.t(`E-addresses are {{sAddressLength}} characters long, not {{length}}`, {
+          sAddressLength: this.getSAddressLength(),
+          length: `{{l}}`
+        }),
         valid: this.t(`is not a valid Cloak address`)
       },
       /* eslint-disable-next-line no-unused-vars */
       pre: (value, state, options) => value.replace(/\s+/g, ''),
       rules: [
         {
-          name: 'rZ',
+          name: 'cs',
           validate: (params, value, state, options) => {
-            if (!value.startsWith('r') && !value.startsWith('z')) {
-              return joi.createError('cloakAddress.rZ', {}, state, options)
+            if (!value.startsWith('C') && !value.startsWith('s')) {
+              return joi.createError('cloakAddress.cs', {}, state, options)
             }
             return value
           }
         },
         {
-          name: 'rLength',
+          name: 'cLength',
           validate: (params, value, state, options) => {
-            if (value.startsWith('r') && value.length !== 35) {
-              return joi.createError('cloakAddress.rLength', { l: value.length }, state, options)
+            if (value.startsWith('C') && value.length !== 34) {
+              return joi.createError('cloakAddress.cLength', { l: value.length }, state, options)
             }
             return value
           }
         },
         {
-          name: 'zLength',
+          name: 'sLength',
           validate: (params, value, state, options) => {
-            if (value.startsWith('z') && value.length !== 95) {
-              return joi.createError('cloakAddress.zLength', { l: value.length }, state, options)
+            if (value.startsWith('s') && value.length !== this.getSAddressLength()) {
+              return joi.createError('cloakAddress.sLength', { l: value.length }, state, options)
             }
             return value
           }
