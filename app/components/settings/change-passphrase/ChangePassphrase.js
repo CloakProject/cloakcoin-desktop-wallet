@@ -5,10 +5,32 @@ import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import { translate } from 'react-i18next'
 import cn from 'classnames'
-import RoundedInput from '~/components/rounded-form/RoundedInput'
+import * as Joi from 'joi'
+import {
+  RoundedForm,
+  RoundedButton,
+  RoundedInput,
+} from '~/components/rounded-form'
 import { SettingsActions, SettingsState } from '~/reducers/settings/settings.reducer'
 import styles from './ChangePassphrase.scss'
-import changepassphraseImg from '~/assets/images/main/settings/changepassphrase.png';
+import changepassphraseImg from '~/assets/images/main/settings/change-passphrase-icon.png';
+import { getPasswordValidationSchema } from '~/utils/auth'
+
+const getValidationSchema = t => Joi.object().keys({
+  oldPassphrase: getPasswordValidationSchema(),
+  newPassphrase: getPasswordValidationSchema(),
+  repeatPassphrase: (
+    Joi.string().required().valid(Joi.ref('newPassphrase'))
+    .label(t(`Repeat passphrase`))
+    .options({
+      language: {
+        any: {
+          allowOnly: `!!${t('Passphrases do not match')}`,
+        }
+      }
+    })
+  )
+})
 
 type Props = {
   className?: string,
@@ -20,18 +42,6 @@ type Props = {
 class ChangePassphrase extends Component<Props> {
   props: Props
   
-  constructor(props) {
-		super(props);
-		this.state = {
-			isCloaking: false
-		};
-  }
-  
-  selectCloakingOption = () => {
-		const { isCloaking } = this.state;
-		this.setState({ isCloaking: !isCloaking });
-  }
-  
 	render() {
     const { t } = this.props;
 		return (
@@ -41,29 +51,45 @@ class ChangePassphrase extends Component<Props> {
           <div className={styles.description}>
             <p>{t('Change the passphrase')}</p>
           </div>
-          <div className={styles.passphraseInput}>
-            <div className={styles.passphrase}>
-              <RoundedInput
-                name="passphrase"
-                placeholder="Enter passphrase"
-              />
+          <RoundedForm
+            className={styles.form}
+            id="settingsChangePassphrase"
+            schema={getValidationSchema(t)}
+          >
+            <div className={styles.passphraseInput}>
+              <div className={styles.passphrase}>
+                <RoundedInput
+                  type="password"
+                  name="oldPassphrase"
+                  placeholder="Enter passphrase"
+                />
+              </div>
+              <div className={styles.passphrase}>
+                <RoundedInput
+                  type="password"
+                  name="newPassphrase"
+                  placeholder="Enter new passphrase"
+                />
+              </div>
+              <div className={styles.passphrase}>
+                <RoundedInput
+                  type="password"
+                  name="repeatPassphrase"
+                  placeholder="Repeat new passphrase"
+                />
+              </div>
+              <RoundedButton
+                type="submit"
+                className={styles.savePasswordButton}
+                onClick={this.props.actions.changePassphrase}
+                important
+                spinner={this.props.settings.isPassphraseChanging}
+                disabled={this.props.settings.isPassphraseChanging}
+              >
+                {t(`Change passphrase`)}
+              </RoundedButton>
             </div>
-            <div className={styles.passphrase}>
-              <RoundedInput
-                name="newpassphrase"
-                placeholder="Enter new passphrase"
-              />
-            </div>
-            <div className={styles.passphrase}>
-              <RoundedInput
-                name="confirmpassphrase"
-                placeholder="Repeat new passphrase"
-              />
-            </div>
-            <button type="button">
-              {t(`Change passphrase`)}
-            </button>
-          </div>
+          </RoundedForm>
         </div>
       </div>
     )

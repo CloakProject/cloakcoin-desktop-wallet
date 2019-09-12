@@ -47,7 +47,7 @@ export const FetchLdbReducer = handleActions(
     [FetchLdbActions.downloadProgress]: (state, action) => {
       const { receivedBytes, totalBytes } = action.payload
 
-      const simpleRate = receivedBytes / (totalBytes + 1)
+      const simpleRate = receivedBytes === totalBytes ? 1 : receivedBytes / totalBytes
       const progressRate = simpleRate * 100.0
 
       const { startedAt } = state

@@ -14,12 +14,8 @@ export type Transaction = {
 }
 
 export type Balances = {
-	transparentBalance: Decimal,
-	transparentUnconfirmedBalance?: Decimal,
-	enigmaBalance: Decimal,
-	enigmaUnconfirmedBalance: Decimal,
-	totalBalance: Decimal,
-	totalUnconfirmedBalance: Decimal
+	balance?: Decimal,
+	unconfirmedBalance?: Decimal
 }
 
 export type OverviewState = {
@@ -57,7 +53,7 @@ export const OverviewReducer = handleActions({
   [OverviewActions.gotWalletInfo]: (state, action) => ({
     ...state,
     balances: action.payload
-  }),
+	}),
 
   [OverviewActions.gotTransactionDataFromWallet]: (state, action) => ({
     ...state,

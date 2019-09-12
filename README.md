@@ -1,4 +1,4 @@
-# CloakCoin Desktop Wallet V3.0
+﻿# CloakCoin Desktop Wallet V3.0
 
 ### An `Electron` native client app for `cloak`, cloned from [electron-react-boilerplate](https://github.com/chentsulin/electron-react-boilerplate) which  based on [React](https://facebook.github.io/react/), [Redux](https://github.com/reactjs/redux), [React Router](https://github.com/reactjs/react-router), [Webpack](http://webpack.github.io/docs/), [React Transform HMR](https://github.com/gaearon/react-transform-hmr) for rapid application development.
 

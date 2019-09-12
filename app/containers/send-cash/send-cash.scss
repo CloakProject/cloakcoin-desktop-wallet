@@ -19,6 +19,7 @@
         }
 
         .leftSide {
+            width: 150px;
             text-align: center;
 
             img {
@@ -40,6 +41,7 @@
             }
 
             button {
+                cursor: pointer;
                 width: 130px;
                 height: 32px;
                 background-color: $SEND_COIN_TEXT_COLOR;
@@ -64,74 +66,84 @@
                 margin-bottom: 8px;
             }
 
-            .sendAddress {
-                .sendCtrl {
-                    text-align: right;
-                    img {
-                        cursor: pointer;
-                        width: 35px;
-                        opacity: 0.6;
-                        margin-left: 15px;
+            .error {
+                color: $BASE_COLOR_ERROR;
+            }
+
+            .receiverContainer {
+                height: calc(100% - 65px);
+                overflow: auto;
+                padding-right: 5px;
+
+                .sendAddress {
+                    .sendCtrl {
+                        text-align: right;
+                        img {
+                            cursor: pointer;
+                            width: 35px;
+                            opacity: 0.6;
+                            margin-left: 15px;
+                        }
                     }
                 }
-            }
 
-            .addressLabel {
-                margin-top: -15px;
-            }
+                .addressLabel {
+                    margin-top: -15px;
+                }
 
-            .sendAmount {
-                margin-top: 5px;
+                .sendAmount {
+                    margin-top: 5px;
 
-                .amoutInputWrapper {
-                    display: flex;
-
-                    .amoutInput {
-                        flex: 1;
-                    }
-
-                    .amountUnit {
+                    .amoutInputWrapper {
                         display: flex;
-                        flex: 1;
 
-                        span {
-                            margin-left: 20px;
-                            margin-right: 3px;
-                            margin-top: 8px;
-                            font-size: 20px;
+                        .amoutInput {
+                            flex: 1;
                         }
 
-                        div {
-                            position: relative;
-                            width: 29px;
-                            height: 29px;
-                            cursor: pointer;
-                            background-color: $SEND_COIN_RADIO_COLOR;
-                            border-radius: 50%;
-                            margin-top: 6px;
-                        }
+                        .amountUnit {
+                            display: flex;
+                            flex: 1;
 
-                        .active {
-                            &::before {
-                                content: ' ';
-                                position: absolute;
-                                width: 15px;
-                                height: 15px;
-                                top: 7px;
-                                left: 7px;
+                            span {
+                                margin-left: 20px;
+                                margin-right: 3px;
+                                margin-top: 8px;
+                                font-size: 20px;
+                            }
+
+                            div {
+                                position: relative;
+                                width: 29px;
+                                height: 29px;
+                                cursor: pointer;
+                                background-color: $SEND_COIN_RADIO_COLOR;
                                 border-radius: 50%;
-                                background-color: $SEND_COIN_RADIO_ACTIVE_COLOR;
+                                margin-top: 6px;
+                            }
+
+                            .active {
+                                &::before {
+                                    content: ' ';
+                                    position: absolute;
+                                    width: 15px;
+                                    height: 15px;
+                                    top: 7px;
+                                    left: 7px;
+                                    border-radius: 50%;
+                                    background-color: $SEND_COIN_RADIO_ACTIVE_COLOR;
+                                }
                             }
                         }
                     }
                 }
             }
-
             .sendOption {
                 display: flex;
                 margin-top: 25px;
 
                 button {
+                    cursor: pointer;
                     width: 110px;
                     height: 28px;
                     background-color: $SEND_COIN_BUTTON_COLOR;
@@ -158,39 +170,6 @@
                         height: 12px;
                         margin-top: 1px
                     }
-                }
-
-                .select_box{
-                    width: 50px;
-                    overflow: hidden;
-                    position: relative;
-                }
-
-                .select_box:nth-child(6) {
-                    margin-right: 20px;
-                }
-
-                .select_box:after{
-                    width: 0; 
-                    height: 0; 
-                    border-left: 6px solid transparent;
-                    border-right: 6px solid transparent;
-                    border-top: 6px solid white;
-                    position: absolute;
-                    top: 30%;
-                    right: 3px;
-                    content: "";
-                    z-index: 100;
-                    pointer-events: none;
-                }
-                .select_box select{
-                    width: 50px;
-                    border: 0;
-                    position: relative;
-                    z-index: 99;
-                    background: none;
-                    color: $BASE_COLOR_LIGHT_GREEN;
-                    font-size: 20px;
                 }
             }
         }

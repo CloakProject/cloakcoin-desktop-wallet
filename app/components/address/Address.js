@@ -16,7 +16,7 @@ export class Address extends Component<Props> {
   getValue() {
     let charsToCut
     const { value } = this.props
-    const minLength = 35
+    const minLength = 34
 
     // Calculate how many chars have to be cut out
     if (!this.element) {

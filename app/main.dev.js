@@ -19,6 +19,7 @@ import log from 'electron-log'
 import { i18n } from './i18next.config'
 import { getOS, getIsExitForbidden, getAppDataPath, getInstallationPath, getChildProcessesGlobal, stopChildProcesses } from './utils/os'
 import { CloakService } from './service/cloak-service-main'
+import { FetchLdbService } from './service/fetch-ldb-service'
 import MenuBuilder from './menu'
 
 
@@ -26,6 +27,7 @@ let isExiting = false
 
 // For the module to be imported in main, dirty, remove
 const cloak = new CloakService()
+const fetchLdb = new FetchLdbService()
 
 const appDataPath = getAppDataPath()
 
@@ -103,9 +105,6 @@ const getWindowSize = (isGetStartedComplete: boolean = false) => {
   }
 
 }
-
-// Used to prevent app quit
-global.pendingActivities = { orders: false, operations: false }
 
 global.childProcesses = getChildProcessesGlobal()
 
@@ -187,6 +186,12 @@ app.on('ready', async () => {
 
   ipcMain.on('change-language', (event, code) => {
     i18n.changeLanguage(code)
+  })
+
+  global.isParametersPresenceConfirmed = await fetchLdb.checkPresence({calculateChecksums: false})
+
+  ipcMain.on('fetch-ldb', async () => {
+    await fetchLdb.fetch(mainWindow)
   })
 
   // eslint-disable-next-line

@@ -10,7 +10,9 @@
         height: 100%;
         background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
         padding: 30px 30px;
-
+        display: flex;
+        flex-direction: column;
+        
         .txFilterContainer {
             width: 100%;
             display: flex;

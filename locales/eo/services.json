@@ -1,7 +1,7 @@
 {
-  "has to begin with C- for a transparent address or E- for an enigma one": "devas komenci de C- por diafanaj adresoj kaj de E- tiuj privataj",
-  "C-addresses are 35 characters long, not {{length}}": "C-adresoj estas 35 karaktrojn longaj, ne {{length}}",
-  "E-addresses are 95 characters long, not {{length}}": "E-adresoj estas 95 karaktrojn longaj, ne {{length}}",
-  "is not a valid Cloak address": "ne estas korekta Rezistanca adreso",
+  "has to begin with C- for a cloak address or s- for an enigma one": "devas komenci de C- por cloak adresoj kaj de s- tiuj privataj",
+  "C-addresses are 34 characters long, not {{length}}": "C-adresoj estas 34 karaktrojn longaj, ne {{length}}",
+  "E-addresses are 102 characters long, not {{length}}": "E-adresoj estas 102 karaktrojn longaj, ne {{length}}",
+  "is not a valid Cloak address": "ne estas korekta Cloak adreso",
   "E address is not listed in the wallet": "E address is not listed in the wallet"
 }

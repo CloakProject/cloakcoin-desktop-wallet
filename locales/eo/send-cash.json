@@ -12,17 +12,17 @@
   "Have no any available address": "Have no any available address",
   "Error": "Error",
   "On": "On",
-  "tip-r-to-r": "tip-r-to-r",
+  "tip-c-to-c": "tip-c-to-c",
   "memo": "memo",
   "\"FROM ADDRESS\" or \"DESTINATION ADDRESS\" is required.": "\"FROM ADDRESS\" or \"DESTINATION ADDRESS\" is required.",
   "\"FROM ADDRESS\" or \"DESTINATION ADDRESS\" cannot be the same.": "\"FROM ADDRESS\" or \"DESTINATION ADDRESS\" cannot be the same.",
   "\"AMOUNT\" is required.": "\"AMOUNT\" is required.",
   "Send cash operation started.": "Send cash operation started.",
   "Unable to start send cash operation": "Unable to start send cash operation",
-  "Sending cash from a transparent (C) address to a enigma address is forbidden when \"Enigma Transactions\" are disabled.": "Sending cash from a transparent (C) address to an enigma address is forbidden when \"Enigma Transactions\" are disabled.",
+  "Sending cash from a cloak (C) address to a enigma address is forbidden when \"Enigma Transactions\" are disabled.": "Sending cash from a cloak (C) address to an enigma address is forbidden when \"Enigma Transactions\" are disabled.",
   "Sending cash from an enigma address to an enigma address is forbidden when \"Enigma Transactions\" are disabled.": "Sending cash from an enigma address to an enigma address is forbidden when \"Enigma Transactions\" are disabled.",
-  "Sending cash from an enigma address to a transparent (C) address is forbidden when \"Enigma Transactions\" are disabled.": "Sending cash from an enigma address to a transparent (C) address is forbidden when \"Enigma Transactions\" are disabled.",
-  "tip-r-to-z": "tip-r-to-z",
-  "tip-z-to-z": "tip-z-to-z",
-  "tip-z-to-r": "tip-z-to-r"
+  "Sending cash from an enigma address to a cloak (C) address is forbidden when \"Enigma Transactions\" are disabled.": "Sending cash from an enigma address to a cloak (C) address is forbidden when \"Enigma Transactions\" are disabled.",
+  "tip-c-to-s": "tip-c-to-s",
+  "tip-s-to-s": "tip-s-to-s",
+  "tip-s-to-c": "tip-s-to-c"
 }

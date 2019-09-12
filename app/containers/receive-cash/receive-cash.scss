@@ -34,6 +34,7 @@
         }
 
         .rightSide {
+            width: calc(100% - 170px);
             flex: 1;
             padding: 0px 60px;
             
@@ -53,23 +54,31 @@
             }
 
             .receiveAddress {
+                height: calc(100% - 150px);
+                overflow: auto;
+
                 div {
+                    cursor: pointer;
                     display: flex;
                     padding: 5px 8px;
                     font-size: 18px;
+                    border-bottom: 1px solid $TRANSACTION_HEADER_TABLE_COLOR;
 
                     &>p:nth-child(2) {
                         flex: 1;
                         text-align: right;
+                        word-break: break-all;
+                        padding-left: 20px;
                     }
                 }
 
-                &>div:nth-child(2) {
+                .active {
                     border-top: 1px solid $TRANSACTION_HEADER_TABLE_COLOR;
                     border-bottom: 1px solid $TRANSACTION_HEADER_TABLE_COLOR;
-                    color: $RECEIVE_COIN_TEXT_COLOR;
                     background-color: $RECEIVE_COIN_RECEIVE_ADDRESS_BG_COLOR;
                     opacity: 0.8;
+                    color: $BASE_COLOR_GREEN;
+                    font-weight: bold;
                 }
             }
         }
@@ -80,9 +89,10 @@
         width: 100%;
         display: flex;
         padding: 0px 30px;
-        margin-top: 360px;
+        bottom: 80px;
 
         button {
+            cursor: pointer;
             min-width: 130px;
             height: 32px;
             border: none;

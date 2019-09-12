@@ -13,17 +13,39 @@ import { ChildProcessService } from '~/service/child-process-service'
 import { SystemInfoActions, SystemInfoState } from '~/reducers/system-info/system-info.reducer'
 import { getStore } from '~/store/configureStore'
 import { State } from '~/reducers/types'
-import humanizeOperationName from '~/components/system-info/humanize-operation'
 
 import HLayout from '~/assets/styles/h-box-layout.scss'
 import statusStyles from '~/assets/styles/status-colors.scss'
 import styles from './system-info.scss'
 
+import enigmaOn from '~/assets/images/footer/enigma-on.png'
+import encryptOn from '~/assets/images/footer/encrypt-on.png'
+import lockOn from '~/assets/images/footer/lock-on.png'
+import shieldOn from '~/assets/images/footer/shield-on.png'
+import miningOn from '~/assets/images/footer/mining-on.png'
+import updateOn from '~/assets/images/footer/update-on.png'
+import connected1On from '~/assets/images/footer/connected1-on.png'
+import connected2On from '~/assets/images/footer/connected2-on.png'
+import connected3On from '~/assets/images/footer/connected3-on.png'
+import connected4On from '~/assets/images/footer/connected4-on.png'
+import connected5On from '~/assets/images/footer/connected5-on.png'
+
+import enigmaOff from '~/assets/images/footer/enigma-off.png';
+import encryptOff from '~/assets/images/footer/encrypt-off.png';
+import lockOff from '~/assets/images/footer/lock-off.png';
+import shieldOff from '~/assets/images/footer/shield-off.png';
+import miningOff from '~/assets/images/footer/mining-off.png';
+import updateOff from '~/assets/images/footer/update-download.png';
+import connected1Off from '~/assets/images/footer/connected1-off.png'
+import connected2Off from '~/assets/images/footer/connected2-off.png'
+import connected3Off from '~/assets/images/footer/connected3-off.png'
+import connected4Off from '~/assets/images/footer/connected4-off.png'
+import connected5Off from '~/assets/images/footer/connected5-off.png'
+
 const childProcess = new ChildProcessService()
 
-const daemonInfoPollingInterval = 2.0
-const blockchainInfoPollingInterval = 4.0
-const operationsPollingInterval = 3.0
+const daemonInfoPollingInterval = 7.0
+const blockchainInfoPollingInterval = 10.0
 
 type Props = {
   t: any,
@@ -32,74 +54,12 @@ type Props = {
 	settings: SettingsState
 }
 
-/**
- * @class SystemInfo
- * @extends {Component<Props>}
- */
 class SystemInfo extends Component<Props> {
-	props: Props
-
-	/**
-   * Displays operation completion message
-   *
-	 * @param {*} prevProps
-	 * @memberof SystemInfo
-	 */
-  componentDidUpdate(prevProps) {
-    const { t } = this.props
-
-    const prevOperationsMap = prevProps.systemInfo.operations.reduce((map, operation) => (
-      {...map, [operation.id]: operation}
-    ), {})
-
-    const isPending = (operation) => ['queued', 'executing'].includes(operation.status)
-
-    const currentOperations  = this.props.systemInfo.operations
-
-    remote.getGlobal('pendingActivities').operations = Boolean(
-      currentOperations.find(operation => isPending(operation))
-    )
-
-    this.props.systemInfo.operations.forEach(currentOperation => {
-      const prevOperation = prevOperationsMap[currentOperation.id]
-
-      if (prevOperation && !isPending(prevOperation)) {
-        return
-      }
-
-      if (!isPending(currentOperation)) {
-        getStore().dispatch(SystemInfoActions.operationFinished(currentOperation))
-      }
-
-      let description
-      const operationName = humanizeOperationName(t, currentOperation)
-      const successTitle = t(`{{operationName}} operation succeeded`, { operationName })
-
-      switch (currentOperation.status) {
-        case 'cancelled':
-          toastr.info(t(`{{operationName}} operation cancelled successfully.`, { operationName }))
-          break
-        case 'failed':
-          toastr.error(t(`{{operationName}} operation failed`, { operationName }), currentOperation.error && currentOperation.error.message)
-          break
-        case 'success':
-          if (currentOperation.method === 'z_sendmany' && currentOperation.params && currentOperation.params.amounts) {
-            const amount = currentOperation.params.amounts[0]
-            description = t(
-              `Sent {{amount}} CLOAK from {{from}} to {{to}}.`,
-              {
-                amount: amount.amount,
-                from: currentOperation.params.fromaddress,
-                to: amount.address
-              }
-            )
-          }
-          toastr.success(`${successTitle}${description ? '' : '.'}`, description)
-          break
-        default:
-      }
-
-    })
+  props: Props
+  
+  componentDidMount() {
+    const win = remote.getCurrentWindow()
+    win.center()
   }
 
 	/**
@@ -143,7 +103,35 @@ class SystemInfo extends Component<Props> {
 	displayLastBlockTime(tempDate: Date | null) {
     const { t, i18n } = this.props
     return tempDate ? moment().locale(i18n.language).calendar(tempDate) : t(`N/A`)
-	}
+  }
+
+  isEnigmaOn() {
+    return this.props.systemInfo.blockchainInfo.anons > 0
+  }
+  
+  isWalletEncryped() {
+    return this.props.systemInfo.blockchainInfo.unlockedUntil !== null
+  }
+
+  isWalletLocked() {
+    return this.props.systemInfo.blockchainInfo.unlockedUntil !== null && this.props.systemInfo.blockchainInfo.unlockedUntil.getTime() < Date.now()
+  }
+
+  isShielded() {
+    return this.props.systemInfo.blockchainInfo.anons >= 5
+  }
+
+  isMining() {
+    return !this.isWalletLocked() && this.isConnected(1) && this.isUpdated()
+  }
+
+  isUpdated() {
+    return this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage >= 100
+  }
+
+  isConnected(power: number) {
+    return this.props.systemInfo.blockchainInfo.connections > ((power - 1) * 2)
+  }
 
 	/**
 	 * @returns
@@ -154,7 +142,7 @@ class SystemInfo extends Component<Props> {
 
 		return (
 			<div className={cn(styles.systemInfoContainer, HLayout.hBoxContainer)}>
-        <RpcPolling
+        {/* <RpcPolling
           criticalChildProcess="NODE"
           interval={daemonInfoPollingInterval}
           actions={{
@@ -162,7 +150,7 @@ class SystemInfo extends Component<Props> {
             success: SystemInfoActions.gotDaemonInfo,
             failure: SystemInfoActions.getDaemonInfoFailure
           }}
-        />
+        /> */}
 
         <RpcPolling
           interval={blockchainInfoPollingInterval}
@@ -174,21 +162,11 @@ class SystemInfo extends Component<Props> {
           }}
         />
 
-        <RpcPolling
-          interval={operationsPollingInterval}
-          criticalChildProcess="NODE"
-          actions={{
-            polling: SystemInfoActions.getOperations,
-            success: SystemInfoActions.gotOperations,
-            failure: SystemInfoActions.getOperationsFailure
-          }}
-        />
-
 				{ /* Status column container */}
 				<div className={cn(styles.statusContainer, HLayout.hBoxChild)}>
 
 					{ /* Cloak status coloumn */}
-					<div className={styles.statusColumnWrapper}>
+					{/* <div className={styles.statusColumnWrapper}>
 						<div className={styles.statusColoumnTitle}>{t(`Cloak status`)}</div>
 						<div className={styles.statusColoumnValue}>
               <span className={styles.nodeStatusContainer}>
@@ -196,45 +174,42 @@ class SystemInfo extends Component<Props> {
                 <span>{t(childProcess.getStatusName(this.props.settings.childProcessesStatus.NODE))}</span>
               </span>
 						</div>
-					</div>
+					</div> */}
 
 					{ /* Cloak status coloumn */}
-					<div className={styles.statusColumnWrapper}>
+					{this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage < 100 && (<div className={styles.statusColumnWrapper}>
 						<div className={styles.statusColoumnTitle}>{t(`Synchronized`)}</div>
 						<div className={styles.statusColoumnValue}>{this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage}%</div>
-					</div>
+					</div>)}
 
 					{ /* Cloak status coloumn */}
-					<div className={styles.statusColumnWrapper}>
+					{/* <div className={styles.statusColumnWrapper}>
 						<div className={styles.statusColoumnTitle}>{t(`Up to`)}</div>
 						<div className={styles.statusColoumnValue}>{this.displayLastBlockTime(this.props.systemInfo.blockchainInfo.lastBlockDate)}</div>
-					</div>
+					</div> */}
 
 					{ /* Cloak status coloumn */}
-					<div className={styles.statusColumnWrapper}>
+					{/* <div className={styles.statusColumnWrapper}>
 						<div className={styles.statusColoumnTitle}>{t(`Connections`)}</div>
 						<div className={styles.statusColoumnValue}>{this.props.systemInfo.blockchainInfo.connectionCount}</div>
-					</div>
+					</div> */}
 
 				</div>
 
         <div className={styles.statusButtonsContainer}>
-          {/* Buttons - don't add onKeyDown() handler, otherwise Finder will become active on Cmd-commands (like Cmd-Q) */}
-          <button
-            type="button"
-            className={styles.walletInFileManagerButton}
-            onClick={event => this.onWalletInFileManagerClicked(event)}
-          >
-            {this.getWalletInFileManagerLabel()}
-          </button>
-
-          <button
-            type="button"
-            className={styles.installationFolderButton}
-            onClick={event => this.onInstallationFolderClicked(event)}
-          >
-            {t(`Installation folder`)}
-          </button>
+          <img src={this.isEnigmaOn() ? enigmaOn : enigmaOff} alt="status icon" />
+          <img src={this.isWalletEncryped() ? encryptOn : encryptOff} alt="status icon" />
+          <img src={this.isWalletLocked() ? lockOn : lockOff} alt="status icon" />
+          <img src={this.isShielded() ? shieldOn : shieldOff} alt="status icon" />
+          <img src={this.isMining() ? miningOn : miningOff} alt="status icon" />
+          <img src={this.isUpdated() ? updateOn : updateOff} alt="status icon" />
+          <div className={styles.connectionsContainer}>
+            <img src={this.isConnected(1) ? connected1On : connected1Off} alt="status icon" />
+            <img src={this.isConnected(2) ? connected2On : connected2Off} alt="status icon" />
+            <img src={this.isConnected(3) ? connected3On : connected3Off} alt="status icon" />
+            <img src={this.isConnected(4) ? connected4On : connected4Off} alt="status icon" />
+            <img src={this.isConnected(5) ? connected5On : connected5Off} alt="status icon" />
+          </div>
         </div>
 
 			</div>

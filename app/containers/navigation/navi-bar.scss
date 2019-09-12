@@ -70,10 +70,16 @@
 
 .enigmaStats {
   margin-right: 30px;
+  a {
+    cursor: not-allowed;
+  }
 }
 
 .byob {
   margin-right: 50px;
+  a {
+    cursor: not-allowed;
+  }
 }
 
 .settings {

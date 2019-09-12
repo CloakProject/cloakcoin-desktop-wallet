@@ -33,7 +33,7 @@ const configFileContents = [
   ``
 ].join(EOL)
 
-const cloakcoindArgs = ['-enigma', '-daemon']
+const cloakcoindArgs = ['-txindex=1', '-enigma', '-staking', '-gen', '-printtoconsole']
 
 
 /**
@@ -169,33 +169,16 @@ export class CloakService {
  * @memberof CloakService
  */
 async function startOrRestart({start}) {
+  console.log("startOrRestart", start)
   const caller = start ? childProcess.startProcess : childProcess.restartProcess
 
   const args = cloakcoindArgs.slice()
-
-  const walletName = config.get('wallet.name', 'wallet')
-  args.push(`-wallet=${walletName}.dat`)
 
   const miningAddress = config.get('miningAddress', false)
 
   if (miningAddress) {
     args.push(`-mineraddress=${miningAddress}`)
   }
-
-  const exportDir = getExportDir()
-
-  log.info(`Export Dir: ${exportDir}`)
-
-  try {
-    await verifyDirectoryExistence(exportDir)
-  } catch (err) {
-    log.error(`Can't create local node export directory`, err)
-    const actions = childProcess.getSettingsActions()
-    getStore().dispatch(actions.childProcessFailed('NODE', err.message))
-    return
-  }
-
-  args.push(`-exportdir=${exportDir}`)
 
   this.isDoneLoading = false
 
@@ -216,14 +199,13 @@ async function startOrRestart({start}) {
  */
 function handleOutput(data: Buffer) {
   if (!this.isDoneLoading) {
-    this.isDoneLoading = data.toString().includes(`init message: Done loading`)
+    this.isDoneLoading = data.toString().includes(`Done loading`)
   }
 }
 
 function getRpcAvailabilityChecker() {
   const checker = async () => {
     const client = getClientInstance()
-
     if (!this.isDoneLoading) {
       return false
     }
@@ -233,6 +215,8 @@ function getRpcAvailabilityChecker() {
       log.debug(`The local node has successfully accepted an RPC call`)
       return true
     } catch (err) {
+      console.log('err', err)
+      log.debug(`Error: ${err}`)
       log.debug(`The local node hasn't accepted an RPC check call`)
       return false
     }

@@ -1,16 +1,18 @@
 /* eslint-disable no-unused-vars */
 // @flow
+import log from 'electron-log'
 import config from 'electron-settings'
 import path from 'path'
 import * as fs from 'fs'
 import { promisify } from 'util'
-import { remote, ipcRenderer } from 'electron'
+import { remote, ipcRenderer, dialog } from 'electron'
 import { tap, filter, delay, mergeMap, flatMap, switchMap, map, mapTo, catchError } from 'rxjs/operators'
 import { of, from, bindCallback, concat, merge, defer } from 'rxjs'
 import { ofType } from 'redux-observable'
 import { toastr } from 'react-redux-toastr'
 
 import { i18n, translate } from '~/i18next.config'
+import { RPC } from '~/constants/rpc'
 import { getEnsureLoginObservable } from '~/utils/auth'
 import { Action } from '../types'
 import { AuthActions } from '../auth/auth.reducer'
@@ -23,6 +25,107 @@ const t = translate('settings')
 const rpc = new RpcService()
 const cloakService = new CloakService()
 const childProcess = new ChildProcessService()
+
+const encryptWalletEpic = (action$: ActionsObservable<Action>, state$) => action$.pipe(
+	ofType(SettingsActions.encryptWallet),
+  switchMap(() => {
+    const { newPassword } = state$.value.roundedForm.settingsEncryptWallet.fields
+    
+    const startLocalNodeObservable = childProcess.getStartObservable({
+      processName: 'NODE',
+      onSuccess: of(SettingsActions.encryptWalletCompleted()),
+      onFailure: of(SettingsActions.encryptWalletFailed()),
+      action$
+    })
+    
+    const observable = from(rpc.encryptWallet(newPassword)).pipe(
+      switchMap(() => {
+        toastr.info(t(`Restarting the local node with the ecrypted wallet...`))
+        return concat(
+          of(SettingsActions.restartLocalNode()),
+          startLocalNodeObservable
+        )
+      }),
+      catchError(err => {
+        log.error(`Can't encrypt wallet`, err.message)
+        toastr.error(t(`Error encryting wallet, check the log for details.`))
+        return of(SettingsActions.encryptWalletCompleted())
+      })
+    )
+    return observable
+  })
+)
+
+const lockWalletEpic = (action$: ActionsObservable<Action>, state$) => action$.pipe(
+	ofType(SettingsActions.lockWallet),
+  switchMap(() => {
+    const observable = from(rpc.lockWallet()).pipe(
+      switchMap(() => {
+        toastr.success(t(`Wallet locked`))
+        return of(SettingsActions.lockWalletCompleted())
+      }),
+      catchError(err => {
+        log.error(`Can't lock wallet`, err.message)
+        toastr.error(t(`Error locking wallet, check the log for details.`))
+        return of(SettingsActions.lockWalletFailed())
+      })
+    )
+    return observable
+  })
+)
+
+const unlockWalletEpic = (action$: ActionsObservable<Action>, state$) => action$.pipe(
+	ofType(SettingsActions.unlockWallet),
+  switchMap(() => {
+    const { passphrase } = state$.value.roundedForm.settingsUnlockWallet.fields
+
+    const observable = from(rpc.sendWalletPassword(passphrase, 9999999)).pipe(
+      switchMap(() => {
+        toastr.success(t(`Wallet unlocked`))
+        return of(SettingsActions.unlockWalletCompleted())
+      }),
+      catchError(err => {
+        let errorMessage
+
+        if (err.code === RPC.WALLET_PASSPHRASE_INCORRECT) {
+          errorMessage = t(`The wallet passphrase is incorrect.`)
+        } else {
+          log.error(`Can't unlock passphrase`, err.message)
+          errorMessage = t(`Error unlocking the wallet, check the log for details.`)
+        }
+        toastr.error(errorMessage)
+        return of(SettingsActions.unlockWalletFailed())
+      })
+    )
+    return observable
+  })
+)
+
+const changePassphraseEpic = (action$: ActionsObservable<Action>, state$) => action$.pipe(
+	ofType(SettingsActions.changePassphrase),
+  switchMap(() => {
+    const { oldPassphrase, newPassphrase } = state$.value.roundedForm.settingsChangePassphrase.fields
+    const observable = from(rpc.changeWalletPassword(oldPassphrase, newPassphrase)).pipe(
+      switchMap(() => {
+        toastr.success(t(`Passphrase changed.`))
+        return of(SettingsActions.changePassphraseCompleted())
+      }),
+      catchError(err => {
+        let errorMessage
+
+        if (err.code === RPC.WALLET_PASSPHRASE_INCORRECT) {
+          errorMessage = t(`The old wallet passphrase is incorrect.`)
+        } else {
+          log.error(`Can't change passphrase`, err.message)
+          errorMessage = t(`Error changing the passphrase, check the log for details.`)
+        }
+        toastr.error(errorMessage)
+        return of(SettingsActions.changePassphraseFailed())
+      })
+    )
+    return observable
+  })
+)
 
 const updateLanguageEpic = (action$: ActionsObservable<Action>) => action$.pipe(
 	ofType(SettingsActions.updateLanguage),
@@ -85,9 +188,7 @@ const stopLocalNodeEpic = (action$: ActionsObservable<Action>, state$) => action
 const initiateWalletBackupEpic = (action$: ActionsObservable<Action>) => action$.pipe(
 	ofType(SettingsActions.initiateWalletBackup),
   mergeMap(() => {
-    const showSaveDialogObservable = bindCallback(remote.dialog.showSaveDialog.bind(remote.dialog))
-
-    const title = t(`Backup Cloak wallet to a file`)
+    const title = t(`Backup resistance wallet to a file`)
     const params = {
       title,
       defaultPath: remote.app.getPath('documents'),
@@ -96,21 +197,30 @@ const initiateWalletBackupEpic = (action$: ActionsObservable<Action>) => action$
       filters: [{ name: t(`Wallet files`),  extensions: ['dat'] }]
     }
 
-    const observable = showSaveDialogObservable(params).pipe(
-      switchMap(([ filePath ]) => (
-        filePath
-          ? of(SettingsActions.backupWallet(filePath))
-          : of(SettingsActions.empty())
-      )))
+    remote.dialog.showSaveDialog(null, params, (filePath) => {
+      if (filePath) {
+        rpc.backupWallet(filePath).pipe(
+          switchMap(() => {
+            toastr.success(t(`Wallet backup succeeded.`))
+            return of(SettingsActions.empty())
+          }),
+          catchError(err => {
+            toastr.error(t(`Unable to backup the wallet`), err.message)
+            return of(SettingsActions.empty())
+          }))
+      } else {
+        of(SettingsActions.empty())
+      }
+    });
 
     const reason = t(`We're going to backup the wallet`)
-    return getEnsureLoginObservable(reason, observable, action$)
+    return getEnsureLoginObservable(reason, null, action$)
   })
 )
 
 const backupWalletEpic = (action$: ActionsObservable<Action>) => action$.pipe(
 	ofType(SettingsActions.backupWallet),
-  mergeMap(action => (
+  mergeMap(action => {
     rpc.backupWallet(action.payload.filePath).pipe(
       switchMap(() => {
         toastr.success(t(`Wallet backup succeeded.`))
@@ -120,7 +230,7 @@ const backupWalletEpic = (action$: ActionsObservable<Action>) => action$.pipe(
         toastr.error(t(`Unable to backup the wallet`), err.message)
         return of(SettingsActions.empty())
       })
-  )))
+  )})
 )
 
 const initiateWalletRestoreEpic = (action$: ActionsObservable<Action>) => action$.pipe(
@@ -155,7 +265,7 @@ const restoreWalletEpic = (action$: ActionsObservable<Action>) => action$.pipe(
     const newWalletPath = path.join(cloakService.getWalletPath(), walletFileName)
 
     // Third, send the password for the new wallet
-    const startLocalNodeObservable = childProcess.getObservable({
+    const startLocalNodeObservable = childProcess.getStartObservable({
       processName: 'NODE',
       onSuccess: concat(
         of(AuthActions.ensureLogin(t(`Your restored wallet password is required`), true)),
@@ -213,9 +323,9 @@ const childProcessFailedEpic = (action$: ActionsObservable<Action>, state$) => a
     toastr.error(t(`Child process failure`), `${errorMessage}\n${action.payload.errorMessage}`)
   }),
 	map((action) => {
-    if (action.payload.processName === 'NODE') {
-        return SettingsActions.disableMiner()
-    }
+    // if (action.payload.processName === 'NODE') {
+    //     return SettingsActions.disableMiner()
+    // }
 
     return SettingsActions.empty()
   })
@@ -236,7 +346,11 @@ export const SettingsEpics = (action$, state$) => merge(
   toggleLocalNodeEpic(action$, state$),
 	startLocalNodeEpic(action$, state$),
   restartLocalNodeEpic(action$, state$),
-	stopLocalNodeEpic(action$, state$),
+  stopLocalNodeEpic(action$, state$),
+  encryptWalletEpic(action$, state$),
+  lockWalletEpic(action$, state$),
+  unlockWalletEpic(action$, state$),
+  changePassphraseEpic(action$, state$),
   initiateWalletBackupEpic(action$, state$),
   initiateWalletRestoreEpic(action$, state$),
   backupWalletEpic(action$, state$),

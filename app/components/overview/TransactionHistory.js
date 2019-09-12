@@ -4,6 +4,7 @@
 // @flow
 // import moment from 'moment'
 import React, { Component } from 'react'
+import moment from 'moment'
 import { translate } from 'react-i18next'
 import cn from 'classnames'
 import styles from './TransactionHistory.scss'
@@ -11,6 +12,12 @@ import mining from '~/assets/images/main/overview/mining.png';
 import enigmaGreen from '~/assets/images/main/overview/enigma-green.png';
 import send from '~/assets/images/main/overview/send.png';
 import question from '~/assets/images/main/overview/question.png';
+import receive from '~/assets/images/main/overview/receive.png';
+
+const icons = {
+  receive,
+  send
+};
 
 const mockData = [
   {
@@ -45,6 +52,29 @@ const mockData = [
 
 class TransactionHistory extends Component<Props> {
 	props: Props
+  constructor(props) {
+    super(props);
+    this.state = {
+      height: 200,
+    }
+  }
+
+  componentWillMount() {
+      this.updateDimensions();
+  }
+
+  componentDidMount() {
+    window.addEventListener("resize", e => this.updateDimensions(e));
+  }
+
+  updateDimensions = e => {
+    const h = window.innerHeight;
+    this.setState({ height: (h - 550) })
+
+    if (e) {
+      this.setState({ height: (e.target.innerHeight - 550) })
+    }
+  }
 
 	render() {
     // const { t } = this.props
@@ -52,33 +82,31 @@ class TransactionHistory extends Component<Props> {
 		return (
       <div className={cn(styles.transactionHistory)}>
         {
-          mockData.map((txData, index) => (
+          this.props.items && this.props.items.map((txData, index) => (
+            index < Math.floor(this.state.height / 50) && (
             <div className={styles.txItem} key={index}>
               <div className={styles.txInfo}>
                 <div>
-                  <img src={txData.iconSrc} alt="img" />
+                  <img className={txData.category === 'minted' ? styles.grey : ''} src={icons[txData.category]} alt="img" />
                 </div>
                 <div>
-                  <p>{txData.dateStr}</p>
-                  <p>{txData.txId}</p>
+                  <p>{moment.unix(txData.timestamp).format('L')}</p>
+                  <p>{txData.destinationAddress}</p>
                 </div>
               </div>
               <div
                 className={
                   cn(
                     styles.txValue,
-                    (txData.type === 'mining' || txData.type === 'enigmaGreen') && styles.green,
-                    txData.type === 'send' && styles.red,
-                    txData.type === 'question' && styles.grey
+                    (txData.category === 'mining' || txData.category === 'enigmaGreen') && styles.green,
+                    txData.category === 'send' && styles.red
                   )
                 }
               >
-                {
-                  (txData.type === 'mining' || txData.type === 'enigmaGreen' || txData.type === 'question') ? `+${  txData.value}` : `-${  txData.value}`
-                }
+                {txData.amount.toFixed(2)}
               </div>
             </div>
-          ))
+          )))
         }
       </div>
 		)

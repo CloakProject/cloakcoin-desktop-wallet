@@ -2,11 +2,14 @@
 /* eslint-disable arrow-body-style */
 /* eslint-disable no-unused-vars */
 // @flow
-import { remote } from 'electron'
+import { remote, ipcRenderer } from 'electron'
 import React, { Component } from 'react'
+import { push } from 'react-router-redux'
 import { NavLink } from 'react-router-dom'
 import cn from 'classnames'
-// import { CloakService } from '~/service/cloak-service'
+import { getStore } from '../../store/configureStore'
+import { FetchLdbState, FetchLdbActions } from '~/reducers/fetch-ldb/fetch-ldb.reducer'
+import { SettingsState, SettingsActions } from '~/reducers/settings/settings.reducer'
 import HLayout from '~/assets/styles/h-box-layout.scss'
 import VLayout from '~/assets/styles/v-box-layout.scss'
 import styles from './Welcome.scss'
@@ -16,26 +19,11 @@ import enigmaLogo from '~/assets/images/about/enigma_logo.png'
 import {
   RoundedButton
 } from '~/components/rounded-form'
-// const cloak = new CloakService()
-type Props = {
-  t: any
-}
 
-const Splash = props => {
-  return (
-    <div className={cn(styles.splash_container)}>
-      <img className={cn(styles.logo_img)} src={splashLogo} alt="img" />
-      <div className={cn(styles.enigma_brand)}>
-        <span>{props.t('Powered by')}</span>
-        <img src={enigmaLogo} alt="img"/>
-      </div>
-      <p className={cn(styles.cloak_core)}>{props.t('CLOAK Core')}</p>
-      <p className={cn(styles.enigma_version)}>{props.t('Enigma Version')}</p>
-      <p className={cn(styles.copy_right)}>{props.t('Copy Right Bitcoin')}</p>
-      <p className={cn(styles.copy_right)}>{props.t('Copy Right Cloak')}</p>
-      <p className={cn(styles.loading_block)}>{props.t('Loading Block')}</p>
-    </div>
-  )
+type Props = {
+  t: any,
+  fetchLdb: FetchLdbState, 
+  settings: SettingsState
 }
 
 const About = props => {
@@ -72,25 +60,67 @@ export class Welcome extends Component<Props> {
 
   constructor(props) {
     super(props)
-    this.state = {
-      isCompletedBlockLoading: false,
-    }
     this.nodeConfig = remote.getGlobal('cloakNodeConfig')
-    setTimeout(() => {
-      this.setState({ isCompletedBlockLoading: true });
-    }, 2000)
+  }
+
+  componentDidMount() {
+    if (!this.props.fetchLdb.isDownloadComplete) {
+      getStore().dispatch(FetchLdbActions.fetch())
+    } else {
+      getStore().dispatch(SettingsActions.kickOffChildProcesses())
+    }
+
+    ipcRenderer.on('cleanup', () => this.cleanup())
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.fetchLdb.isDownloadComplete !== this.props.fetchLdb.isDownloadComplete
+       && this.props.fetchLdb.isDownloadComplete) {
+      getStore().dispatch(SettingsActions.kickOffChildProcesses())
+    }
+  }
+
+  cleanup() {
+    getStore().dispatch(SettingsActions.stopChildProcesses())
   }
 
   mainPage = () => {
     this.props.actions.useCloak()
   }
 
+  prepairingStatus = () => {
+    if (this.props.settings.childProcessesStatus && this.props.settings.childProcessesStatus.NODE === 'STARTING') {
+      return this.props.t(`Loading Block`)
+    }
+    if (this.props.fetchLdb.progressRate < 100) {
+      return this.props.t(`Downloading Blockchain {{progress}}`, {progress: this.props.fetchLdb.progressRate.toFixed(2) || 0})
+    }
+    if (this.props.fetchLdb.progressRate >= 100) {
+      return this.props.t(`Extracting Blockchain`)
+    }
+    return this.props.t(`Loading Block`)
+  }
+
 	render() {
-    const { t } = this.props
+    if (this.props.settings.childProcessesStatus && this.props.settings.childProcessesStatus.NODE === 'RUNNING') {
+      this.mainPage()
+      return null
+    }
 
 		return (
       <div className={cn(HLayout.hBoxChild, VLayout.vBoxContainer, styles.getStartedContainer)}>
-        {!this.state.isCompletedBlockLoading ? <Splash t={t} /> : <About t={t} mainPage={this.mainPage} />}
+        <div className={cn(styles.splash_container)}>
+          <img className={cn(styles.logo_img)} src={splashLogo} alt="img" />
+          <div className={cn(styles.enigma_brand)}>
+            <span>{this.props.t('Powered by')}</span>
+            <img src={enigmaLogo} alt="img"/>
+          </div>
+          <p className={cn(styles.cloak_core)}>{this.props.t('CLOAK Core')}</p>
+          <p className={cn(styles.enigma_version)}>{this.props.t('Enigma Version')}</p>
+          <p className={cn(styles.copy_right)}>{this.props.t('Copy Right Bitcoin')}</p>
+          <p className={cn(styles.copy_right)}>{this.props.t('Copy Right Cloak')}</p>
+          <p className={cn(styles.prepairing_status)}>{this.prepairingStatus()}</p>
+        </div>
       </div>
     )
   }

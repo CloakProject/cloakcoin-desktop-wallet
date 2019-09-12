@@ -7,7 +7,7 @@ import { translate } from 'react-i18next'
 import cn from 'classnames'
 import { SettingsActions, SettingsState } from '~/reducers/settings/settings.reducer'
 import styles from './BackupWallet.scss'
-import backupImg from '~/assets/images/main/settings/backup.png';
+import backupImg from '~/assets/images/main/settings/backup-wallet-icon.png';
 
 type Props = {
   className?: string,
@@ -26,7 +26,10 @@ class BackupWallet extends Component<Props> {
         <div className={styles.backupPage}>
           <img src={backupImg} alt="enigma icon" />
           <p>{ t('Backup file') }</p>
-          <button type="button">
+          <button type="button"
+             onClick={this.props.actions.initiateWalletBackup}
+             disabled={this.props.settings.childProcessesStatus.NODE !== 'RUNNING'}
+          >
             {t(`Backup wallet`)}
           </button>
         </div>

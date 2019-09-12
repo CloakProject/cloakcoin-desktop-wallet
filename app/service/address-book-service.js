@@ -57,7 +57,6 @@ export class AddressBookService {
     const match = record => (
       record.name === validated.name || record.address === validated.address
     )
-
     if (this.addressBook.filter(match).length) {
       return throwError(this.t(`Address already exists in the database.`))
     }

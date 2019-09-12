@@ -8,10 +8,8 @@ import { Switch, Route, Redirect } from 'react-router'
 import cn from 'classnames'
 
 import WelcomePage from './get-started/WelcomePage'
-
 import TitleBarButtons from '~/components/title-bar-buttons/TitleBarButtons'
 import NaviBar from './navigation/navi-bar'
-import StatusIcons from '~/components/status-icons/StatusIcons'
 import SystemInfo from './system-info/system-info'
 import Overview from './overview/overview'
 import SendCash from './send-cash/send-cash'
@@ -31,7 +29,6 @@ import styles from './App.scss'
 import HLayout from '../assets/styles/h-box-layout.scss'
 import VLayout from '../assets/styles/v-box-layout.scss'
 
-
 type Props = {
   auth: AuthState,
   getStarted: GetStartedState
@@ -45,16 +42,9 @@ type Props = {
 class App extends React.Component<Props> {
 	props: Props
 
-	componentDidMount() {
-    if (!this.props.getStarted.isInProgress) {
-      getStore().dispatch(SettingsActions.kickOffChildProcesses())
-    }
-  }
-
   getGetStartedContent() {
     return (
       <div className={cn(styles.contentContainer, VLayout.vBoxChild, HLayout.hBoxContainer)}>
-        <TitleBarButtons />
         <div className={cn(styles.routeContentContainer, HLayout.hBoxChild, HLayout.hBoxContainer)}>
           <Switch>
             <Route exact path="/" render={() => (<Redirect to="/get-started/welcome" />)} />
@@ -71,7 +61,6 @@ class App extends React.Component<Props> {
 				<div className={cn(VLayout.vBoxChild, HLayout.hBoxContainer)}>
           <TitleBarButtons />
 					<NaviBar />
-          {/* <StatusIcons /> */}
 					<div className={cn(styles.layoutContent)}>
 						<Switch>
 							<Route exact path="/" render={() => (<Redirect to="/overview" />)} />

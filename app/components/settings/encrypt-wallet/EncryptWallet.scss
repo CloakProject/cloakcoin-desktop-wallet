@@ -25,6 +25,7 @@
 
         input {
             height: 25px;
+            text-align: left;
         }
 
         .description {
@@ -63,7 +64,7 @@
                 background-color: $RECEIVE_COIN_BUTTON_COLOR;
                 border: none;
                 border-radius: 3px;
-                font-size: 18px;
+                font-size: 14px;
                 color: rgba(0, 0, 0, 0.8);
             }
         }

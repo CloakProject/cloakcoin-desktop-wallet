@@ -1,56 +1,37 @@
 @import "~/assets/styles/vars.scss";
 
-.transactionChart {
-  height: calc(100vh - 450px);
-  display: flex;
-  padding: 5px 60px;
+.overviewContainer {
+  padding: 30px 60px;
 
-  .transactionsContainer {
-    width: calc(50% - 10px);
-    margin-right: 10px;
-    background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
-    padding: 15px 15px;
+  .transactionChart {
+    height: calc(100vh - 450px);
+    display: flex;
+    margin-top: 20px;
 
-    .transactionTitle {
-      display: flex;
-      font-size: 20px;
-      
-      div {
-        flex: 1;
-      }
+    .transactionsContainer {
+      width: calc(50% - 10px);
+      margin-right: 10px;
+      background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
+      padding: 15px 15px;
+      overflow: hidden;
 
-      .viewAll {
-        text-align: right;
-        opacity: 0.5;
-      }
-    }
-  }
-
-  .chartContainer {
-    width: calc(50% - 10px);
-    margin-left: 10px;
-    background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
-    padding: 20px 20px;
-
-    .chartTitle {
-      display: flex;
-      font-size: 20px;
-      
-      div {
-        flex: 1;
-      }
-
-      .currecyValue {
-        text-align: right;
-
-        span:nth-child(1) {
-          opacity: 0.5;
+      .transactionTitle {
+        display: flex;
+        font-size: 20px;
+        
+        div {
+          flex: 1;
         }
 
-        span:nth-child(2) {
-          color: $BASE_COLOR_PERSIMMON_COLOR;
-          opacity: 1;
-          margin-left: 15px;
+        a {
+          text-decoration: none;
+        }
+
+        .viewAll {
+          cursor: pointer;
+          text-align: right;
+          color: white;
+          opacity: 0.5;
         }
       }
     }

@@ -37,6 +37,10 @@ type Props = {
 class NaviBar extends Component<Props> {
 	props: Props
 
+  handleClickDisabled = (e) => {
+    e.preventDefault()
+  }
+
 	render() {
     const { t } = this.props
 
@@ -74,12 +78,6 @@ class NaviBar extends Component<Props> {
               <p>{t(`Transaction Cash`)}</p>
             </NavLink>
           </div>
-          {/* <div className={cn(styles.ownAddresses, getItemClasses('/own-addresses'))}>
-            <NavLink to="/own-addresses">
-              <img src={addressbook} alt="navImage" />
-              {t(`My Addresses`)}
-            </NavLink>
-          </div> */}
           <div className={cn(styles.addressBook, getItemClasses('/address-book'))}>
             <NavLink to="/address-book">
               <img src={addressbook} alt="navImage" />
@@ -87,13 +85,13 @@ class NaviBar extends Component<Props> {
             </NavLink>
           </div>
           <div className={cn(styles.enigmaStats, getItemClasses('/enigma-stats'))}>
-            <NavLink to="/enigma-stats">
+            <NavLink to="/enigma-stats" onClick={this.handleClickDisabled}>
               <img src={enigma} alt="navImage" />
               <p>{t(`Enigma Stats`)}</p>
             </NavLink>
           </div>
           <div className={cn(styles.byob, getItemClasses('/byob'))}>
-            <NavLink to="/byob">
+            <NavLink to="/byob" onClick={this.handleClickDisabled}>
               <img src={byob} alt="navImage" />
               <p>{t(`BYOB`)}</p>
             </NavLink>

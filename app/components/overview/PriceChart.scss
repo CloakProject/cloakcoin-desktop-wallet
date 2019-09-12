@@ -23,3 +23,27 @@
         }
     }
 }
+
+.chartContainer {
+    width: calc(50% - 10px);
+    margin-left: 10px;
+    background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
+    padding: 20px 20px;
+
+    .chartTitle {
+      display: flex;
+      font-size: 20px;
+      
+      div {
+        flex: 1;
+      }
+
+      .currecyValue {
+        text-align: right;
+
+        span {
+          opacity: 0.5;
+        }
+      }
+    }
+  }

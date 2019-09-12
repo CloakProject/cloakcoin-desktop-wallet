@@ -4,7 +4,8 @@ import { preloadedState } from '../preloaded.state'
 
 export type AddressBookRecord = {
   name: string,
-  address: string
+  address: string,
+  isEnigma: boolean
 }
 
 export type AddressBookState = {
@@ -13,7 +14,8 @@ export type AddressBookState = {
     originalName?: string,
     defaultValues: {
       name?: string,
-      address?: string
+      address?: string,
+      isEnigma?: boolean
     },
     isInEditMode?: boolean,
     isVisible: boolean

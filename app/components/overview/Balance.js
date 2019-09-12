@@ -21,17 +21,16 @@ class Balance extends Component<Props> {
 
 	hasUnconfirmedTransactionBalance(balanceType) {
 		const tempBalances = this.props.balances
-
 		if (balanceType === 'transparent') {
-			return tempBalances && !tempBalances.transparentBalance.equals(tempBalances.transparentUnconfirmedBalance)
+			return tempBalances.balance && !tempBalances.balance.equals(tempBalances.unconfirmedBalance)
     }
 
     if (balanceType === 'enigma') {
-			return tempBalances && !tempBalances.enigmaBalance.equals(tempBalances.enigmaUnconfirmedBalance)
+			return tempBalances.enigmaBalance && !tempBalances.enigmaBalance.equals(tempBalances.enigmaUnconfirmedBalance)
     }
 
-    if (balanceType === 'total') {
-			return tempBalances && !tempBalances.totalBalance.equals(tempBalances.totalUnconfirmedBalance)
+    if (balanceType === 'value') {
+			return tempBalances.value && !tempBalances.totalBalance.equals(tempBalances.unconfirmedValue)
 		}
 
 		return false
@@ -44,7 +43,7 @@ class Balance extends Component<Props> {
 			hasUnconfirmed = this.hasUnconfirmedTransactionBalance(balanceType)
 		} else if (balanceType === 'enigma') {
 			hasUnconfirmed = this.hasUnconfirmedTransactionBalance(balanceType)
-		} else if (balanceType === 'total') {
+		} else if (balanceType === 'value') {
 			hasUnconfirmed = this.hasUnconfirmedTransactionBalance(balanceType)
 		}
 
@@ -63,7 +62,7 @@ class Balance extends Component<Props> {
 
 	render() {
     const { t } = this.props
-		
+		const { balances } = this.props;
 		return (
 			<div className={[HLayout.hBoxContainer, styles.balanceContainer].join(' ')} data-tid="balance-container">
 
@@ -76,8 +75,8 @@ class Balance extends Component<Props> {
 								<p>7 days</p>
 							</div>
 							<p className={styles.balance}>
-								{this.renderBalanceValue(truncateAmount(this.props.balances.transparentUnconfirmedBalance), false)}
-								<span className={styles.unit}>K</span>
+								{balances.unconfirmedBalance ? this.renderBalanceValue(truncateAmount(balances.unconfirmedBalance), false) : 0.00}
+								{/* <span className={styles.unit}>K</span> */}
 							</p>
 						</div>
 					</div>
@@ -96,7 +95,7 @@ class Balance extends Component<Props> {
 							</div>
 							<p className={styles.balance}>
 								<span>+</span>
-								{this.renderBalanceValue(truncateAmount(this.props.balances.enigmaUnconfirmedBalance), true)}
+								{balances.enigmaUnconfirmedBalance ? this.renderBalanceValue(truncateAmount(balances.enigmaUnconfirmedBalance), true) : 0}
 							</p>
 						</div>
 					</div>
@@ -105,15 +104,15 @@ class Balance extends Component<Props> {
 				<div className={[styles.totalBalance, HLayout.hBoxChild].join(' ')}>
 					<div className={styles.balanceWraper}>
 						<div className={styles.balanceTitle}>{t(`Total Wallet Value`)}</div>
-						<div className={this.getBalanceValueStyles('total')}>
+						<div className={this.getBalanceValueStyles('value')}>
 							<div className={styles.balanceStatus}>
 								<img src={ballanceUp} alt="img" />
 								<p>7 days</p>
 							</div>
 							<p className={styles.balance}>
 								<span>$</span>
-								{this.renderBalanceValue(truncateAmount(this.props.balances.totalUnconfirmedBalance), false)}
-								<span className={styles.unit}>K</span>
+								{balances.unconfirmedBalance ? this.renderBalanceValue(truncateAmount(balances.unconfirmedBalance), false) : 0}
+								{/* <span className={styles.unit}>K</span> */}
 							</p>
 						</div>
 					</div>

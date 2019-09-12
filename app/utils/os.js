@@ -2,28 +2,11 @@ import * as fs from 'fs'
 import ps from 'ps-node'
 import path from 'path'
 import log from 'electron-log'
-import { app, dialog, remote } from 'electron'
-
-import { translate } from '../i18next.config'
-
+import { app, remote } from 'electron'
 
 const childProcessNames = ['NODE']
 
-
-function getIsExitForbidden(mainWindow) {
-  const t = translate('other')
-  const { orders, operations } = global.pendingActivities
-
-  if (orders || operations) {
-    const isExitForbidden = dialog.showMessageBox(mainWindow, {
-      type: 'question',
-      buttons: [t(`Quit`), t(`Cancel`)],
-      title: t(`Are you sure?`),
-      message: t(`Pending activities are present, closing the application now can cause irreversible damage.`)
-    })
-
-    return isExitForbidden
-  }
+function getIsExitForbidden() {
 
   return false
 }

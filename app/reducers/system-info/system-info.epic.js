@@ -51,20 +51,6 @@ const getBlockchainInfoFailureEpic = (action$: ActionsObservable<Action>) => act
   mapTo(SystemInfoActions.empty())
 )
 
-const getOperationsEpic = (action$: ActionsObservable<Action>) => action$.pipe(
-  ofType(SystemInfoActions.getOperations.toString()),
-  tap(() => rpcService.requestOperations()),
-  mapTo(SystemInfoActions.empty())
-)
-
-const getOperationsFailureEpic = (action$: ActionsObservable<Action>) => action$.pipe(
-  ofType(SystemInfoActions.getOperationsFailure.toString()),
-  tap((action) => {
-    suppressRpcWarmupError(action, () => toastr.error(action.payload.errorMessage))
-  }),
-  mapTo(SystemInfoActions.empty())
-)
-
 const openWalletInFileManagerEpic = (action$: ActionsObservable<Action>) => action$.pipe(
   ofType(SystemInfoActions.openWalletInFileManager.toString()),
   tap(() => {
@@ -88,6 +74,4 @@ export const SystemInfoEpics = (action$, state$) => merge(
   getDaemonInfoFailureEpic(action$, state$),
   getBlockchainInfoEpic(action$, state$),
   getBlockchainInfoFailureEpic(action$, state$),
-  getOperationsEpic(action$, state$),
-  getOperationsFailureEpic(action$, state$)
 )

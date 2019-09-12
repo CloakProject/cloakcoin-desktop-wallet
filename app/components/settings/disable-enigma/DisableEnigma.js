@@ -7,7 +7,7 @@ import { translate } from 'react-i18next'
 import cn from 'classnames'
 import { SettingsActions, SettingsState } from '~/reducers/settings/settings.reducer'
 import styles from './DisableEnigma.scss'
-import enigmaImg from '~/assets/images/main/settings/enigma.png';
+import enigmaImg from '~/assets/images/main/settings/enigma-icon.png';
 
 type Props = {
   className?: string,
@@ -30,7 +30,7 @@ class DisableEnigma extends Component<Props> {
             { this.props.isEnigmaDisabled ? t('ENIGMA IS DISABLED') : t('ENIGMA IS ENABLED') }
           </p>
           <p>
-            { this.props.isEnigmaDisabled ? t('press button to enable it') : t('press button to disable it')}
+            { this.props.isEnigmaDisabled ? t('Press button to enable it') : t('Press button to disable it')}
           </p>
           <button type="button" className={this.props.isEnigmaDisabled ? styles.enigmaEnableBtn : styles.enigmaDisabledBtn}>
             { this.props.isEnigmaDisabled ? t(`Enable ENIGMA`) : t(`Disable ENIGMA`) }

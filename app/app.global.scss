@@ -17,8 +17,32 @@ body {
 
   overflow: hidden;
 
-  -webkit-scrollbar {
-    width: 0 !important
+  // -webkit-scrollbar {
+  //   width: 0px !important
+  // }
+
+  > * {
+    /* width */
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    /* Track */
+    ::-webkit-scrollbar-track {
+      background: rgba(255,255,255, .08);
+      border-radius: 10px;
+    }
+
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,.1);
+      border-radius: 10px;
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,255,255,.2); 
+    }
   }
 
   @include full-screen();

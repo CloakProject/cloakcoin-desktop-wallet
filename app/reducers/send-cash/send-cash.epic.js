@@ -20,16 +20,9 @@ const addressBookService = new AddressBookService()
 
 const allowToSend = (sendCashState: SendCashState) => {
 	if (
-		sendCashState.fromAddress.trim() === '' ||
-		sendCashState.toAddress.trim() === ''
+		sendCashState.receiptions.trim() === ''
 	) {
 		return t('"FROM ADDRESS" or "DESTINATION ADDRESS" is required.')
-  }
-
-  if (
-		sendCashState.fromAddress.trim() === sendCashState.toAddress.trim()
-	) {
-		return t(`"FROM ADDRESS" or "DESTINATION ADDRESS" cannot be the same.`)
   }
 
   if (sendCashState.amount.lessThanOrEqualTo(DECIMAL.transactionFee)) {
@@ -43,10 +36,10 @@ const allowToSend = (sendCashState: SendCashState) => {
 const sendCashEpic = (action$: ActionsObservable<Action>, state$) => action$.pipe(
 	ofType(SendCashActions.sendCash),
 	map(() => {
-		const isAllowedToSend = allowToSend(state$.value.sendCash)
-		if (isAllowedToSend !== 'ok') {
-			return SendCashActions.sendCashFailure(isAllowedToSend)
-		}
+		// const isAllowedToSend = allowToSend(state$.value.sendCash)
+		// if (isAllowedToSend !== 'ok') {
+		// 	return SendCashActions.sendCashFailure(isAllowedToSend)
+		// }
 
 		const checkRuleResult = checkEnigmaTransactionRule(state$.value.sendCash)
 		if (checkRuleResult !== 'ok') {
@@ -60,7 +53,7 @@ const sendCashEpic = (action$: ActionsObservable<Action>, state$) => action$.pip
 		// Only fire real send if no error above
 		if (action.type === SystemInfoActions.newOperationTriggered.toString()) {
 			const state = state$.value.sendCash
-			rpcService.sendCash(state.fromAddress, state.toAddress, state.amount)
+			rpcService.sendCash(state.receiptions, state.isEnigmaTransactions);
 		}
 	})
 )

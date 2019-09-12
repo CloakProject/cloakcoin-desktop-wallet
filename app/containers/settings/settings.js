@@ -1,24 +1,16 @@
 // @flow
-import * as Joi from 'joi'
-import config from 'electron-settings'
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import { translate } from 'react-i18next'
 import cn from 'classnames'
-import Iso6391 from 'iso-639-1'
+import Status from '~/components/settings/status/Status'
+import EncryptWallet from '~/components/settings/encrypt-wallet/EncryptWallet'
+import LockWallet from '~/components/settings/lock-wallet/LockWallet'
+import ChangePassphrase from '~/components/settings/change-passphrase/ChangePassphrase'
+import DisableEnigma from '~/components/settings/disable-enigma/DisableEnigma'
+import BackupWallet from '~/components/settings/backup-wallet/BackupWallet'
 
-import { getPasswordValidationSchema } from '~/utils/auth'
-import { availableLanguages } from '~/i18next.config'
-import { Tab, Tabs, TabList, TabPanel } from 'react-tabs'
-import {
-  RoundedForm,
-  RoundedButton,
-  ToggleButton,
-  RoundedInput,
-  RoundedInputWithDropdown,
-} from '~/components/rounded-form'
-import { PopupMenu, PopupMenuItem } from '~/components/popup-menu'
 import styles from './settings.scss'
 import HLayout from '~/assets/styles/h-box-layout.scss'
 import VLayout from '~/assets/styles/v-box-layout.scss'
@@ -26,36 +18,21 @@ import VLayout from '~/assets/styles/v-box-layout.scss'
 import { PopupMenuActions } from '~/reducers/popup-menu/popup-menu.reducer'
 import { SystemInfoState } from '~/reducers/system-info/system-info.reducer'
 import { SettingsActions, SettingsState } from '~/reducers/settings/settings.reducer'
-import StatusModal from '~/components/settings/status-modal'
-
-const languagePopupMenuId = 'settings-language-dropdown-id'
+import statusImg from '~/assets/images/main/settings/status.png';
+import encryptWalletImg from '~/assets/images/main/settings/encrypt-wallet.png';
+import encryptedWalletImg from '~/assets/images/main/settings/encrypted-wallet.png';
+import lockWalletImg from '~/assets/images/main/settings/lock-wallet.png';
+import lockedWalletImg from '~/assets/images/main/settings/locked-wallet.png';
+import changePassphraseImg from '~/assets/images/main/settings/change-passphrase.png';
+import enigmaOffImg from '~/assets/images/main/settings/enigma-off.png';
+import enigmaOnImg from '~/assets/images/main/settings/enigma-on.png';
+import backupWalletImg from '~/assets/images/main/settings/backup-wallet.png';
 
 type Props = {
   t: any,
   systemInfo: SystemInfoState,
   settings: SettingsState,
   actions: SettingsActions,
-  popupMenu: PopupMenuActions
-}
-
-function getValidationSchema(t) {
-  const schema = Joi.object().keys({
-    oldPassword: Joi.string().required().label(t(`Old password`)),
-    newPassword: getPasswordValidationSchema(),
-    repeatPassword: (
-      Joi.string().required().valid(Joi.ref('newPassword'))
-      .label(t(`Repeat password`))
-      .options({
-        language: {
-          any: {
-            allowOnly: `!!${t('Passwords do not match')}`,
-          }
-        }
-      })
-    )
-  })
-
-  return schema
 }
 
 /**
@@ -63,26 +40,13 @@ function getValidationSchema(t) {
  * @extends {Component<Props>}
  */
 class Settings extends Component<Props> {
-	props: Props
-
-	/**
-	 * @param {*} nextProps
-	 * @memberof Settings
-	 */
-  componentWillUpdate(nextProps) {
-  }
-
-	/**
-	 * @memberof Settings
-	 */
-  getLanguageMenuItems() {
-    const languages = Iso6391.getLanguages(availableLanguages)
-
-    return languages.map(language => (
-      <PopupMenuItem key={language.code} onClick={() => this.props.actions.updateLanguage(language.code)}>
-        {language.nativeName}
-      </PopupMenuItem>
-    ))
+  props: Props
+  
+  constructor(props) {
+    super(props);
+    this.state = {
+      settingId: 'Status'
+    }
   }
 
   getIsChildProcessUpdating(processName) {
@@ -101,166 +65,74 @@ class Settings extends Component<Props> {
       : t(`Stop local node`)
   }
 
-	/**
-	 * @param {*} event
-	 * @memberof Settings
-	 */
-  checkPendingOperations() {
-    if (this.props.systemInfo.isNewOperationTriggered) {
-      return true
-    }
-
-    const result = this.props.systemInfo.operations.some(operation => (
-      ['queued', 'executing'].indexOf(operation.status) !== -1
-    ))
-
-    return result
+  onChooseSetting = id => {
+    this.setState({ settingId: id });
   }
 
-	/**
-	 * @returns
-	 * @memberof Settings
-	 */
+  isNetworkActive() {
+    return this.props.systemInfo.blockchainInfo.connections > 0
+  }
+
+  isEncryptedWallet() {
+    return this.props.systemInfo.blockchainInfo.unlockedUntil !== null
+  }
+
+  isLockedWallet() {
+    return this.props.systemInfo.blockchainInfo.unlockedUntil !== null && this.props.systemInfo.blockchainInfo.unlockedUntil < Date.now()
+  }
+
+  isEnigmaOn() {
+    return this.props.systemInfo.blockchainInfo.anons > 0
+  }
+
 	render() {
     const { t } = this.props
+    const settingItems = [
+      {label: 'Status', icon: statusImg},
+      {label: 'Encrypt wallet', icon: encryptWalletImg, inactive: this.isEncryptedWallet()},
+      {label: 'Encrypted wallet', icon: encryptedWalletImg, inactive: !this.isEncryptedWallet()},
+      {label: 'Lock wallet', icon: lockWalletImg, inactive: this.isLockedWallet()},
+      {label: 'Unlock wallet', icon: lockedWalletImg, inactive: !this.isLockedWallet()},
+      {label: 'Change passphrase', icon: changePassphraseImg},
+      {label: 'Enable Enigma', icon: enigmaOffImg, inactive: this.isEnigmaOn()},
+      {label: 'Disable Enigma', icon: enigmaOnImg, inactive: !this.isEnigmaOn()},
+      {label: 'Backup wallet', icon: backupWalletImg},
+    ]
 
 		return (
-			// Layout container
 			<div className={cn(styles.layoutContainer, HLayout.hBoxChild, VLayout.vBoxContainer)}>
-				{/* Route content */}
 				<div className={cn(styles.settingsContainer, VLayout.vBoxChild, HLayout.hBoxContainer)}>
-					<div className={cn(HLayout.hBoxChild, VLayout.vBoxContainer, styles.wrapperContainer)}>
-            {this.props.settings.isStatusModalOpen &&
-              <StatusModal />
-            }
-
-						{/* Title bar */}
-            <div className={styles.titleBar}>{t(`Settings`)}</div>
-
-            <Tabs
-              className={styles.tabs}
-              selectedTabClassName={styles.selectedTab}
-              selectedTabPanelClassName={styles.selectedTabPanel}
-            >
-              <TabList className={styles.tabList}>
-                <Tab className={styles.tab}>{t(`Wallet password`)}</Tab>
-                <Tab className={styles.tab}>{t(`Manage wallet`)}</Tab>
-                <Tab className={styles.tab}>{t(`Manage daemons`)}</Tab>
-                <Tab className={styles.tab}>{t(`Language`)}</Tab>
-              </TabList>
-
-              <TabPanel>
-
-
-                {/* Wallet Password */}
-                <div className={cn(styles.body)}>
-                  <RoundedForm
-                    className={styles.form}
-                    id=""
-                    schema={getValidationSchema(t)}
-                  >
-
-                    <RoundedInput
-                      type="password"
-                      labelClassName={styles.inputLabel}
-                      name="oldPassword"
-                      label={t(`Old password`)}
-                    />
-
-                    <RoundedInput
-                      type="password"
-                      labelClassName={styles.inputLabel}
-                      name="newPassword"
-                      label={t(`New password`)}
-                    />
-
-                    <RoundedInput
-                      type="password"
-                      name="repeatPassword"
-                      label={t(`Repeat new password`)}
-                    />
-
-                    <RoundedButton
-                      type="submit"
-                      onClick={this.props.actions.savePassword}
-                      important
-                    >
-                      {t(`Save password`)}
-                    </RoundedButton>
-
-                  </RoundedForm>
-
-                </div>
-
-              </TabPanel>
-
-              <TabPanel>
-                {/* Manage wallet */}
-                <div className={styles.buttonsRow}>
-                  <RoundedButton
-                    onClick={this.props.actions.initiateWalletBackup}
-                    disabled={this.props.settings.childProcessesStatus.NODE !== 'RUNNING'}
-                    important
-                  >
-                    {t(`Backup`)}
-                  </RoundedButton>
-
-                  <RoundedButton
-                    className={styles.walletNodeButton}
-                    onClick={this.props.actions.initiateWalletRestore}
-                    disabled={this.props.settings.childProcessesStatus.NODE !== 'RUNNING'}
-                    important
-                  >
-                    {t(`Restore`)}
-                  </RoundedButton>
-                </div>
-                </TabPanel>
-
-              <TabPanel>
-                {/* Manage daemons */}
-
-                <div className={cn(styles.localNodeButtons, styles.buttonsRow)}>
-                  <RoundedButton
-                    className={styles.stopLocalNodeButton}
-                    onClick={this.props.actions.toggleLocalNode}
-                    disabled={this.getIsChildProcessUpdating('NODE') || this.checkPendingOperations()}
-                    important
-                  >
-                    {this.getStartStopLocalNodeButtonLabel()}
-                  </RoundedButton>
-
-                  <RoundedButton onClick={this.props.actions.openStatusModal}>
-                    {t(`Show status`)}
-                  </RoundedButton>
-
-                </div>
-
-              </TabPanel>
-
-              <TabPanel>
-                {/* Language */}
-                <div className={styles.form}>
-
-                  <RoundedInputWithDropdown
-                    name="language"
-                    defaultValue={Iso6391.getNativeName(this.props.settings.language)}
-                    label={t(`Language`)}
-                    onDropdownClick={() => this.props.popupMenu.show(languagePopupMenuId)}
-                    readOnly
-                  >
-                    <PopupMenu id={languagePopupMenuId} relative>
-                      {this.getLanguageMenuItems()}
-                    </PopupMenu>
-
-                  </RoundedInputWithDropdown>
-
-                </div>
-
-              </TabPanel>
-
-            </Tabs>
-
-					</div>
+          <div className={styles.leftSide}>
+            <div className={cn(styles.networkStatus, this.isNetworkActive() ? styles.active : '')}>
+              {this.isNetworkActive() && (<p>{t('Connected')} / {this.props.systemInfo.blockchainInfo.connections}</p>)}
+              {!this.isNetworkActive() && (<p>{t('Disconnected')}</p>)}
+            </div>
+            <div className={styles.settingItems}>
+              {
+                settingItems.map(item => {
+                  if (item.inactive) {
+                    return null
+                  }
+                  return (
+                    <div className={cn(styles.item, styles.borderTop, this.state.settingId === item.label ? styles.active : '' )} key={item.label} onClick={() => this.onChooseSetting(item.label)}>
+                      <img src={item.icon} alt="setting icon" />
+                      <p>{item.label}</p>
+                    </div>  
+                  )})
+              }
+            </div>
+          </div>
+          <div className={styles.rightSide}>
+            {this.state.settingId === 'Status' && <Status />}
+            {this.state.settingId === 'Encrypt wallet' && <EncryptWallet />}
+            {this.state.settingId === 'Encrypted wallet' && <EncryptWallet isEncrypted />}
+            {this.state.settingId === 'Lock wallet' && <LockWallet />}
+            {this.state.settingId === 'Unlock wallet' && <LockWallet isLocked />}
+            {this.state.settingId === 'Change passphrase' && <ChangePassphrase />}
+            {this.state.settingId === 'Enable Enigma' && <DisableEnigma isEnigmaDisabled />}
+            {this.state.settingId === 'Disable Enigma' && <DisableEnigma />}
+            {this.state.settingId === 'Backup wallet' && <BackupWallet />}
+          </div>
 				</div>
 			</div>
 		)

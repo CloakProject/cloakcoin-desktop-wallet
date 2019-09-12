@@ -10,6 +10,11 @@ const t = i18n.getFixedT(null, 'send-cash')
 
 export type SendFromRadioButtonType = 'transparent' | 'enigma'
 
+export type Receiption = {
+	toAddress?: string,
+	amountToSend?: Decimal
+}
+
 export type AddressDropdownItem = {
 	address: string,
 	balance: Decimal | null,
@@ -17,6 +22,8 @@ export type AddressDropdownItem = {
 }
 
 export type SendCashState = {
+	receiptions?: Array<Receiption>,
+	transactionId?: string,
 	isEnigmaTransactions: boolean,
 	lockIcon: 'Lock' | 'Unlock',
 	lockTips: string | null,
@@ -127,10 +134,9 @@ const handleToggleEnigmaTransaction = (tempState: SendCashState) => {
 	return ({ ...newState, inputTooltips: newInputTooltips })
 }
 
-
 export const SendCashReducer = handleActions({
 	[SendCashActions.sendCash]: (state) => ({ ...state, isInputDisabled: true }),
-	[SendCashActions.sendCashOperationStarted]: (state) => ({ ...state, isInputDisabled: false }),
+	[SendCashActions.sendCashOperationStarted]: (state, action) => ({ ...state, isInputDisabled: false, transactionId: action.payload.operationId }),
 	[SendCashActions.sendCashFailure]: (state) => ({ ...state, isInputDisabled: false }),
 
 	[SendCashActions.toggleEnigmaSend]: (state) => handleToggleEnigmaTransaction(state),

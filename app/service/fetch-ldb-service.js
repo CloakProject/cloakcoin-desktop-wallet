@@ -12,8 +12,10 @@ const t = translate('service')
 
 const ldbFolderName = 'CloakCoin'
 const ldbUrl = `https://backend.cloakcoin.com/wallet/v2`
+// const ldbUrl = `https://file-examples.com/wp-content/uploads/2017/02`
 const ldbFiles = [
   { name: 'cloak_ldb.zip', checksum: '' }
+  // { name: 'zip_2MB.zip', checksum: '' }
 ]
 
 /**
@@ -123,6 +125,7 @@ export class FetchLdbService {
 		this.completedBytes = 0
     this.downloadItems = new Set()
 
+    console.log("in fetch");
     try {
       await this::fetchOrThrowError()
     } catch(err) {
@@ -159,10 +162,8 @@ async function fetchOrThrowError() {
 function downloadDoneCallback(state, downloadItem, resolve, reject) {
   let error = null
 
-  this.completedBytes += downloadItem.getTotalBytes()
-  this.downloadItems.delete(downloadItem)
-
-  const fileName = downloadItem.getFilename()
+  this.completedBytes += downloadItem.downloadedBytes
+  const fileName = downloadItem.downloadedFileName
 
   const removeListener = () => {
     if (!this.mainWindow.isDestroyed()) {
@@ -216,10 +217,17 @@ function registerDownloadListener(resolve, reject) {
     downloadItem.on('updated', () => this::downloadUpdatedCallback())
 
     downloadItem.on('done', (event, state) => {
+      const downloadInfo = {
+        downloadedBytes: downloadItem.getTotalBytes(),
+        downloadedFileName: downloadItem.getFilename()
+      };
+      this::downloadUpdatedCallback()
+      this.downloadItems.delete(downloadItem)
+
       // Extract doenloaded zip file
       if (savePath.toLowerCase().endsWith('.zip')) {
-
-        const destTmpPath = path.join(this.getLdbFolder(), 'ldbtemp')
+        const ldbFolder = this.getLdbFolder()
+        const destTmpPath = path.join(ldbFolder, 'ldbtemp')
         fs.removeSync(destTmpPath);
 
         extract(savePath, {dir: destTmpPath}, (err) => {
@@ -227,8 +235,18 @@ function registerDownloadListener(resolve, reject) {
             log.info(`Ldb file ${savePath} extract failed`)
             return;
           }
-          fs.moveSync(destTmpPath, this.getLdbFolder(), {overwrite: true});
-          this::downloadDoneCallback(state, downloadItem, resolve, reject)
+
+          // Move extracted files to Ldb folder
+          fs.moveSync(path.join(destTmpPath, 'txleveldb'), path.join(ldbFolder, 'txleveldb'), {overwrite: true});
+          fs.moveSync(path.join(destTmpPath, 'blk0001.dat'), path.join(ldbFolder, 'blk0001.dat'), {overwrite: true});
+          fs.moveSync(path.join(destTmpPath, 'peers.dat'), path.join(ldbFolder, 'peers.dat'), {overwrite: true});
+          // fs.moveSync(path.join(destTmpPath, 'zip_10MB'), path.join(ldbFolder, 'zip_10MB'), {overwrite: true});
+          
+          // Remove tmp files
+          fs.removeSync(destTmpPath);
+          fs.removeSync(savePath);
+
+          this::downloadDoneCallback(state, downloadInfo, resolve, reject)
         })
       }
      
@@ -245,7 +263,7 @@ function downloadUpdatedCallback() {
   ), this.completedBytes)
 
   if (!this.mainWindow.isDestroyed()) {
-    this.mainWindow.setProgressBar(receivedBytes / this.totalBytes)
+    this.mainWindow.setProgressBar(receivedBytes === this.totalBytes ? 1 : receivedBytes / this.totalBytes)
     this.mainWindow.webContents.send('fetch-ldb-download-progress', {
       receivedBytes,
       totalBytes: this.totalBytes,

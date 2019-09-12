@@ -8,7 +8,15 @@ export const preloadedState: State = {
     enter: true,
     isLoginRequired: true,
   },
-  roundedForm: {},
+	roundedForm: {},
+	fetchLdb: {
+    progressRate: 0,
+    startedAt: null,
+    minutesLeft: null,
+    statusMessage: '',
+    errorMessage: null,
+    isDownloadComplete: false,
+  },
   getStarted: {
     createNewWallet: {
       wallet: null
@@ -33,18 +41,38 @@ export const preloadedState: State = {
 	systemInfo: {
 		daemonInfo: {},
 		blockchainInfo: {
-			connectionCount: 0,
+			version: '',
+			protocolVersion: 0,
+			walletVersion: 0,
+			balance: Decimal('0'),
+			unconfirmedBalance: Decimal('0'),
+			immatureBalance: Decimal('0'),
+			cloakingEarnings: Decimal('0'),
+			newMint: Decimal('0'),
+			stake: Decimal('0'),
+			blocks: 0,
+			moneySupply: Decimal('0'),
+			connections: 0,
+			proxy: '',
+			ip: '',
+			difficulty: Decimal('0'),
+			keypoolOldest: 0,
+			keypoolSize: 0,
+			payTxFee: Decimal('0'),
+			errors: '',
+			anons: 0,
+			cloakings: 0,
+			weight: 0,
+			networkWeight: 0,
+			unlockedUntil: null,
 			blockchainSynchronizedPercentage: 0,
 			lastBlockDate: null
-		},
-    operations: [],
-    isNewOperationTriggered: false,
-    isOperationsModalOpen: false
+		}
 	},
 	overview: {
 		balances: {
-			transparentBalance: Decimal('0'),
-			transparentUnconfirmedBalance: Decimal('0'),
+			balance: Decimal('0'),
+			unconfirmedBalance: Decimal('0'),
 			enigmaBalance: Decimal('0'),
 			enigmaUnconfirmedBalance: Decimal('0'),
 			totalBalance: Decimal('0'),
@@ -69,7 +97,9 @@ export const preloadedState: State = {
 		currentOperation: null,
 		showDropdownMenu: false,
 		sendFromRadioButtonType: 'transparent',
-    addressList: [],
+		addressList: [],
+		receiptions: [],
+		transactionId: '',
     isInputDisabled: false
 	},
 	addressBook: {
@@ -87,6 +117,11 @@ export const preloadedState: State = {
     language: 'en',
   }
 }
+
+// Load serialized settings
+Object.assign(preloadedState.fetchLdb, {
+  isDownloadComplete: remote.getGlobal('isParametersPresenceConfirmed', false)
+})
 
 // Load serialized settings
 Object.assign(preloadedState.getStarted, {

@@ -14,6 +14,22 @@ export const SettingsActions = createActions(
   {
     EMPTY: undefined,
 
+    ENCRYPT_WALLET: undefined,
+    ENCRYPT_WALLET_COMPLETED: undefined,
+    ENCRYPT_WALLET_FAILED: undefined,
+
+    LOCK_WALLET: undefined,
+    LOCK_WALLET_COMPLETED: undefined,
+    LOCK_WALLET_FAILED: undefined,
+
+    UNLOCK_WALLET: undefined,
+    UNLOCK_WALLET_COMPLETED: undefined,
+    UNLOCK_WALLET_FAILED: undefined,
+
+    CHANGE_PASSPHRASE: undefined,
+    CHANGE_PASSPHRASE_COMPLETED: undefined,
+    CHANGE_PASSPHRASE_FAILED: undefined,
+
     UPDATE_LANGUAGE: (code: string) => ({ code }),
 
     OPEN_STATUS_MODAL: undefined,
@@ -58,6 +74,79 @@ const getChildProcessUpdateFailedState = (state, action, processStatus: ChildPro
 
 export const SettingsReducer = handleActions(
   {
+    // Encrypt Wallet
+    [SettingsActions.encryptWallet]: state => ({
+      ...state,
+      isWalletEncrypting: true,
+      isWalletEncrypted: false
+    }),
+
+    [SettingsActions.encryptWalletCompleted]: state => ({
+      ...state,
+      isWalletEncrypting: false,
+      isWalletEncrypted: true
+    }),
+
+    [SettingsActions.encryptWalletFailed]: state => ({
+      ...state,
+      isWalletEncrypting: false,
+      isWalletEncrypted: false
+    }),
+
+    // Lock Wallet
+    [SettingsActions.lockWallet]: state => ({
+      ...state,
+      isWalletLocking: true,
+      isWalletLocked: false
+    }),
+
+    [SettingsActions.lockWalletCompleted]: state => ({
+      ...state,
+      isWalletLocking: false,
+      isWalletLocked: true
+    }),
+
+    [SettingsActions.lockWalletFailed]: state => ({
+      ...state,
+      isWalletLocking: false,
+      isWalletLocked: false
+    }),
+
+    // Unlock Wallet
+    [SettingsActions.unlockWallet]: state => ({
+      ...state,
+      isWalletUnlocking: true,
+      isWalletLocked: true
+    }),
+
+    [SettingsActions.unlockWalletCompleted]: state => ({
+      ...state,
+      isWalletUnlocking: false,
+      isWalletLocked: false
+    }),
+
+    [SettingsActions.unlockWalletFailed]: state => ({
+      ...state,
+      isWalletUnlocking: false,
+      isWalletLocked: true
+    }),
+
+    // Change Passphrase
+    [SettingsActions.changePassphrase]: state => ({
+      ...state,
+      isPassphraseChanging: true
+    }),
+
+    [SettingsActions.changePassphraseCompleted]: state => ({
+      ...state,
+      isPassphraseChanging: false
+    }),
+
+    [SettingsActions.changePassphraseFailed]: state => ({
+      ...state,
+      isPassphraseChanging: false
+    }),
+
     // Language
     [SettingsActions.updateLanguage]: (state, action) => ({
       ...state, language: action.payload.code

@@ -1,0 +1,25 @@
+@import "~/assets/styles/vars.scss";
+@import "~/assets/styles/modal.scss";
+
+.qrCodeWrapper {
+    position: relative;
+    width: 400px;
+    height: auto;
+    padding: 30px 30px;
+    text-align: center;
+    background-color: $BASE_COLOR_DARK_BLUE;
+
+    .modalClose {
+        position: absolute;
+        right: 10px;
+        top: 5px;
+        font-weight: bold;
+        outline: none;
+        cursor: pointer;
+    
+        &:before {
+          content: "\e906";
+          font-size: 0.57rem;
+        }
+    }
+}

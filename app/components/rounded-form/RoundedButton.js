@@ -7,6 +7,7 @@ import GenericButton, { GenericButtonProps } from './GenericButton'
 import animatedSpinner from '~/assets/images/animated-spinner.svg'
 import styles from './RoundedButton.scss'
 
+const t = translate('other')
 
 export type RoundedButtonProps = {
   ...GenericButtonProps,

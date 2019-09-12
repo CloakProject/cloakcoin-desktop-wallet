@@ -10,7 +10,7 @@
   "Amount": "Amount",
   "Transaction fee:": "Transaction fee:",
   "Send": "Send",
-  "tip-r-to-r": "tip-r-to-r",
+  "tip-c-to-c": "tip-c-to-c",
   "Memo:": "Memo:",
   "memo": "memo",
   "\"FROM ADDRESS\" or \"DESTINATION ADDRESS\" is required.": "\"FROM ADDRESS\" or \"DESTINATION ADDRESS\" is required.",
@@ -18,10 +18,10 @@
   "\"AMOUNT\" is required.": "\"AMOUNT\" is required.",
   "Send cash operation started.": "Send cash operation started.",
   "Unable to start send cash operation": "Unable to start send cash operation",
-  "Sending cash from a transparent (C) address to a enigma (E) address is forbidden when \"Enigma Transactions\" are disabled.": "Sending cash from a transparent (C) address to an enigma (E) address is forbidden when \"Enigma Transactions\" are disabled.",
+  "Sending cash from a cloak (C) address to a enigma (E) address is forbidden when \"Enigma Transactions\" are disabled.": "Sending cash from a cloak (C) address to an enigma (E) address is forbidden when \"Enigma Transactions\" are disabled.",
   "Sending cash from an enigma (E) address to an enigma (E) address is forbidden when \"Enigma Transactions\" are disabled.": "Sending cash from an enigma (E) address to an enigma (E) address is forbidden when \"Enigma Transactions\" are disabled.",
-  "Sending cash from an enigma (E) address to a transparent (C) address is forbidden when \"Enigma Transactions\" are disabled.": "Sending cash from an enigma (E) address to a transparent (C) address is forbidden when \"Enigma Transactions\" are disabled.",
-  "tip-r-to-z": "tip-r-to-z",
-  "tip-z-to-z": "tip-z-to-z",
-  "tip-z-to-r": "tip-z-to-r"
+  "Sending cash from an enigma (E) address to a cloak (C) address is forbidden when \"Enigma Transactions\" are disabled.": "Sending cash from an enigma (E) address to a cloak (C) address is forbidden when \"Enigma Transactions\" are disabled.",
+  "tip-r-to-z": "tip-c-to-s",
+  "tip-z-to-z": "tip-s-to-s",
+  "tip-z-to-r": "tip-s-to-c"
 }

@@ -24,6 +24,8 @@
   "Enigma Version": "v3.0 ‘rEVOLUTION’ stormfix ENIGMA Engine v1.2",
   "Copy Right Bitcoin": "© 2009-2019 Bitcoin Developers",
   "Copy Right Cloak": "© 2014-2019 CloakCoin Developers",
+  "Downloading Blockchain {{progress}}": "Downloading blockchain... {{progress}}%",
+  "Extracting Blockchain": "Extracting blockchain...",
   "Loading Block": "Loading block index...",
   "CloakCoin": "CloakCoin",
   "Revolution stormfix": "v3.0 ‘rEVOLUTION’ stormfix",
