@@ -2,15 +2,17 @@
 @import "~/assets/styles/generic-component.scss";
 
 .enigmaStatsContainer {
-    padding: 30px 60px;
+    padding: 30px 60px 0;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 310px);
+    box-sizing: border-box;    
+    height: calc(100% - 15px);
 
     .enigmaStatsWrapper {
         width: auto;
         display: flex;
-        padding: 15px 30px;
+        padding: 20px 20px;
+        padding-right: 30px;
         background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
 
         p {
@@ -21,20 +23,20 @@
         .leftSide {
             width: 180px;
             text-align: center;
-            padding-right: 30px;
+            padding-right: 20px;
 
-            img {
-                width: 90px;
+            .statusImg {
+                width: 85px;
                 opacity: 0.2;
             }
 
             p:nth-child(2) {
-                font-size: 20px;
+                font-size: 1.4rem;
                 margin-top: 12px;
             }
 
             p:nth-child(3) {
-                font-size: 16px;
+                font-size: 1.2rem;
                 margin-top: 12px;
                 opacity: 0.3;
             }
@@ -42,13 +44,13 @@
 
         .rightSide {
             flex: 1;
-            padding: 15px 30px;
+            padding: 12px 30px;
             background-color: $ENIGMA_STATS_INFO_BACKGROUND_COLOR;
 
             .enigmaInfo {
                 div {
                     display: flex;
-                    padding: 5px 0px;
+                    padding: 3px 0px;
                     &>p:nth-child(2) {
                         flex: 1;
                         text-align: right;
@@ -64,12 +66,13 @@
 
     .enigmaActivityListWrapper {
         width: 100%;
+        height: calc(100%);
         text-align: center;
         margin-top: 25px;
         background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
 
         >p {
-            opacity: 0.8;
+            opacity: 0.6;
         }
     }
 }

@@ -85,7 +85,7 @@ class NaviBar extends Component<Props> {
             </NavLink>
           </div>
           <div className={cn(styles.enigmaStats, getItemClasses('/enigma-stats'))}>
-            <NavLink to="/enigma-stats" onClick={this.handleClickDisabled}>
+            <NavLink to="/enigma-stats">
               <img src={enigma} alt="navImage" />
               <p>{t(`Enigma Stats`)}</p>
             </NavLink>

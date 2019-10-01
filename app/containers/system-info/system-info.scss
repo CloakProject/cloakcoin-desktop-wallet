@@ -24,15 +24,36 @@
 }
 
 .statusColoumnTitle {
-    font-size: 16px;
-    color: white;
+    font-size: 1.2rem;
+    color: $BASE_COLOR_LIGHT_WHITE;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.statusColoumnTitleSuccess {
+    font-size: 1.2rem;
+    color: $BASE_COLOR_GREEN;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.statusColoumnTitleWarning {
+    font-size: 1.2rem;
+    color: $BASE_COLOR_WARNING;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.statusColoumnTitleError {
+    font-size: 1.2rem;
+    color: $BASE_COLOR_RED;
     font-weight: bold;
     margin-right: 5px;
 }
 
 .statusColoumnValue {
-    font-size: 16px;
-    color: white;
+    font-size: 1.2rem;
+    color: $BASE_COLOR_LIGHT_WHITE;
     font-weight: bold;
 }
 

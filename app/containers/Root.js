@@ -17,7 +17,8 @@ type Props = {
 export default class Root extends Component<Props> {
 	render() {
     const state = this.props.store.getState()
-    i18n.changeLanguage(state.settings.language)
+    const language = state.options.language === 'default' ? 'en' : state.options.language
+    i18n.changeLanguage(language)
 
 		return (
       <Provider store={this.props.store}>

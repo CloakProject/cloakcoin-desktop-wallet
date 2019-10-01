@@ -9,28 +9,32 @@ import { NavLink } from 'react-router-dom'
 import cn from 'classnames'
 import { translate } from 'react-i18next'
 
+import { Decimal } from 'decimal.js'
 import RpcPolling from '~/components/rpc-polling/rpc-polling'
 import { PopupMenuActions } from '~/reducers/popup-menu/popup-menu.reducer'
-// import { PopupMenu, PopupMenuItem } from '~/components/popup-menu'
 import { OverviewState, OverviewActions } from '~/reducers/overview/overview.reducer'
-import Balance from '~/components/overview/Balance'
+import { AddressBookActions } from '~/reducers/address-book/address-book.reducer'
+import { SystemInfoState } from '~/reducers/system-info/system-info.reducer'
+import { OptionsState } from '~/reducers/options/options.reducer'
+import Balances from '~/components/overview/Balances'
 import TransactionHistory from '~/components/overview/TransactionHistory'
 import PriceChart from '~/components/overview/PriceChart'
-// import { CloakService } from '../../service/cloak-service'
 
 import styles from './overview.scss'
 import HLayout from '~/assets/styles/h-box-layout.scss'
 import VLayout from '~/assets/styles/v-box-layout.scss'
 
 const overviewPopupMenuId = 'overview-row-popup-menu-id'
-const walletInfoPollingInterval = 2.0 // 10.0
-const transactionsPollingInterval = 5.0 // 30.0
+const transactionsPollingInterval = 30.0
+const priceChartPollingInterval = 60.0
 
 type Props = {
   t: any,
   overview: OverviewState,
-  actions: object,
-  popupMenu: object
+  systemInfo: SystemInfoState,
+  options: OptionsState,
+  popupMenu: object,
+  addressBookActions: object
 }
 
 /**
@@ -38,9 +42,44 @@ type Props = {
  * @extends {Component<Props>}
  */
 class Overview extends Component<Props> {
-	props: Props
-
+  props: Props
+  
   componentDidMount() {
+    this.props.addressBookActions.loadAddressBook()
+  }
+  
+  getBalances() {
+    const week = 7
+
+    let timeLimit = ((Date.now() / 1000 / 3600 / 24) - (week - 1)) * 24 * 3600
+    if (timeLimit < 0) {
+      timeLimit = 0
+    }
+
+    let balanceChangesIn7Days = Decimal(`0`)
+    this.props.overview.transactions.forEach((t) => {
+      if (t.timestamp >= timeLimit) {
+        balanceChangesIn7Days = balanceChangesIn7Days.add(t.amount)
+      }
+    })
+
+    const balance7DaysAgo = this.props.systemInfo.blockchainInfo.balance.sub(balanceChangesIn7Days)
+    const price7DaysAgo = (this.props.overview.prices && this.props.overview.prices.length >= (week+1)) ? this.props.overview.prices[this.props.overview.prices.length - 1 - week].price : Decimal(`0`)
+    const value7DaysAgo = balance7DaysAgo.mul(price7DaysAgo)
+    const priceToday = (this.props.overview.prices && this.props.overview.prices.length > 0) ? this.props.overview.prices[this.props.overview.prices.length - 1].price : Decimal(`0`)
+    const valueToday = this.props.systemInfo.blockchainInfo.balance.mul(priceToday)
+    const valueChangesIn7Days = valueToday.sub(value7DaysAgo)
+    
+    const val = {
+      balance: this.props.systemInfo.blockchainInfo.balance,
+      balanceChangesIn7Days,
+      reward: this.props.systemInfo.blockchainInfo.cloakingEarnings,
+      rewardEstimation: this.props.systemInfo.blockchainInfo.mintEstimation,
+      value: this.props.systemInfo.blockchainInfo.balance.mul(priceToday),
+      valueChangesIn7Days
+    }
+
+    return val
   }
 
 	/**
@@ -53,16 +92,6 @@ class Overview extends Component<Props> {
 			<div className={cn(styles.layoutContainer, HLayout.hBoxChild, VLayout.vBoxContainer)}>
 
         <RpcPolling
-          interval={walletInfoPollingInterval}
-          criticalChildProcess="NODE"
-          actions={{
-            polling: OverviewActions.getWalletInfo,
-            success: OverviewActions.gotWalletInfo,
-            failure: OverviewActions.getWalletInfoFailure
-          }}
-        />
-
-        <RpcPolling
           interval={transactionsPollingInterval}
           criticalChildProcess="NODE"
           actions={{
@@ -71,11 +100,21 @@ class Overview extends Component<Props> {
             failure: OverviewActions.getTransactionDataFromWalletFailure
           }}
         />
+        
+        <RpcPolling
+          interval={priceChartPollingInterval}
+          criticalChildProcess="NODE"
+          actions={{
+            polling: OverviewActions.getPriceChart,
+            success: OverviewActions.gotPriceChart,
+            failure: OverviewActions.getPriceChartFailed
+          }}
+        />
 
 				{ /* Route content */}
 				<div className={cn(styles.overviewContainer, VLayout.vBoxChild, HLayout.hBoxContainer)}>
           <div className={cn(HLayout.hBoxChild, VLayout.vBoxContainer)}>
-            <Balance balances={this.props.overview.balances} />
+            <Balances balances={this.getBalances()} />
             <div className={cn(styles.transactionChart)}>
               <div className={cn(styles.transactionsContainer)}>
                 <div className={cn(styles.transactionTitle)} >
@@ -86,27 +125,12 @@ class Overview extends Component<Props> {
                 </div>
                 <TransactionHistory
                   items={this.props.overview.transactions}
-                  onRowClick={(e, transactionId) => this.props.actions.getTransactionDetails(transactionId)}
+                  amountUnit={this.props.options.amountUnit}
                   onRowContextMenu={(e, transactionId) => this.props.popupMenu.show(overviewPopupMenuId, transactionId, e.clientY, e.clientX)}
                 />
               </div>
-              <PriceChart />
+              <PriceChart prices={this.props.overview.prices}/>
             </div>
-
-            {/* <PopupMenu id={overviewPopupMenuId}>
-              <PopupMenuItem onClick={(e, transactionId) => this.props.actions.getTransactionDetails(transactionId)}>
-                {t(`Show details`)}
-              </PopupMenuItem>
-              <PopupMenuItem onClick={(e, transactionId) => this.props.actions.copyValue(transactionId)}>
-                {t(`Copy value`)}
-              </PopupMenuItem>
-              <PopupMenuItem onClick={(e, transactionId) => this.props.actions.showInBlockExplorer(transactionId)}>
-                {t(`Show in Block Explorer`)}
-              </PopupMenuItem>
-              <PopupMenuItem onClick={(e, transactionId) => this.props.actions.showMemo(transactionId)}>
-                {t(`Show transaction memo`)}
-              </PopupMenuItem>
-            </PopupMenu> */}
 
           </div>
 				</div>
@@ -118,11 +142,13 @@ class Overview extends Component<Props> {
 
 
 const mapStateToProps = (state) => ({
-	overview: state.overview
+  systemInfo: state.systemInfo,
+  overview: state.overview,
+  options: state.options
 })
 
 const mapDispatchToProps = dispatch => ({
-  actions: bindActionCreators(OverviewActions, dispatch),
+  addressBookActions: bindActionCreators(AddressBookActions, dispatch),
   popupMenu: bindActionCreators(PopupMenuActions, dispatch)
 })
 

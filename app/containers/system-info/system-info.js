@@ -5,12 +5,12 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux';
 import { translate } from 'react-i18next'
 import cn from 'classnames'
-import { toastr } from 'react-redux-toastr'
 
 import RpcPolling from '~/components/rpc-polling/rpc-polling'
 import { getOS } from '~/utils/os'
 import { ChildProcessService } from '~/service/child-process-service'
 import { SystemInfoActions, SystemInfoState } from '~/reducers/system-info/system-info.reducer'
+import { OptionsState } from '~/reducers/options/options.reducer'
 import { getStore } from '~/store/configureStore'
 import { State } from '~/reducers/types'
 
@@ -44,14 +44,14 @@ import connected5Off from '~/assets/images/footer/connected5-off.png'
 
 const childProcess = new ChildProcessService()
 
-const daemonInfoPollingInterval = 7.0
 const blockchainInfoPollingInterval = 10.0
 
 type Props = {
   t: any,
   i18n: any,
 	systemInfo: SystemInfoState,
-	settings: SettingsState
+	settings: SettingsState,
+	options: OptionsState
 }
 
 class SystemInfo extends Component<Props> {
@@ -106,7 +106,9 @@ class SystemInfo extends Component<Props> {
   }
 
   isEnigmaOn() {
-    return this.props.systemInfo.blockchainInfo.anons > 0
+    return this.props.options.enigmaEnabled &&
+            this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage >= 100 &&
+            this.isShielded()
   }
   
   isWalletEncryped() {
@@ -121,8 +123,25 @@ class SystemInfo extends Component<Props> {
     return this.props.systemInfo.blockchainInfo.anons >= 5
   }
 
-  isMining() {
-    return !this.isWalletLocked() && this.isConnected(1) && this.isUpdated()
+  isStaking() {
+    return true
+  }
+
+  hasMatureCoin() {
+    return this.props.systemInfo.blockchainInfo.weight
+  }
+
+  getMintEstimation() {
+    return this.props.systemInfo.blockchainInfo.mintEstimation
+  }
+
+  isMinting() {
+    return !this.isWalletLocked() &&
+            this.isStaking() &&
+            this.isConnected(1) && 
+            this.isUpdated() && 
+            this.hasMatureCoin() && 
+            this.getMintEstimation() > 0
   }
 
   isUpdated() {
@@ -131,6 +150,35 @@ class SystemInfo extends Component<Props> {
 
   isConnected(power: number) {
     return this.props.systemInfo.blockchainInfo.connections > ((power - 1) * 2)
+  }
+
+  isCloakServiceStarting() {
+    return this.props.settings.childProcessesStatus && this.props.settings.childProcessesStatus.NODE === 'STARTING'
+  }
+
+  isCloakServiceRestarting() {
+    return this.props.settings.childProcessesStatus && this.props.settings.childProcessesStatus.NODE === 'RESTARTING'
+  }
+
+  isCloakServiceRunning() {
+    return this.props.settings.childProcessesStatus && this.props.settings.childProcessesStatus.NODE === 'RUNNING'
+  }
+
+  isCloakServiceStopping() {
+    return this.props.settings.childProcessesStatus && this.props.settings.childProcessesStatus.NODE === 'STOPPING'
+  }
+
+  isCloakServiceNotRunning() {
+    return !this.props.settings.childProcessesStatus || this.props.settings.childProcessesStatus.NODE === 'NOT RUNNING'
+  }
+
+  isCloakServiceFailed() {
+    return this.props.settings.childProcessesStatus &&
+          this.props.settings.childProcessesStatus.NODE !== 'STARTING' &&
+          this.props.settings.childProcessesStatus.NODE !== 'RESTARTING' &&
+          this.props.settings.childProcessesStatus.NODE !== 'RUNNING' &&
+          this.props.settings.childProcessesStatus.NODE !== 'STOPPING' &&
+          this.props.settings.childProcessesStatus.NODE !== 'NOT RUNNING'
   }
 
 	/**
@@ -142,16 +190,6 @@ class SystemInfo extends Component<Props> {
 
 		return (
 			<div className={cn(styles.systemInfoContainer, HLayout.hBoxContainer)}>
-        {/* <RpcPolling
-          criticalChildProcess="NODE"
-          interval={daemonInfoPollingInterval}
-          actions={{
-            polling: SystemInfoActions.getDaemonInfo,
-            success: SystemInfoActions.gotDaemonInfo,
-            failure: SystemInfoActions.getDaemonInfoFailure
-          }}
-        /> */}
-
         <RpcPolling
           interval={blockchainInfoPollingInterval}
           criticalChildProcess="NODE"
@@ -177,22 +215,23 @@ class SystemInfo extends Component<Props> {
 					</div> */}
 
 					{ /* Cloak status coloumn */}
-					{this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage < 100 && (<div className={styles.statusColumnWrapper}>
-						<div className={styles.statusColoumnTitle}>{t(`Synchronized`)}</div>
-						<div className={styles.statusColoumnValue}>{this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage}%</div>
-					</div>)}
-
-					{ /* Cloak status coloumn */}
-					{/* <div className={styles.statusColumnWrapper}>
-						<div className={styles.statusColoumnTitle}>{t(`Up to`)}</div>
-						<div className={styles.statusColoumnValue}>{this.displayLastBlockTime(this.props.systemInfo.blockchainInfo.lastBlockDate)}</div>
-					</div> */}
-
-					{ /* Cloak status coloumn */}
-					{/* <div className={styles.statusColumnWrapper}>
-						<div className={styles.statusColoumnTitle}>{t(`Connections`)}</div>
-						<div className={styles.statusColoumnValue}>{this.props.systemInfo.blockchainInfo.connectionCount}</div>
-					</div> */}
+          {this.isCloakServiceRunning() && this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage < 100 && 
+            (<div className={styles.statusColumnWrapper}>
+						  <div className={styles.statusColoumnTitle}>{t(`Synchronizing`)}</div>
+						  <div className={styles.statusColoumnValue}>{this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage}%</div>
+            </div>)}
+          {this.isCloakServiceRunning() && this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage >= 100 && 
+            (<div className={styles.statusColoumnTitleSuccess}>{t(`Cloak Service Running`)}</div>)}
+          {this.isCloakServiceStarting() && 
+            (<div className={styles.statusColoumnTitleWarning}>{t(`Cloak Service Starting`)}</div>)}
+          {this.isCloakServiceRestarting() && 
+            (<div className={styles.statusColoumnTitleWarning}>{t(`Cloak Service Restarting`)}</div>)}
+          {this.isCloakServiceStopping() && 
+            (<div className={styles.statusColoumnTitleWarning}>{t(`Cloak Service Stopping`)}</div>)}
+          {this.isCloakServiceFailed() && 
+            (<div className={styles.statusColoumnTitleError}>{t(`Cloak Service Failed`)}</div>)}
+          {this.isCloakServiceNotRunning() && 
+            (<div className={styles.statusColoumnTitleError}>{t(`Cloak Service Not Running`)}</div>)}
 
 				</div>
 
@@ -201,7 +240,7 @@ class SystemInfo extends Component<Props> {
           <img src={this.isWalletEncryped() ? encryptOn : encryptOff} alt="status icon" />
           <img src={this.isWalletLocked() ? lockOn : lockOff} alt="status icon" />
           <img src={this.isShielded() ? shieldOn : shieldOff} alt="status icon" />
-          <img src={this.isMining() ? miningOn : miningOff} alt="status icon" />
+          <img src={this.isMinting() ? miningOn : miningOff} alt="status icon" />
           <img src={this.isUpdated() ? updateOn : updateOff} alt="status icon" />
           <div className={styles.connectionsContainer}>
             <img src={this.isConnected(1) ? connected1On : connected1Off} alt="status icon" />
@@ -220,8 +259,8 @@ class SystemInfo extends Component<Props> {
 
 const mapStateToProps = (state: State) => ({
 	systemInfo: state.systemInfo,
-	sendCash: state.sendCash,
-	settings: state.settings
+  settings: state.settings,
+  options: state.options
 })
 
 export default connect(mapStateToProps, null)(translate('other')(SystemInfo))

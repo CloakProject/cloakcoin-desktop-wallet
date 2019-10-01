@@ -5,28 +5,43 @@
 // @flow
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
+import { bindActionCreators } from 'redux'
+import { NavLink } from 'react-router-dom'
+import cn from 'classnames'
 import { translate } from 'react-i18next'
 
+import * as Joi from 'joi'
 import { Decimal } from 'decimal.js'
-import { getStore } from '~/store/configureStore'
-import RoundedInput from '~/components/rounded-form/RoundedInput'
+import { truncateAmount } from '~/utils/decimal'
+import {
+  RoundedForm,
+  RoundedButton,
+  RoundedInput,
+  RoundedInputWithPaste,
+} from '~/components/rounded-form'
 import DropdownSelect from '~/components/dropdown-select/DropdownSelect'
 import TransactionModal from '~/components/send-cash/TransactionModal'
 import { SendCashActions, SendCashState } from '~/reducers/send-cash/send-cash.reducer'
-import { AddressBookActions, AddressBookState } from '~/reducers/address-book/address-book.reducer'
+import { SystemInfoState } from '~/reducers/system-info/system-info.reducer'
+import { OptionsState } from '~/reducers/options/options.reducer'
 import styles from './send-cash.scss'
 import HLayout from '~/assets/styles/h-box-layout.scss'
 import VLayout from '~/assets/styles/v-box-layout.scss'
-import sendImg from '~/assets/images/main/send/send.png';
-import addressImg from '~/assets/images/main/addressbook.png';
-import pasteImg from '~/assets/images/main/send/paste.png';
-import deleteImg from '~/assets/images/main/send/delete.png';
-import checkmarkImg from '~/assets/images/main/send/checkmark.png';
+import sendImg from '~/assets/images/main/send/send.png'
+import addressImg from '~/assets/images/main/addressbook.png'
+import deleteImg from '~/assets/images/main/send/delete.png'
+import checkmarkImg from '~/assets/images/main/send/checkmark.png'
+import ValidateAddressService from '~/service/validate-address-service'
+import ValidateAmountService from '~/service/validate-amount-service'
+
+const validateAddress = new ValidateAddressService()
+const validateAmount = new ValidateAmountService()
 
 type Props = {
-  t: any,
+	t: any,
 	sendCash: SendCashState,
-	newAddressModal: AddressBookState.newAddressModal
+	systemInfo: SystemInfoState,
+	options: OptionsState
 }
 
 /**
@@ -39,245 +54,364 @@ class SendCash extends Component<Props> {
 	constructor(props) {
 		super(props);
 		this.state = {
-			isEnigma: true,
-			receiverCount: 1,
-			receivers: [],
-			labels: [],
-			amounts: [],
-			amountUnits: [],
-			error: '',
-			isTxModalVisible: false,
+			isTxModalVisible: false
 		};
 	}
 
-	/**
-	 * @memberof SendCash
-	 */
 	componentDidMount() {
-    getStore().dispatch(SendCashActions.checkAddressBookByName())
+		this.defaultReception()
 	}
 
-	getEnigmalyToggleButtonClasses() {
-		return this.props.sendCash.isEnigmaTransactions
-			? `${styles.toggleButton} ${styles.toggleButtonOn}`
-			: `${styles.toggleButton}`
+	componentDidUpdate(prevProps) {
+    if (prevProps.options.amountUnit !== this.props.options.amountUnit) {
+      this.props.sendCash.receptionUnits.forEach(u => {
+				this.toggleAmountUnit(u.id, this.getDefaultAmountUnit())
+			})
+    }
+  }
+
+	getValidationSchema() {
+		const { t, sendCash } = this.props
+		const js = {}
+		sendCash.receptionUnits.forEach(u => {
+			const {id: i, unit} = u
+			js[`toAddress${i}`] = (
+				validateAddress.getJoi()
+				.cloakAddress()
+				.validAll()
+				.label(t(`Send To`))
+			)
+			js[`label${i}`] = (
+				validateAddress.getJoiWithAddressBook()
+				.addressBook()
+				.allow('', null)
+				.valid()
+				.label(t(`Label`))
+			)
+			if (unit === 1) {
+				js[`amount${i}`] = (
+					validateAmount.getJoi()
+					.cloakAmount()
+					.validCloak()
+					.label(t(`Amount`))
+				)
+			} else if (unit === 1000) {
+				js[`amount${i}`] = (
+					validateAmount.getJoi()
+					.cloakAmount()
+					.validCloakM()
+					.label(t(`Amount`))
+				)
+			} else if (unit === 1000000) {
+				js[`amount${i}`] = (
+					validateAmount.getJoi()
+					.cloakAmount()
+					.validCloakU()
+					.label(t(`Amount`))
+				)
+			}
+		})
+		return Joi.object().keys(js)
 	}
 
-	onSendButtonClicked() {
-		this.props.sendCash.isEnigmaTransactions = this.state.isEnigma;
-		//CDRBTjswQwN9UKz42r8bhxhAqYnyhVGUtj
-		const receiptions = [];
-		if (this.state.receivers.length === 0 || this.state.amounts.length === 0) {
-			this.setState({error: 'Please fill out all fields'});
-			return;
+	defaultReception() {
+		if (this.props.sendCash.receptionUnits.length <= 0) {
+			this.newReception()
+		}  else {
+			setTimeout(this.scrollToBottom, 100)
 		}
+	}
 
-		for (let i = 0; i < this.state.labels.length; i +=1) {
-			this.props.newAddressModal.defaultValues.name = this.state.labels[i];
-			this.props.newAddressModal.defaultValues.address = this.state.receivers[i];
-			this.props.newAddressModal.defaultValues.isEnigma = this.state.isEnigma;
-			if (this.state.labels[i].trim().length !== 0) {
-				getStore().dispatch(AddressBookActions.newAddressModal.addAddress());
+	newReception() {
+		let maxId = 0
+		for (let i = 0; i < this.props.sendCash.receptionUnits.length; i += 1) {
+			const {id} = this.props.sendCash.receptionUnits[i]
+			if (maxId < id) {
+				maxId = id
 			}
 		}
+		this.props.actions.newReception(maxId + 1, this.getDefaultAmountUnit())
+		setTimeout(this.scrollToBottom, 100)
+	}
 
-		for (let i = 0; i < this.state.receivers.length; i +=1) {
-			if (this.state.receivers[i].trim().length === 0 || !this.state.amounts[i]) {
-				break;
-			}
-			let amountToSend;
-			amountToSend = this.state.amounts[i];
-			if (this.state.amountUnits[i] === 'mCLOAK') {
-				amountToSend = this.state.amounts[i] / 1000;
-			}	else if (this.state.amountUnits[i] === 'μCLOAK') {
-				amountToSend = this.state.amounts[i] / 100000;
-			}
-			receiptions.push({
-				toAddress: this.state.receivers[i],
-				amountToSend: new Decimal(amountToSend)
-			});
+	scrollToBottom() {
+		const receiverContainerDom = document.getElementById('receiverContainer')
+		receiverContainerDom.scrollTop = receiverContainerDom.scrollHeight
+	}
+
+	removeReception(id) {
+		if (!this.isAbleToSend()) {
+			return
 		}
-		if (receiptions.length === this.state.receiverCount) {
-			this.setState({error: ''});
+		if (this.props.sendCash.receptionUnits.length <= 1) {
+			this.clearReceptions()
 		} else {
-			this.setState({error: 'Please fill out all fields'});
-			return;
+			this.props.actions.removeReception(id)		
 		}
-		this.props.sendCash.receiptions = receiptions;
-		this.setState({isTxModalVisible: true});
-		getStore().dispatch(SendCashActions.sendCash());
 	}
 
-	selectAmountUnit = (i, type) => {
-		// let amounts = this.state.amounts;
-		let amountUnits = this.state.amountUnits.slice();
-		amountUnits[i] = type;
-		
-		// if (type === 'CLOAK') {
-		// 	if(this.state.amountUnits[i]) {
-		// 		if (this.state.amountUnits[i] === 'mCLOAK') {
-		// 			amounts[i] = amounts[i] / 1000;
-		// 		} else if (this.state.amountUnits[i] === 'μCLOAK') {
-		// 			amounts[i] = amounts[i] / 1000000;
-		// 		}
-		// 	}
-		// }	else if (type === 'mCLOAK') {
-		// 	if(this.state.amountUnits[i]) {
-		// 		if (this.state.amountUnits[i] === 'CLOAK') {
-		// 			amounts[i] = amounts[i] * 1000;
-		// 		} else if (this.state.amountUnits[i] === 'μCLOAK') {
-		// 			amounts[i] = amounts[i] / 1000;
-		// 		}
-		// 	}
-		// } else if (type === 'μCLOAK') {
-		// 	if(this.state.amountUnits[i]) {
-		// 		if (this.state.amountUnits[i] === 'CLOAK') {
-		// 			amounts[i] = amounts[i] * 1000000;
-		// 		} else if (this.state.amountUnits[i] === 'mCLOAK') {
-		// 			amounts[i] = amounts[i] * 1000;
-		// 		}
-		// 	}
-		// }
-
-		this.setState({amountUnits})
+	clearReceptions() {
+		this.props.actions.removeReceptions()
+		this.newReception()
 	}
 
-	selectEnigma = () => {
-		const { isEnigma } = this.state;
-		this.setState({ isEnigma: !isEnigma });
+	toggleAmountUnit(id, unit) {
+		if (!this.isAbleToSend()) {
+			return
+		}
+		this.props.actions.toggleAmountUnit(id, unit)
 	}
 
-	addMoreRecipient = () => {
-		const receiverCount = this.state.receiverCount + 1;
-		this.setState({ receiverCount });
+	checkNaviClickDisabled = (e) => {
+		if (this.isAbleToSend()) {
+			return
+		}
+    e.preventDefault()
+  }
+
+	toggleEnigmaSend() {
+		if (!this.isAbleToEnigmaSend()) {
+			return
+		}
+		this.props.actions.toggleEnigmaSend(!this.isEnigmaSend())
 	}
 
-	handleReceiverChange = (value, i) => {
-		let receivers = this.state.receivers.slice();
-    receivers[i] = value;
-    this.setState({receivers});
+	changeEnigmaSendCloakers(cloakers) {
+		this.props.actions.changeEnigmaSendCloakers(parseInt(cloakers, 10))
 	}
 
-	handleLabelChange = (value, i) => {
-		let labels = this.state.labels.slice();
-    labels[i] = value;
-    this.setState({labels});
+	changeEnigmaSendTimeout(timeout) {
+		this.props.actions.changeEnigmaSendTimeout(parseInt(timeout, 10))
 	}
 
-	handleAmountChange = (value, i) => {
-		let amounts = this.state.amounts.slice();
-    amounts[i] = value;
-    this.setState({amounts});
+	sendCash() {
+		this.setState({isTxModalVisible: true})
+		this.props.actions.sendCash(this.isAbleToEnigmaSend() && this.isEnigmaSend(),
+																this.props.sendCash.enigmaSendCloakers,
+																this.props.sendCash.enigmaSendTimeout)
+	}
+
+	closeTransactionModal() {
+		this.setState({isTxModalVisible: false})
+		this.clearReceptions()
+	}
+
+	isWalletLocked() {
+    return this.props.systemInfo.blockchainInfo.unlockedUntil !== null && this.props.systemInfo.blockchainInfo.unlockedUntil.getTime() < Date.now()
+  }
+
+	isAbleToEnigmaSend() {
+		return this.props.options.enigmaEnabled &&
+						this.props.systemInfo.blockchainInfo.anons >= 5 &&
+						this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage >= 100
+	}
+
+	isAbleToSend() {
+		return !this.props.sendCash.isSendingCash && !this.isWalletLocked()
+	}
+
+	isEnigmaSend() {
+		return this.props.sendCash.isEnigmaSend
+	}
+
+	getDefaultAmountUnit() {
+		let unit = 1
+		if (this.props.options.amountUnit === 'cloakM') {
+			unit = 1000
+		} else if (this.props.options.amountUnit === 'cloakU') {
+			unit = 1000 * 1000
+		}
+		return unit
+	}
+
+	getAmountUnitToDisplay() {
+		const unit = this.getDefaultAmountUnit()
+		let strUnit = 'CLOAK'
+		if (unit === 1000) {
+			strUnit = 'mCLOAK'
+		} else if (unit === 1000 * 1000) {
+			strUnit = 'μCLOAK'
+		}
+		return strUnit
+	}
+
+	getAmountToDisplay(amount: Decimal) {
+		return truncateAmount(amount.mul(Decimal(this.getDefaultAmountUnit())))
+	}
+
+	renderRecipient(reception) {
+		const { t } = this.props
+		const i = reception.id
+		const u = reception.unit
+
+		return (<div key={i}>
+			<div className={styles.sendAddress}>
+				<p>{t('Send to')}</p>
+				<RoundedInputWithPaste
+					name={`toAddress${i}`}
+					placeholder={t('Enter a valid CloakCoin or ENIGMA address')}
+					disabled={!this.isAbleToSend()}
+				/>
+				<div className={styles.sendCtrl}>
+					<NavLink
+						className={cn(!this.isAbleToSend() ? styles.disabled : '')}
+						disabled={!this.isAbleToSend()}
+						to="/address-book"
+						onClick={this.checkNaviClickDisabled}
+					>
+						<img src={addressImg} alt="img" />
+					</NavLink>
+					<img
+						className={cn(!this.isAbleToSend() ? styles.disabled : '')}
+						src={deleteImg}
+						alt="img"
+						disabled={!this.isAbleToSend()}
+						onClick={() => this.removeReception(i)} />
+				</div>
+			</div>
+			<div className={styles.addressLabel}>
+				<p>{t('Label')}</p>
+				<RoundedInput
+					name={`label${i}`}
+					placeholder={t('Enter a label for this address to add it to your address book')}
+					disabled={!this.isAbleToSend()}
+				/>
+			</div>
+			<div className={styles.sendAmount}>
+				<p>{t('Amount')}</p>
+				<div className={styles.amoutInputWrapper}>
+					<div className={styles.amoutInput}>
+						<RoundedInput
+							name={`amount${i}`}
+							type="number"
+							placeholder={t('0.00')}
+							disabled={!this.isAbleToSend()}
+						/>
+					</div>
+					<div className={styles.amountUnit}>
+						<span>{t('CLOAK')}</span>
+						<div 
+							className={cn((u === 1) ? styles.active : '', !this.isAbleToSend() ? styles.disabled : '')}
+							disabled={!this.isAbleToSend()}
+							onClick={() => this.toggleAmountUnit(i, 1)} />
+						<span>{t('mCLOAK')}</span>
+						<div 
+							className={cn((u === 1000) ? styles.active : '', !this.isAbleToSend() ? styles.disabled : '')}
+							disabled={!this.isAbleToSend()}
+							onClick={() => this.toggleAmountUnit(i, 1000)} />
+						<span>{t('μCLOAK')}</span>
+						<div 
+							className={cn((u === 1000000) ? styles.active : '', !this.isAbleToSend() ? styles.disabled : '')}
+							disabled={!this.isAbleToSend()}
+							onClick={() => this.toggleAmountUnit(i, 1000000)} />
+					</div>
+				</div>
+			</div>
+		</div>)
 	}
 
 	render() {
-    const { t } = this.props
-		const cloakBalance = "3,192.32";
-		let receiverDom = [];
-		for(let i = 0; i < this.state.receiverCount; i += 1) {
-			receiverDom.push(
-				<div key={i}>
-					<div className={styles.sendAddress}>
-						<p>{t('Send to')}</p>
-						<RoundedInput
-							name="receiver"
-							placeholder={t('Enter a valid CloakCoin or ENIGMA address')}
-							disabled={this.props.sendCash.isInputDisabled}
-							value={this.state.receivers[i] || ''}
-							onChange={value => this.handleReceiverChange(value, i)}
-						/>
-						<div className={styles.sendCtrl}>
-							<img src={addressImg} alt="img" />
-							<img src={pasteImg} alt="img" />
-							<img src={deleteImg} alt="img" />
-						</div>
-					</div>
-					<div className={styles.addressLabel}>
-						<p>{t('Label')}</p>
-						<RoundedInput
-							name="label"
-							placeholder={t('Enter a label for this address to add it to your address book')}
-							disabled={this.props.sendCash.isInputDisabled}
-							value={this.state.labels[i] || ''}
-							onChange={value => this.handleLabelChange(value, i)}
-						/>
-					</div>
-					<div className={styles.sendAmount}>
-						<p>{t('Amount')}</p>
-						<div className={styles.amoutInputWrapper}>
-							<div className={styles.amoutInput}>
-								<RoundedInput
-									name="amount"
-									type="number"
-									placeholder={t('0.00')}
-									disabled={this.props.sendCash.isInputDisabled}
-									value={this.state.amounts[i] || ''}
-									onChange={value => this.handleAmountChange(value, i)}
-									number
-								/>
-							</div>
-							<div className={styles.amountUnit}>
-								<span>{t('CLOAK')}</span>
-								<div className={(!this.state.amountUnits[i] || this.state.amountUnits[i] === 'CLOAK') ? styles.active : ''} onClick={() => this.selectAmountUnit(i, 'CLOAK')} />
-								<span>{t('mCLOAK')}</span>
-								<div className={(this.state.amountUnits[i] && this.state.amountUnits[i] === 'mCLOAK') ? styles.active : ''} onClick={() => this.selectAmountUnit(i, 'mCLOAK')} />
-								<span>{t('μCLOAK')}</span>
-								<div className={(this.state.amountUnits[i] && this.state.amountUnits[i] === 'μCLOAK') ? styles.active : ''} onClick={() => this.selectAmountUnit(i, 'μCLOAK')}/>
-							</div>
-						</div>
-					</div>
-				</div>
-			);
-		}
+    const { t, sendCash } = this.props
 
 		return (
 			<div className={[styles.sendCashContainer, VLayout.vBoxChild, HLayout.hBoxContainer].join(' ')}>
 				<div className={styles.sendCashWrapper}>
-					<TransactionModal isvisible={this.state.isTxModalVisible} txId={this.props.sendCash.transactionId} onClose={() => this.setState({isTxModalVisible: false})} />
-					<div className={styles.leftSide}>
-						<img src={sendImg} alt="img" />
-						<p>{t('SEND COINS')}</p>
-						<p>{t(`{{cloakBalance}} CLOAK`, { cloakBalance })}</p>
-						<p>{t('BALANCE')}</p>
-						<button
-							type="button"
-							onClick={() => this.onSendButtonClicked()}
-							onKeyDown={() => this.onSendButtonClicked()}
-							disabled={this.props.sendCash.isInputDisabled}
-						>
-							{t(`Send`)}
-						</button>
-					</div>
-					<div className={styles.rightSide}>
-						<div className={styles.receiverContainer}>
-							{receiverDom}
+					<TransactionModal isVisible={this.state.isTxModalVisible && sendCash.transactionId} txId={sendCash.transactionId} onClose={() => this.closeTransactionModal()} />
+					<RoundedForm
+						className={styles.form}
+						id="sendCash"
+						schema={this.getValidationSchema()}
+						options={{abortEarly: true}}
+					>
+						<div className={styles.leftSide}>
+							<img className={styles.statusImg} src={sendImg} alt="img" />
+							<p>{t('SEND COINS')}</p>
+							<p>{this.getAmountToDisplay(this.props.systemInfo.blockchainInfo.balance)}&nbsp;{t(this.getAmountUnitToDisplay())}</p>
+							<p>{t('BALANCE')}</p>
+							<RoundedButton
+								className={styles.send}
+								type="submit"
+								onClick={() => this.sendCash()}
+								spinner={sendCash.isSendingCash}
+								disabled={!this.isAbleToSend()}
+							>
+								{t(`Send`)}
+							</RoundedButton>
 						</div>
-						{this.state.error !== '' && <p className={styles.error}>{this.state.error}</p> }
-						<div className={styles.sendOption}>
-							<button
-								type="button"
-								disabled={this.props.sendCash.isInputDisabled}
-								onClick={this.addMoreRecipient}
-							>
-								{t(`Add recipient`)}
-							</button>
-							<button
-								type="button"
-								disabled={this.props.sendCash.isInputDisabled}
-								onClick={() => this.setState({receiverCount: 1, receivers: [], amounts: [], amountUnits: []})}
-							>
-								{t(`Clear all`)}
-							</button>
-							<span>{t('Enigma')}</span>
-							<div className={styles.checkmark} onClick={this.selectEnigma} >
-								{this.state.isEnigma && <img src={checkmarkImg} alt="img" /> }
+						<div className={styles.rightSide}>
+							<div id="receiverContainer" className={styles.receiverContainer}>
+								{sendCash.receptionUnits.map(r => (this.renderRecipient(r)))}
 							</div>
-							<span>{t('Cloakers')}</span>
-							<DropdownSelect options={[{value: 25, label: 25}]} />
-							<span>{t('Timeout')}</span>
-							<DropdownSelect options={[{value: '3m', label: '3m'}]} />
+							<div className={styles.sendOption}>
+								<RoundedButton
+									className={styles.addReception}
+									type="button"
+									onClick={() => this.newReception()}
+									disabled={!this.isAbleToSend()}
+								>
+									{t(`Add recipient`)}
+								</RoundedButton>
+								<RoundedButton
+									className={styles.clearReceptions}
+									type="button"
+									onClick={() => this.clearReceptions()}
+									disabled={!this.isAbleToSend()}
+								>
+									{t(`Clear all`)}
+								</RoundedButton>
+								<span>{t('Enigma')}</span>
+								<div 
+									className={cn(styles.checkmark, !this.isAbleToSend() ? styles.disabled : '', !this.isAbleToEnigmaSend() ? styles.disabled : '')}
+									onClick={() => this.toggleEnigmaSend()}
+									disabled={!this.isAbleToSend() || !this.isAbleToEnigmaSend()}
+								>
+									{this.isEnigmaSend() && <img src={checkmarkImg} alt="img" /> }
+								</div>
+								<span className={styles.cloakers}>{t('Cloakers')}</span>
+								<DropdownSelect 
+									className={cn(styles.cloakersSelector, !this.isEnigmaSend() ? styles.disabled : '')}
+									disabled={!this.isAbleToSend() || !this.isEnigmaSend()}
+									onChange={(event) => this.changeEnigmaSendCloakers(event.target.value)}
+									value={this.props.sendCash.enigmaSendCloakers}
+								 	options={[
+										{value: 5, label: 5},
+										{value: 6, label: 6},
+										{value: 7, label: 7},
+										{value: 8, label: 8},
+										{value: 9, label: 9},
+										{value: 10, label: 10},
+										{value: 11, label: 11},
+										{value: 12, label: 12},
+										{value: 13, label: 13},
+										{value: 14, label: 14},
+										{value: 15, label: 15},
+										{value: 16, label: 16},
+										{value: 17, label: 17},
+										{value: 18, label: 18},
+										{value: 19, label: 19},
+										{value: 20, label: 20},
+										{value: 21, label: 21},
+										{value: 22, label: 22},
+										{value: 23, label: 23},
+										{value: 24, label: 24},
+										{value: 25, label: 25}
+									]} />
+								<span className={styles.timeout}>{t('Timeout')}</span>
+								<DropdownSelect
+									className={cn(styles.timeoutSelector, !this.isEnigmaSend() ? styles.disabled : '')}
+									disabled={!this.isAbleToSend() || !this.isEnigmaSend()}
+									onChange={(event) => this.changeEnigmaSendTimeout(event.target.value)}
+									value={this.props.sendCash.enigmaSendTimeout}
+									options={[
+										{value: 60, label: '1m'},
+										{value: 120, label: '2m'},
+										{value: 180, label: '3m'},
+										{value: 240, label: '4m'},
+										{value: 300, label: '5m'}
+									]} />
+							</div>
 						</div>
-					</div>
+					</RoundedForm>
 				</div>
 			</div>
 		)
@@ -286,7 +420,12 @@ class SendCash extends Component<Props> {
 
 const mapStateToProps = state => ({
 	sendCash: state.sendCash,
-	newAddressModal: state.addressBook.newAddressModal
+	systemInfo: state.systemInfo,
+	options: state.options
 })
 
-export default connect(mapStateToProps, null)(translate('send-cash')(SendCash))
+const mapDispatchToProps = dispatch => ({
+  actions: bindActionCreators(SendCashActions, dispatch),
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(translate('send-cash')(SendCash))

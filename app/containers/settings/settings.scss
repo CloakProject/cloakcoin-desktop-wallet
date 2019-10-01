@@ -30,11 +30,11 @@
 
             p {
                 margin-left: 60px;
-                font-size: 20px;
+                font-size: 1.4rem;
             }
         }
 
-        .networkStatus .active {
+        .active {
             &::before {
                 background-color: $BASE_COLOR_GREEN;
             }
@@ -54,7 +54,7 @@
 
                 p {
                     margin-left: 20px;
-                    font-size: 20px;
+                    font-size: 1.4rem;
                 }
             }
 

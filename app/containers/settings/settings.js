@@ -1,7 +1,6 @@
 // @flow
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { bindActionCreators } from 'redux'
 import { translate } from 'react-i18next'
 import cn from 'classnames'
 import Status from '~/components/settings/status/Status'
@@ -15,9 +14,8 @@ import styles from './settings.scss'
 import HLayout from '~/assets/styles/h-box-layout.scss'
 import VLayout from '~/assets/styles/v-box-layout.scss'
 
-import { PopupMenuActions } from '~/reducers/popup-menu/popup-menu.reducer'
 import { SystemInfoState } from '~/reducers/system-info/system-info.reducer'
-import { SettingsActions, SettingsState } from '~/reducers/settings/settings.reducer'
+import { OptionsState } from '~/reducers/options/options.reducer'
 import statusImg from '~/assets/images/main/settings/status.png';
 import encryptWalletImg from '~/assets/images/main/settings/encrypt-wallet.png';
 import encryptedWalletImg from '~/assets/images/main/settings/encrypted-wallet.png';
@@ -31,8 +29,7 @@ import backupWalletImg from '~/assets/images/main/settings/backup-wallet.png';
 type Props = {
   t: any,
   systemInfo: SystemInfoState,
-  settings: SettingsState,
-  actions: SettingsActions,
+  options: OptionsState
 }
 
 /**
@@ -47,22 +44,6 @@ class Settings extends Component<Props> {
     this.state = {
       settingId: 'Status'
     }
-  }
-
-  getIsChildProcessUpdating(processName) {
-    const processStatus = this.props.settings.childProcessesStatus[processName]
-    const updateStatuses = ['STARTING', 'STOPPING', 'RESTARTING']
-    return updateStatuses.indexOf(processStatus) !== -1
-  }
-
-  getStartStopLocalNodeButtonLabel() {
-    const { t } = this.props
-    const nodeStatus = this.props.settings.childProcessesStatus.NODE
-    const startStatuses = ['NOT RUNNING', 'STARTING', 'FAILED']
-
-    return startStatuses.indexOf(nodeStatus) !== -1
-      ? t(`Start local node`)
-      : t(`Stop local node`)
   }
 
   onChooseSetting = id => {
@@ -82,7 +63,7 @@ class Settings extends Component<Props> {
   }
 
   isEnigmaOn() {
-    return this.props.systemInfo.blockchainInfo.anons > 0
+    return this.props.options.enigmaEnabled
   }
 
 	render() {
@@ -91,9 +72,9 @@ class Settings extends Component<Props> {
       {label: 'Status', icon: statusImg},
       {label: 'Encrypt wallet', icon: encryptWalletImg, inactive: this.isEncryptedWallet()},
       {label: 'Encrypted wallet', icon: encryptedWalletImg, inactive: !this.isEncryptedWallet()},
-      {label: 'Lock wallet', icon: lockWalletImg, inactive: this.isLockedWallet()},
-      {label: 'Unlock wallet', icon: lockedWalletImg, inactive: !this.isLockedWallet()},
-      {label: 'Change passphrase', icon: changePassphraseImg},
+      {label: 'Lock wallet', icon: lockWalletImg, inactive: !this.isEncryptedWallet() || this.isLockedWallet()},
+      {label: 'Unlock wallet', icon: lockedWalletImg, inactive: !this.isEncryptedWallet() || !this.isLockedWallet()},
+      {label: 'Change passphrase', icon: changePassphraseImg, inactive: !this.isEncryptedWallet()},
       {label: 'Enable Enigma', icon: enigmaOffImg, inactive: this.isEnigmaOn()},
       {label: 'Disable Enigma', icon: enigmaOnImg, inactive: !this.isEnigmaOn()},
       {label: 'Backup wallet', icon: backupWalletImg},
@@ -114,9 +95,13 @@ class Settings extends Component<Props> {
                     return null
                   }
                   return (
-                    <div className={cn(styles.item, styles.borderTop, this.state.settingId === item.label ? styles.active : '' )} key={item.label} onClick={() => this.onChooseSetting(item.label)}>
+                    <div
+                      className={cn(styles.item, styles.borderTop, this.state.settingId === item.label ? styles.active : '' )}
+                      key={item.label}
+                      onClick={() => this.onChooseSetting(item.label)}
+                    >
                       <img src={item.icon} alt="setting icon" />
-                      <p>{item.label}</p>
+                      <p>{t(item.label)}</p>
                     </div>  
                   )})
               }
@@ -125,11 +110,11 @@ class Settings extends Component<Props> {
           <div className={styles.rightSide}>
             {this.state.settingId === 'Status' && <Status />}
             {this.state.settingId === 'Encrypt wallet' && <EncryptWallet />}
-            {this.state.settingId === 'Encrypted wallet' && <EncryptWallet isEncrypted />}
+            {this.state.settingId === 'Encrypted wallet' && <EncryptWallet />}
             {this.state.settingId === 'Lock wallet' && <LockWallet />}
-            {this.state.settingId === 'Unlock wallet' && <LockWallet isLocked />}
+            {this.state.settingId === 'Unlock wallet' && <LockWallet />}
             {this.state.settingId === 'Change passphrase' && <ChangePassphrase />}
-            {this.state.settingId === 'Enable Enigma' && <DisableEnigma isEnigmaDisabled />}
+            {this.state.settingId === 'Enable Enigma' && <DisableEnigma />}
             {this.state.settingId === 'Disable Enigma' && <DisableEnigma />}
             {this.state.settingId === 'Backup wallet' && <BackupWallet />}
           </div>
@@ -141,12 +126,7 @@ class Settings extends Component<Props> {
 
 const mapStateToProps = state => ({
   systemInfo: state.systemInfo,
-	settings: state.settings
+  options: state.options
 })
 
-const mapDispatchToProps = dispatch => ({
-  actions: bindActionCreators(SettingsActions, dispatch),
-  popupMenu: bindActionCreators(PopupMenuActions, dispatch)
-})
-
-export default connect(mapStateToProps, mapDispatchToProps)(translate('settings')(Settings))
+export default connect(mapStateToProps, null)(translate('settings')(Settings))

@@ -2,14 +2,19 @@
 /* eslint-disable no-unused-vars */
 // @flow
 
+import { remote } from 'electron'
 import React from 'react'
 import { connect } from 'react-redux'
+import { bindActionCreators } from 'redux';
 import { Switch, Route, Redirect } from 'react-router'
 import cn from 'classnames'
+import path from 'path'
+import { getOS, getResourcesPath } from '~/utils/os'
 
 import WelcomePage from './get-started/WelcomePage'
 import TitleBarButtons from '~/components/title-bar-buttons/TitleBarButtons'
 import NaviBar from './navigation/navi-bar'
+import Options from './options/options'
 import SystemInfo from './system-info/system-info'
 import Overview from './overview/overview'
 import SendCash from './send-cash/send-cash'
@@ -23,7 +28,7 @@ import AddressBookPage from './AddressBookPage'
 import { getStore } from '../store/configureStore'
 import { AuthState } from '~/reducers/auth/auth.reducer'
 import { GetStartedState } from '~/reducers/get-started/get-started.reducer'
-import { SettingsActions } from '~/reducers/settings/settings.reducer'
+import { OptionsActions, OptionsState } from '~/reducers/options/options.reducer'
 
 import styles from './App.scss'
 import HLayout from '../assets/styles/h-box-layout.scss'
@@ -31,8 +36,13 @@ import VLayout from '../assets/styles/v-box-layout.scss'
 
 type Props = {
   auth: AuthState,
-  getStarted: GetStartedState
+  getStarted: GetStartedState,
+  options: OptionsState,
+  optionsActions: OptionsActions
 }
+
+const {Tray, Menu} = remote
+let tray = null
 
 /**
  * @export
@@ -40,7 +50,23 @@ type Props = {
  * @extends {React.Component<Props>}
  */
 class App extends React.Component<Props> {
-	props: Props
+  props: Props
+  
+  showHideApp() {
+    if (remote.getCurrentWindow().isVisible()) {
+      remote.getCurrentWindow().hide()
+    } else {
+      remote.getCurrentWindow().show()
+    }
+  }
+
+  showOptions() {
+    this.props.optionsActions.openOptions()
+  }
+
+  exitApp() {
+    remote.getCurrentWindow().close()
+  }
 
   getGetStartedContent() {
     return (
@@ -56,11 +82,34 @@ class App extends React.Component<Props> {
   }
 
   getMainContent() {
+    if (tray === null) {
+      let iconFileName = 'icon.png'
+      if (getOS() === 'macos') {
+        iconFileName = 'icon.icns'
+      } else if (getOS() === 'windows') {
+        iconFileName = 'icon.ico'
+      }
+
+      const basePath = getResourcesPath()
+      const iconPath = path.join(basePath, 'resources', `${iconFileName}`)
+    
+      tray = new Tray(iconPath)
+      const contextMenu = Menu.buildFromTemplate([
+        { label: 'Show/Hide', click: () => this.showHideApp() },
+        { label: 'Options...', click: () => this.showOptions() },
+        { type: 'separator' },
+        { label: 'Exit', click: () => this.exitApp() }
+      ])
+      tray.setToolTip('Cloak wallet v3.0')
+      tray.setContextMenu(contextMenu)
+    }
+
     return (
       <div className={cn(styles.contentContainer, VLayout.vBoxContainer)}>
 				<div className={cn(VLayout.vBoxChild, HLayout.hBoxContainer)}>
           <TitleBarButtons />
 					<NaviBar />
+          <Options />
 					<div className={cn(styles.layoutContent)}>
 						<Switch>
 							<Route exact path="/" render={() => (<Redirect to="/overview" />)} />
@@ -86,6 +135,7 @@ class App extends React.Component<Props> {
    * @memberof App
 	 */
 	render() {
+
     let content
     if (this.props.getStarted.isInProgress) {
       content = this.getGetStartedContent()
@@ -105,4 +155,8 @@ class App extends React.Component<Props> {
 	}
 }
 
-export default connect(state => state, null)(App)
+const mapDispatchToProps = dispatch => ({
+  optionsActions: bindActionCreators(OptionsActions, dispatch)
+})
+
+export default connect(state => state, mapDispatchToProps)(App)

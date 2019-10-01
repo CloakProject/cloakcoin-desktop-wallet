@@ -10,7 +10,13 @@
         height: 100%;
         display: flex;
         padding: 35px 30px;
+        padding-bottom: 70px;
         background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
+
+        .form {
+            display: flex;
+            width: 100%;
+        }
 
         p {
             margin-top: 0px;
@@ -19,16 +25,18 @@
         }
 
         .leftSide {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             width: 150px;
-            text-align: center;
 
-            img {
+            .statusImg {
                 width: 90px;
                 opacity: 0.2;
             }
 
             p:nth-child(2) {
-                color: $SEND_COIN_TEXT_COLOR;
+                color: $BASE_COLOR_RED;
                 margin-top: 15px;
             }
 
@@ -40,17 +48,16 @@
                 color: $BASE_COLOR_LIGHT_GREEN;
             }
 
-            button {
-                cursor: pointer;
-                width: 130px;
-                height: 32px;
-                background-color: $SEND_COIN_TEXT_COLOR;
+            .send {
+                background-color: $BASE_COLOR_RED;
+                border-color: $BASE_COLOR_RED;
                 color: white;
-                border: none;
-                border-radius: 3px;
-                margin-top: 110px;
-                margin-bottom: 40px;
-                font-size: 16px;
+                font-size: 1.2rem;
+            }
+
+            div {
+                margin-top: auto;
+                margin-bottom: 8px;
             }
         }
 
@@ -83,6 +90,17 @@
                             width: 35px;
                             opacity: 0.6;
                             margin-left: 15px;
+                        }
+                        img.disabled {
+                            cursor: default;
+                            opacity: 0.3;
+                        }
+                        a.disabled {
+                            cursor: default;
+                            opacity: 0.5;
+                            img {
+                                cursor: default;
+                            }
                         }
                     }
                 }
@@ -122,6 +140,11 @@
                                 margin-top: 6px;
                             }
 
+                            div.disabled {
+                                cursor: default;
+                                opacity: 0.5;
+                            }
+
                             .active {
                                 &::before {
                                     content: ' ';
@@ -141,15 +164,25 @@
             .sendOption {
                 display: flex;
                 margin-top: 25px;
+                justify-content: flex-end;
+                align-items: baseline;
 
                 button {
-                    cursor: pointer;
-                    width: 110px;
-                    height: 28px;
                     background-color: $SEND_COIN_BUTTON_COLOR;
+                    border-color: $SEND_COIN_BUTTON_COLOR;
                     margin-right: 25px;
-                    border: none;
                     color: white;
+                    font-size: 1rem;
+                }
+
+                .addReception {
+                    padding-left: 12px;
+                    padding-right: 12px;
+                }
+
+                .clearReceptions {
+                    padding-left: 30px;
+                    padding-right: 30px;
                 }
 
                 span {
@@ -158,18 +191,58 @@
                 }
 
                 .checkmark {
+                    display: flex;
                     cursor: pointer;
                     width: 18px;
                     height: 18px;
                     border: 1px solid rgba(255,255,255,0.5);
-                    text-align: center;
-                    margin-top: 5px;
+                    margin-top: auto;
+                    margin-bottom: auto;
                     margin-right: 20px;
                     img {
                         width: 18px;
                         height: 12px;
-                        margin-top: 1px
+                        margin-top: auto;
+                        margin-bottom: auto;
                     }
+                }
+
+                .checkmark.disabled {
+                    cursor: default;
+                    opacity: 0.5;
+                }
+
+                .cloakers {
+                    margin-right: 5px;
+                }
+
+                .cloakersSelector:disabled {
+                    opacity: 0.5;
+                }
+                
+                .cloakersSelector.disabled::after {
+                    opacity: 0.5;
+                }
+
+                .cloakersSelector::after {
+                    top: 35% !important;
+                }
+
+                .timeout {
+                    margin-left: 20px;
+                    margin-right: 5px;
+                }
+
+                .timeoutSelector:disabled {
+                    opacity: 0.5;
+                }
+
+                .timeoutSelector.disabled::after {
+                    opacity: 0.5;
+                }
+
+                .timeoutSelector::after {
+                    top: 35% !important;
                 }
             }
         }

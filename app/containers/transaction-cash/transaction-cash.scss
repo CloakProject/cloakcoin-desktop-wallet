@@ -3,7 +3,7 @@
 
 .transactionCashContainer {
     padding: 30px 60px;
-    height: calc(100% - 150px);
+    height: calc(100% - 45px);
 
     .txListWrapper {
         width: 100%;
@@ -12,25 +12,31 @@
         padding: 30px 30px;
         display: flex;
         flex-direction: column;
+        box-sizing: border-box;
         
         .txFilterContainer {
             width: 100%;
             display: flex;
+            align-items: baseline;
 
-            .dateField {
-                width: 21%;
+            input {
+                font-size: 1.2rem;
             }
 
-            .typeField {
+            .dateField {
                 width: 15%;
             }
 
+            .categoryField {
+                width: 27%;
+            }
+
             .addressField {
-                width: 46%;
+                width: 41%;
             }
 
             .amountField {
-                width: 18%;
+                width: 17%;
                 padding-left: 15px;
             }
         }

@@ -13,6 +13,7 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = dispatch => ({
   actions: bindActionCreators(AddressBookActions, dispatch),
+  newAddressModalActions: bindActionCreators(AddressBookActions.newAddressModal, dispatch),
   popupMenu: bindActionCreators(PopupMenuActions, dispatch)
 })
 

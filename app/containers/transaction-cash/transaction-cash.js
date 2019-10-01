@@ -11,6 +11,7 @@ import styles from './transaction-cash.scss'
 import HLayout from '~/assets/styles/h-box-layout.scss'
 import VLayout from '~/assets/styles/v-box-layout.scss'
 
+
 type Props = {
   t: any
 }
@@ -29,17 +30,28 @@ class TransactionCash extends Component<Props> {
     this.state = {
       address: '',
 			amount: 0,
-			period: 'all',
-			type: 'all'
+			period: -1,
+			category: 'all|all'
     }
   }
+
+	getDefaultAmountUnit() {
+		let unit = 1
+		if (this.props.options.amountUnit === 'cloakM') {
+			unit = 1000
+		} else if (this.props.options.amountUnit === 'cloakU') {
+			unit = 1000 * 1000
+		}
+		return unit
+	}
 
   handleAddressChange = (value) => {
     this.setState({address: value});
 	}
 
 	handleAmountChange = (value) => {
-    this.setState({amount: value});
+		const amount = parseInt(value, 10) / this.getDefaultAmountUnit()
+    this.setState({amount});
 	}
 
 	render() {
@@ -52,23 +64,29 @@ class TransactionCash extends Component<Props> {
 							<DropdownSelect
 								options={
 									[
-										{value: 'all', label: 'All'},
-										{value: 'lastmonth', label: 'Last month'}
+										{value: -1, label: 'All'},
+										{value: 30, label: 'Last month'},
+										{value: 7, label: 'Last week'}
 									]
 								}
 								onChange={e => this.setState({period: e.target.value})}
 							/>
 						</div>
-						<div className={styles.typeField}>
+						<div className={styles.categoryField}>
 							<DropdownSelect
 								options={
 									[
-										{value: 'all', label: 'All'},
-										{value: 'receive', label: 'receive'},
-										{value: 'send', label: 'send'}
+										{value: 'all|all', label: 'All'},
+										{value: 'receive', label: 'Received'},
+										{value: 'receive|enigma', label: 'Received with Enigma'},
+										{value: 'send', label: 'Sent'},
+										{value: 'send|enigma', label: 'Sent with Enigma'},
+										{value: 'generate', label: 'Mined'},
+										{value: 'immature|all', label: 'Immature'},
+										{value: 'orphan|all', label: 'Orphan'}
 									]
 								}
-								onChange={e => this.setState({type: e.target.value})}
+								onChange={e => this.setState({category: e.target.value})}
 							/>
 						</div>
 						<div className={styles.addressField}>
@@ -80,16 +98,16 @@ class TransactionCash extends Component<Props> {
 						</div>
 						<div className={styles.amountField}>
 							<RoundedInput
-								name="label"
+								type="number"
+								name="amount"
 								placeholder={t('Min. amount')}
 								onChange={value => this.handleAmountChange(value)}
-								number
 							/>
 						</div>
 					</div>
 					<TransactionsList
 						filterPeriod={this.state.period}
-						filterType={this.state.type}
+						filterCategory={this.state.category}
 						filterAddress={this.state.address}
 						filterAmount={this.state.amount} 
 					/>
@@ -100,7 +118,8 @@ class TransactionCash extends Component<Props> {
 }
 
 const mapStateToProps = state => ({
-	TransactionCash: state.TransactionCash
+	TransactionCash: state.TransactionCash,
+	options: state.options
 })
 
 export default connect(mapStateToProps, null)(translate('transaction-cash')(TransactionCash))
