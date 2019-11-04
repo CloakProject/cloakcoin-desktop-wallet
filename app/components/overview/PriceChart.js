@@ -129,7 +129,7 @@ class PriceChart extends Component<Props> {
 		return (
       <div className={cn(styles.chartContainer)}>
         <div className={cn(styles.chartTitle)} >
-          <div>{t(`Beaxy`)}</div>
+          <div>{t(`Exchange`)}</div>
           <div className={cn(styles.currecyValue)}>
             <span>{this.state.latest} €</span>
           </div>
