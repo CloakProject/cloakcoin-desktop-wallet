@@ -1,28 +1,17 @@
 // @flow
 import log from 'electron-log'
-import { tap, map, switchMap, mapTo } from 'rxjs/operators'
-import { of, concat, merge } from 'rxjs'
+import { tap, switchMap, mapTo } from 'rxjs/operators'
+import { of, merge, observable } from 'rxjs'
 import { ActionsObservable, ofType } from 'redux-observable'
 import { toastr } from 'react-redux-toastr'
-import { routerActions } from 'react-router-redux'
 
 import { Action } from '../types'
 import { OverviewActions } from './overview.reducer'
 import { RpcService } from '~/service/rpc-service'
+import { PriceChartService } from '~/service/price-chart-service'
 
 const rpc = new RpcService()
-
-const getWalletInfoEpic = (action$: ActionsObservable<Action>) => action$.pipe(
-  ofType(OverviewActions.getWalletInfo),
-  tap(() => rpc.requestWalletInfo()),
-  map(() => OverviewActions.empty())
-)
-
-const getWalletInfoFailureEpic = (action$: ActionsObservable<Action>) => action$.pipe(
-  ofType(OverviewActions.getWalletInfoFailure),
-  tap((action) => toastr.error(action.payload.errorMessage)),
-  mapTo(OverviewActions.empty())
-)
+const priceChart = new PriceChartService()
 
 const getTransactionDataFromWalletEpic = (action$: ActionsObservable<Action>) => action$.pipe(
   ofType(OverviewActions.getTransactionDataFromWallet),
@@ -36,28 +25,37 @@ const getTransactionDataDromWalletFailureEpic = (action$: ActionsObservable<Acti
   mapTo(OverviewActions.empty())
 )
 
-const getTransactionDetailsEpic = (action$: ActionsObservable<Action>) => action$.pipe(
-  ofType(OverviewActions.getTransactionDetails),
-  switchMap(action => rpc.getTransactionDetails(action.payload.transactionId)),
-  switchMap(transactionDetails => {
-    if (typeof transactionDetails !== 'object') {
-      log.error(`Can't get transaction details`, transactionDetails)
-      toastr.error(`Error getting transaction details`)
-      return of(OverviewActions.getTransactionDetailsFailed())
+const getPriceChartEpic = (action$: ActionsObservable<Action>) => action$.pipe(
+  ofType(OverviewActions.getPriceChart),
+  switchMap(() => priceChart.getPriceChart()),
+  switchMap((prices: observable) => {
+    if (!Array.isArray(prices)) {
+      log.error(`Can't get price chart`, prices)
+      toastr.error(`Error getting price chart`)
+      return of(OverviewActions.getPriceChartFailed())
     }
 
-    log.debug(`Got transaction details`, transactionDetails)
-    return concat(
-      of(OverviewActions.gotTransactionDetails(transactionDetails)),
-      of(routerActions.push('/overview/transaction-details'))
-    )
+    return of(OverviewActions.gotPriceChart(prices))
+  })
+)
+
+const getLatestPriceEpic = (action$: ActionsObservable<Action>) => action$.pipe(
+  ofType(OverviewActions.getLatestPrice),
+  switchMap(() => priceChart.getLatestPrice()),
+  switchMap((price: observable) => {
+    if (typeof price !== 'number') {
+      log.error(`Can't get latest price`, price)
+      toastr.error(`Error getting latest price`)
+      return of(OverviewActions.getLatestPriceFailed())
+    }
+
+    return of(OverviewActions.gotLatestPrice(price))
   })
 )
 
 export const OverviewEpics = (action$, state$) => merge(
-    getWalletInfoEpic(action$, state$),
-    getWalletInfoFailureEpic(action$, state$),
     getTransactionDataFromWalletEpic(action$, state$),
     getTransactionDataDromWalletFailureEpic(action$, state$),
-    getTransactionDetailsEpic(action$, state$)
+    getPriceChartEpic(action$, state$),
+    getLatestPriceEpic(action$, state$)
 )

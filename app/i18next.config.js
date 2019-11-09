@@ -5,7 +5,7 @@ import i18nextBackend from 'i18next-node-fs-backend'
 
 import { getResourcesPath } from './utils/os'
 
-const availableLanguages = ['en', 'eo']
+const availableLanguages = ['en', 'fr', 'ru']
 
 const availableNamespaces = [
   'get-started',
@@ -20,7 +20,8 @@ const availableNamespaces = [
   'service',
   'validation',
   'menu',
-  'other'
+  'other',
+  'options'
 ]
 
 // const isDev = process.env.NODE_ENV === 'development'

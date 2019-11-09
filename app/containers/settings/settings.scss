@@ -3,7 +3,7 @@
 .settingsContainer {
     padding: 30px 60px;
     display: flex;
-    height: calc(100vh - 350px);
+    height: calc(100% - 105px);
 
     p {
         margin-top: 0px;
@@ -13,6 +13,8 @@
     .leftSide {
         width: 280px;
         padding-top: 35px;
+        padding-bottom: 25px;
+        height: 100%;
         background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
 
         .networkStatus {

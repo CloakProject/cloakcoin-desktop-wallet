@@ -1,8 +1,8 @@
 import { Decimal } from 'decimal.js'
 // import { DECIMAL } from '~/constants/decimal'
 
-function truncateAmount(amount: Decimal) {
-  return amount.toFixed(2);
+function truncateAmount(amount: Decimal, places: number = 2) {
+  return amount.toFixed(places);
 }
 
 function toDecimalPlaces(amount: Decimal, places: number = 4) {

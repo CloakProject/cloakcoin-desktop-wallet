@@ -5,12 +5,11 @@ import path from 'path'
 import log from 'electron-log'
 import generator from 'generate-password'
 import PropertiesReader from 'properties-reader'
-import config from 'electron-settings'
 import { app, remote } from 'electron'
+import config from 'electron-settings'
 
 import { getClientInstance } from '~/service/rpc-service'
-import { getStore } from '~/store/configureStore'
-import { getOS, getExportDir, verifyDirectoryExistence } from '~/utils/os'
+import { getOS } from '~/utils/os'
 import { ChildProcessService } from './child-process-service'
 
 const childProcess = new ChildProcessService()
@@ -33,7 +32,7 @@ const configFileContents = [
   ``
 ].join(EOL)
 
-const cloakcoindArgs = ['-txindex=1', '-enigma', '-staking', '-gen', '-printtoconsole']
+const cloakcoindArgs = ['-txindex=1', '-enigma', '-staking', '-printtoconsole']
 
 
 /**
@@ -105,7 +104,7 @@ export class CloakService {
     }
 
     if (!cloakNodeConfig.rpcport) {
-      cloakNodeConfig.rpcport = cloakNodeConfig.testnet ? 18132 : 8132
+      cloakNodeConfig.rpcport = cloakNodeConfig.testnet ? 19661 : 29661
     }
 
     cloakNodeConfig.configPath = configPath
@@ -169,15 +168,44 @@ export class CloakService {
  * @memberof CloakService
  */
 async function startOrRestart({start}) {
-  console.log("startOrRestart", start)
   const caller = start ? childProcess.startProcess : childProcess.restartProcess
 
   const args = cloakcoindArgs.slice()
-
-  const miningAddress = config.get('miningAddress', false)
-
-  if (miningAddress) {
-    args.push(`-mineraddress=${miningAddress}`)
+  const options = config.get('newOptions', {})
+  if (options.mapPortUsingUpnp) {
+    args.push(`-upnp`)
+  }
+  if (options.connectThroughSocksProxy && options.proxyIp && options.proxyPort && options.socksVersion) {
+    args.push(`-proxy=${options.proxyIp}:${options.proxyPort}`)
+    args.push(`-socks=${options.socksVersion === 'v4' ? 4 : 5}`)
+  }
+  if (options.enigmaReserveBalance !== undefined) {
+    args.push(`-enigmareserve=${options.enigmaReserveBalance}`)
+  }
+  if (options.enigmaAutoRetry === undefined || options.enigmaAutoRetry) {
+    args.push(`-enableenigmaretry`)
+  } else {
+    args.push(`-enableenigmaretry=0`)
+  }
+  if (options.cloakShieldEnigmaTransactions === undefined || options.cloakShieldEnigmaTransactions) {
+    args.push(`-onionroute`)
+  } else {
+    args.push(`-onionroute=0`)
+  }
+  if (options.cloakShieldNonEnigmaTransactions) {
+    args.push(`-onionrouteall`)
+  }
+  if (options.cloakShieldRoutes) {
+    args.push(`-cloakshieldroutes=${options.cloakShieldRoutes}`)
+  }
+  if (options.cloakShieldNodes) {
+    args.push(`-cloakshieldnodes=${options.cloakShieldNodes}`)
+  }
+  if (options.cloakShieldHops) {
+    args.push(`-cloakshieldhops=${options.cloakShieldHops}`)
+  }
+  if (options.detachDatabaseAtShutdown) {
+    args.push(`-detachdb`)
   }
 
   this.isDoneLoading = false

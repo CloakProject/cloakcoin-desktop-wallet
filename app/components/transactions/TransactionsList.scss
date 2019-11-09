@@ -4,34 +4,37 @@
 .transactionsList {
     height: calc(100% - 120px);
     margin-top: 10px;
+    font-size: 1.2rem;
 
     .dateField {
-        width: 24%;
+        width: 20%;
+        padding: 2px;
 
         span {
             margin-left: 40px;
         }
-
-        p {
-            font-size: 16px;
-        }
     }
 
-    .typeField {
-        width: 6%;
+    .categoryField {
+        width: 18%;
+        padding: 2px;
     }
 
     .addressField {
-        width: 52%;
-        
-        span {
-            margin-left: 40px;
+        width: 45%;
+        padding: 2px;
+
+        p {
+            white-space: nowrap;
+            overflow: hidden;
+            width: 100%;
+            text-overflow: ellipsis;
         }
     }
 
     .amountField {
-        width: 18%;
-        padding-left: 15px;
+        width: 17%;
+        padding: 2px;
     }
 
     .tableHeader {
@@ -46,7 +49,7 @@
     }
 
     .transactionListWrapper {
-        padding-top: 30px;
+        margin-top: 20px;
         overflow: auto;
         height: 100%;
 
@@ -60,7 +63,6 @@
             p {
                 margin-top: 0px;
                 margin-bottom: 0px;
-                font-size: 18px;
             }
 
             .grey {
@@ -74,12 +76,12 @@
             .redBage::before {
                 content: ' ';
                 position: absolute;
-                width: 10px;
-                height: 10px;
+                width: 8px;
+                height: 8px;
                 background-color: red;
                 border-radius: 50%;
-                right: 12px;
-                top: 16px;
+                right: 13px;
+                top: 15px;
                 border: 2px solid $TRANSACTION_LIST_BACKGROUND_COLOR;
             }
 
@@ -89,19 +91,13 @@
                 img {
                     width: 25px;
                     margin-right: 15px;
-                }
-            }
-
-            .addressField {
-                p {
-                    padding-left: 40px;
+                    vertical-align: top;
                 }
             }
 
             .txValue {
                 display: flex;
                 text-align: left;
-                font-size: 20px;
                 align-items: center;
                 
                 .btnTxId {
@@ -109,11 +105,8 @@
                     flex: 1;
                     text-align: right;
                     button {
-                        cursor: pointer;
-                        background-color: $RECEIVE_COIN_BUTTON_COLOR;
-                        border: none;
-                        padding: 4px 18px;
-                        font-size: 12px;
+                        padding: 3px 18px;
+                        font-size: 0.8rem;
                         margin-bottom: 5px;
                     }
                 }

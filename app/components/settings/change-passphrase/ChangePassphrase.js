@@ -15,6 +15,7 @@ import { SettingsActions, SettingsState } from '~/reducers/settings/settings.red
 import styles from './ChangePassphrase.scss'
 import changepassphraseImg from '~/assets/images/main/settings/change-passphrase-icon.png';
 import { getPasswordValidationSchema } from '~/utils/auth'
+import { RoundedFormActions } from '~/reducers/rounded-form/rounded-form.reducer'
 
 const getValidationSchema = t => Joi.object().keys({
   oldPassphrase: getPasswordValidationSchema(),
@@ -41,13 +42,19 @@ type Props = {
 
 class ChangePassphrase extends Component<Props> {
   props: Props
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.settings.isPassphraseChanging !== this.props.settings.isPassphraseChanging && !this.props.settings.isPassphraseChanging && this.props.settings.isPassphraseChanged) {
+      this.props.formActions.updateFields('settingsChangePassphrase', {}, false)
+    }
+  }
   
 	render() {
     const { t } = this.props;
 		return (
       <div className={cn(styles.changePassphraseContainer, this.props.className)}>
         <div className={styles.changePassphrasePage}>
-          <img src={changepassphraseImg} alt="lock icon" />
+          <img className={styles.statusImg} src={changepassphraseImg} alt="lock icon" />
           <div className={styles.description}>
             <p>{t('Change the passphrase')}</p>
           </div>
@@ -55,6 +62,7 @@ class ChangePassphrase extends Component<Props> {
             className={styles.form}
             id="settingsChangePassphrase"
             schema={getValidationSchema(t)}
+            defaultValues={{}}
           >
             <div className={styles.passphraseInput}>
               <div className={styles.passphrase}>
@@ -80,7 +88,6 @@ class ChangePassphrase extends Component<Props> {
               </div>
               <RoundedButton
                 type="submit"
-                className={styles.savePasswordButton}
                 onClick={this.props.actions.changePassphrase}
                 important
                 spinner={this.props.settings.isPassphraseChanging}
@@ -103,5 +110,7 @@ const mapStateToProps = state => ({
 
 const mapDispatchToProps = dispatch => ({
   actions: bindActionCreators(SettingsActions, dispatch),
+  formActions: bindActionCreators(RoundedFormActions, dispatch)
 })
+
 export default connect(mapStateToProps, mapDispatchToProps)(translate('settings')(ChangePassphrase))

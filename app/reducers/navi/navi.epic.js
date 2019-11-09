@@ -1,5 +1,6 @@
 // @flow
 import { remote } from 'electron'
+import config from 'electron-settings'
 import { map, tap } from 'rxjs/operators'
 import { merge } from 'rxjs'
 import log from 'electron-log'
@@ -20,7 +21,13 @@ const naviPathChangedEpic = (action$: ActionsObservable<Action>) => action$.pipe
 const mainWindowCloseEpic = (action$: ActionsObservable<Action>) => action$.pipe(
     ofType(NaviActions.MAIN_WINDOW_CLOSE),
     tap(() => setTimeout(() => {
-        remote.getCurrentWindow().close()
+        const minimizeToTray = config.get('options.minimizeToTray', false)
+        const closeToTray = config.get('options.closeToTray', false)
+        if (minimizeToTray || closeToTray) {
+            remote.getCurrentWindow().hide()
+        } else {
+            remote.getCurrentWindow().close()
+        }
     }, 100)),
     map(() => NaviActions.empty())
 )
@@ -28,7 +35,12 @@ const mainWindowCloseEpic = (action$: ActionsObservable<Action>) => action$.pipe
 const mainWindowMinimizeEpic = (action$: ActionsObservable<Action>) => action$.pipe(
     ofType(NaviActions.MAIN_WINDOW_MINIMIZE),
     tap(() => setTimeout(() => {
-        remote.getCurrentWindow().minimize()
+        const minimizeToTray = config.get('options.minimizeToTray', false)
+        if (minimizeToTray) {
+            remote.getCurrentWindow().hide()
+        } else {
+            remote.getCurrentWindow().minimize()
+        }
     }, 100)),
     map(() => NaviActions.empty())
 )
@@ -40,8 +52,10 @@ const mainWindowMaximizeEpic = (action$: ActionsObservable<Action>) => action$.p
 
         if (process.platform === 'darwin') {
             win.setFullScreen(!win.isFullScreen())
+        } else if (win.isMaximized()) {
+            win.unmaximize()
         } else {
-            win.isMaximized() ? win.unmaximize() : win.maximize()
+            win.maximize()
         }
     }, 100)),
     map(() => NaviActions.empty())

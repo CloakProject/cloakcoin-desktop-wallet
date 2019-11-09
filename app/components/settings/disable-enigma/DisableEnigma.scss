@@ -4,27 +4,28 @@
     text-align: center;
 
     .enigmaPage {
-        img {
-            width: 90px;
+        .statusImg {
+            width: 85px;
             opacity: 0.3;
             margin-bottom: 40px;
         }
 
         p {
             margin-bottom: 30px;
-            font-size: 20px;
+            font-size: 1.4rem;
         }
 
         .disabledTitle {
-            color: $SEND_COIN_TEXT_COLOR;
+            color: $BASE_COLOR_RED;
         }
 
         .enableTitle {
             color: $BASE_COLOR_LIGHT_GREEN;
         }
 
-        .enigmaDisabledBtn {
-            background-color: $SEND_COIN_TEXT_COLOR;
+        .enigmaDisableBtn {
+            background-color: $BASE_COLOR_RED;
+            border-color: $BASE_COLOR_RED;
             color: white;
         }
 
@@ -34,11 +35,6 @@
         }
 
         button {
-            width: 200px;
-            height: 40px;
-            border: none;
-            border-radius: 3px;
-            font-size: 18px;
             margin-top: 60px;
         }
     }

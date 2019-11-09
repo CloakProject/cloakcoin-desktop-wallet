@@ -108,7 +108,49 @@ export class AddressBookService {
 		config.set(addressBookConfigKey, this.addressBook)
 
     return of(this.addressBook.slice(0))
+  }
+
+	/**
+   * Adds or updates an address record to the Address Book.
+   *
+	 * @param {AddressBookRecord} addressRecord
+	 * @returns {Observable<AddressBookRecord[]>}
+	 * @memberof AddressBookService
+	 */
+	addOrUpdateAddress(addressRecord: AddressBookRecord) {
+    const validated = this::validateAddressRecord(addressRecord)
+
+    const indexByAddr = this.addressBook.findIndex(record => record.address.toLowerCase() === validated.address.toLowerCase())
+    if (indexByAddr !== -1) {
+      this.addressBook.splice(indexByAddr, 1)
+    }
+
+    const indexByName = this.addressBook.findIndex(record => record.name === validated.name)
+    if (indexByName !== -1) {
+      this.addressBook[indexByName] = validated
+    } else {
+      this.addressBook.push(validated)
+    }
+
+		config.set(addressBookConfigKey, this.addressBook)
+
+    return of(this.addressBook.slice(0))
 	}
+
+	/**
+   * Validates name.
+   *
+	 * @param {string} name
+	 * @returns {boolean}
+	 * @memberof AddressBookService
+	 */
+  static isValidName(name: string) {
+    const predefinedNames = [
+      'No label',
+      '(Cloaking)'
+    ]
+    return !predefinedNames.find(p => p === name)
+  }
 }
 
 /**
@@ -119,6 +161,6 @@ export class AddressBookService {
  * @memberof AddressBookService
  */
 function validateAddressRecord(addressRecord: AddressBookRecord) {
-  // TODO: replace with proper form validation #116
+  // TODO: replace with proper form validation
   return addressRecord
 }

@@ -33,31 +33,35 @@ const getValidationSchema = t => Joi.object().keys({
 
 type Props = {
   className?: string,
-  isEncrypted?: boolean,
   t: any,
+  systemInfo: SystemInfoState,
   settings: SettingsState,
   actions: SettingsActions
 }
 
 class EncryptWallet extends Component<Props> {
-	props: Props
-    
+  props: Props
+  
+  isWalletEncrypted() {
+    return this.props.systemInfo.blockchainInfo.unlockedUntil !== null
+  }
+
 	render() {
     const { t } = this.props;
 		return (
       <div className={cn(styles.encryptWalletContainer, this.props.className)}>
         {
-          (this.props.isEncrypted || this.props.settings.isWalletEncrypted) && (
+          (this.isWalletEncrypted()) && (
             <div className={styles.encryptedPage}>
-              <img src={encryptWalletImg} alt="encrypted icon" />
+              <img className={styles.statusImg} src={encryptWalletImg} alt="encrypted icon" />
               <p>{t('THE WALLET IS ENCRYPTED')}</p>
             </div>
           )
         }
         {
-          (!this.props.isEncrypted && !this.props.settings.isWalletEncrypted) && (
+          (!this.isWalletEncrypted()) && (
             <div className={styles.encryptPage}>
-              <img src={encryptWalletImg} alt="encrypted icon" />
+              <img className={styles.statusImg} src={encryptWalletImg} alt="encrypted icon" />
               <div className={styles.description}>
                 <p>{t('Enter the passphrase fot the wallet.')}</p>
                 <p>
@@ -71,15 +75,16 @@ class EncryptWallet extends Component<Props> {
                 className={styles.form}
                 id="settingsEncryptWallet"
                 schema={getValidationSchema(t)}
+                options={{abortEarly: true}}
+                defaultValues={{newPassword: '', repeatPassword: ''}}
               >
                 <div className={styles.encryptWalletInput}>
                   <div className={styles.newPassword}>
                     <p>{t('Enter new passphrase')}</p>
                     <RoundedInput
                       type="password"
-                      labelClassName={styles.inputLabel}
                       name="newPassword"
-                      placeholder={t(`New password`)}
+                      disabled={this.props.settings.isWalletEncrypting}
                     />
                   </div>
                   <div className={styles.confirmPassword}>
@@ -87,12 +92,11 @@ class EncryptWallet extends Component<Props> {
                     <RoundedInput
                       type="password"
                       name="repeatPassword"
-                      placeholder={t(`Repeat new password`)}
+                      disabled={this.props.settings.isWalletEncrypting}
                     />
                   </div>
                   <RoundedButton
                     type="submit"
-                    className={styles.savePasswordButton}
                     onClick={this.props.actions.encryptWallet}
                     important
                     spinner={this.props.settings.isWalletEncrypting}
@@ -118,4 +122,5 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = dispatch => ({
   actions: bindActionCreators(SettingsActions, dispatch),
 })
+
 export default connect(mapStateToProps, mapDispatchToProps)(translate('settings')(EncryptWallet))

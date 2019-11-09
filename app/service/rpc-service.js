@@ -1,24 +1,25 @@
 // @flow
-import path from 'path'
 import log from 'electron-log'
 import { Decimal } from 'decimal.js'
-import { v4 as uuid } from 'uuid'
 import { remote } from 'electron'
+import config from 'electron-settings'
 import Client from 'bitcoin-core'
-import { from, of, Observable } from 'rxjs'
-import { map, take, catchError, switchMap } from 'rxjs/operators'
-import { toastr } from 'react-redux-toastr'
+import { from, race } from 'rxjs'
+import { map, take, switchMap, mergeMap } from 'rxjs/operators'
+import { ofType } from 'redux-observable'
 
 import { translate } from '~/i18next.config'
-import { getExportDir, moveFile } from '~/utils/os'
 import { getStore } from '~/store/configureStore'
 import { AddressBookService } from './address-book-service'
-import { BlockchainInfo, DaemonInfo, SystemInfoActions } from '../reducers/system-info/system-info.reducer'
-import { Balances, OverviewActions, Transaction } from '../reducers/overview/overview.reducer'
-import { OwnAddressesActions, AddressRow } from '../reducers/own-addresses/own-addresses.reducer'
+import { BlockchainInfo, SystemInfoActions } from '../reducers/system-info/system-info.reducer'
+import { OverviewActions, Transaction } from '../reducers/overview/overview.reducer'
+import { OwnAddressesActions } from '../reducers/own-addresses/own-addresses.reducer'
 import { SendCashActions } from '~/reducers/send-cash/send-cash.reducer'
-import { AddressBookRecord } from '~/reducers/address-book/address-book.reducer'
-
+import { AddressBookActions, AddressBookRecord } from '~/reducers/address-book/address-book.reducer'
+import { EnigmaStatsActions } from '~/reducers/enigma-stats/enigma-stats.reducer'
+import { DebugActions } from '~/reducers/debug/debug.reducer'
+import { SettingsActions } from '~/reducers/settings/settings.reducer'
+import ValidateAddressService from '~/service/validate-address-service'
 
 const t = translate('service')
 
@@ -49,11 +50,11 @@ export const getClientInstance = () => {
       port: nodeConfig.rpcport,
       username: nodeConfig.rpcuser,
       password: nodeConfig.rpcpassword,
-      timeout: 10000
+      timeout: 60000
     })
   }
 
-	return clientInstance
+  return clientInstance
 }
 
 /**
@@ -95,13 +96,13 @@ export class RpcService {
   }
 
   /**
-   * Encrypts the wallet with a passphrase.
+   * Unlocks the wallet.
    *
    * @memberof RpcService
-   */
-  sendWalletPassword(password: string, timeoutSec: number) {
+     */
+  sendWalletPassword(password: string, timeoutSec: number, mintOnly: boolean) {
     const client = getClientInstance()
-    return client.command('walletpassphrase', password, timeoutSec)
+    return client.command('walletpassphrase', password, timeoutSec, mintOnly)
   }
 
   /**
@@ -115,72 +116,6 @@ export class RpcService {
   }
 
   /**
-   * Requests Cloak node running status and memory usage.
-   *
-   * @memberof RpcService
-   */
-  requestDaemonInfo() {
-    const client = getClientInstance()
-
-    client.getInfo()
-      .then((info: DaemonInfo) => {
-        getStore().dispatch(SystemInfoActions.gotDaemonInfo(info))
-        return Promise.resolve()
-      })
-      .catch(err => {
-        // TODO: move the prefix to toastr error title in the epic #114
-        const errorPrefix = t(`Unable to get Cloak local node info`)
-        getStore().dispatch(SystemInfoActions.getDaemonInfoFailure(`${errorPrefix}: ${err}`, err.code))
-      })
-  }
-
-  getInfo() {
-    const client = getClientInstance()
-
-    client.getInfo()
-      .then((info: DaemonInfo) => {
-        getStore().dispatch(SystemInfoActions.gotDaemonInfo(info))
-        return Promise.resolve()
-      })
-      .catch(err => {
-        // TODO: move the prefix to toastr error title in the epic #114
-        const errorPrefix = t(`Unable to get Cloak local node info`)
-        getStore().dispatch(SystemInfoActions.getDaemonInfoFailure(`${errorPrefix}: ${err}`, err.code))
-      })
-  }
-
-  /**
-   * Request the wallet information.
-   *
-   * @memberof RpcService
-   */
-  requestWalletInfo() {
-    const client = getClientInstance()
-
-    const commandList = [
-      { method: 'getbalance' }
-    ]
-
-    from(client.command(commandList))
-    .pipe(
-         map(result => ({
-           unconfirmedBalance: Decimal(result[0])
-         }))
-    )
-    .subscribe(
-      (result: Balances) => {
-        getStore().dispatch(OverviewActions.gotWalletInfo(result))
-      },
-      error => {
-        log.debug(`Error fetching the wallet balances: ${error}`)
-        // TODO: move the prefix to toastr error title in the epic #114
-        const errorPrefix = t(`Unable to get Cloak local node info`)
-        getStore().dispatch(OverviewActions.getWalletInfoFailure(`${errorPrefix}: ${error}`))
-      }
-    )
-  }
-
-  /**
    * Request wallet transactions.
    *
    * @memberof RpcService
@@ -189,7 +124,7 @@ export class RpcService {
     const client = getClientInstance()
 
     const queryPromiseArr = [
-      this::getPublicTransactionsPromise(client),
+      this:: getPublicTransactionsPromise(client),
     ]
 
     const combineQueryPromise = Promise.all(queryPromiseArr)
@@ -201,7 +136,7 @@ export class RpcService {
         return { transactions: sortedByDateTransactions }
       })
 
-    this::applyAddressBookNamesToTransactions(combineQueryPromise)
+    this:: applyAddressBookNamesToTransactions(combineQueryPromise)
       .subscribe(
         result => {
           log.debug(`Wallet transactions: ${result}`)
@@ -224,9 +159,13 @@ export class RpcService {
   requestBlockchainInfo() {
     const client = getClientInstance()
     const blockchainInfo: BlockchainInfo = {
-      version: '',
+      version: 'N/A',
       protocolVersion: 0,
       walletVersion: 0,
+      openSslVersion: 'N/A',
+      clientName: 'N/A',
+      clientBuiltDate: 'N/A',
+      clientStartupTime: null,
       balance: Decimal('0'),
       unconfirmedBalance: Decimal('0'),
       immatureBalance: Decimal('0'),
@@ -234,57 +173,70 @@ export class RpcService {
       newMint: Decimal('0'),
       stake: Decimal('0'),
       blocks: 0,
+      highstBlock: 0,
+      lastBlockTime: null,
       moneySupply: Decimal('0'),
       connections: 0,
       proxy: '',
       ip: '',
       difficulty: Decimal('0'),
+      testnet: false,
       keypoolOldest: 0,
       keypoolSize: 0,
       payTxFee: Decimal('0'),
       errors: '',
+      enigma: false,
       anons: 0,
       cloakings: 0,
       weight: 0,
       networkWeight: 0,
+      unlockedUntil: null,
+      unlockedMintOnly: false,
       blockchainSynchronizedPercentage: 0,
-      lastBlockDate: null,
-      unlockedUntil: null
+      lastBlockTime: null,
+      mintEstimation: 0
     }
 
-    this::getBlockchainInfo(client)
+    this:: getBlockchainInfo(client)
       .then(result => {
         blockchainInfo.version = result.version
         blockchainInfo.protocolVersion = result.protocolversion
         blockchainInfo.walletVersion = result.walletversion
-        blockchainInfo.balance = Decimal(result.balance)
+        blockchainInfo.openSslVersion = result.opensslversion
+        blockchainInfo.clientName = result.clientname,
+          blockchainInfo.clientBuiltDate = result.clientbuiltdate,
+          blockchainInfo.clientStartupTime = new Date(result.clientstartuptime * 1000),
+          blockchainInfo.balance = Decimal(result.balance)
         blockchainInfo.unconfirmedBalance = Decimal(result.unconfirmed)
         blockchainInfo.immatureBalance = Decimal(result.immature)
         blockchainInfo.cloakingEarnings = Decimal(result.cloakingearnings)
         blockchainInfo.newMint = Decimal(result.newmint)
         blockchainInfo.stake = Decimal(result.stake)
         blockchainInfo.blocks = result.blocks
+        blockchainInfo.highestBlock = result.highestblock
+        blockchainInfo.lastBlockTime = new Date(result.lastblocktime * 1000)
         blockchainInfo.moneySupply = Decimal(result.moneysupply)
         blockchainInfo.connections = result.connections
         blockchainInfo.proxy = result.proxy
         blockchainInfo.ip = result.ip
         blockchainInfo.difficulty = Decimal(result.difficulty)
+        blockchainInfo.testnet = result.testnet === 1 ? true : false
         blockchainInfo.keypoolOldest = result.keypoololdest
         blockchainInfo.keypoolSize = result.keypoolsize
         blockchainInfo.payTxFee = Decimal(result.paytxfee)
         blockchainInfo.errors = result.errors
+        blockchainInfo.enigma = result.enigma === 1 ? true : false
         blockchainInfo.anons = result.anons
         blockchainInfo.cloakings = result.cloakings
         blockchainInfo.weight = result.weight || 0
         blockchainInfo.networkWeight = result.networkweight || 0
         blockchainInfo.unlockedUntil = result.unlocked_until === undefined ? null : new Date(result.unlocked_until * 1000)
-        return client.getBlockHash(result.blocks)
-      })
-      .then(result => client.getBlock(result))
-      .then(result => {
-        log.debug(`Blockchain info: ${result}`)
-        blockchainInfo.lastBlockDate = new Date(result.time * 1000)
-        blockchainInfo.blockchainSynchronizedPercentage = blockchainInfo.blocks <= 0 ? 0 : this.getBlockchainSynchronizedPercentage(blockchainInfo.lastBlockDate)
+        blockchainInfo.unlockedMintOnly = result.unlocked_mint_only === 1 ? true : false
+        blockchainInfo.mintEstimation = blockchainInfo.weight > 0 ? (60 * blockchainInfo.networkWeight / blockchainInfo.weight) : 0
+        blockchainInfo.blockchainSynchronizedPercentage = blockchainInfo.highestBlock > 0 ? blockchainInfo.blocks * 100 / blockchainInfo.highestBlock : 0
+        if (blockchainInfo.blockchainSynchronizedPercentage >= 100) {
+          blockchainInfo.blockchainSynchronizedPercentage = this.getBlockchainSynchronizedPercentage(blockchainInfo.lastBlockTime)
+        }
         getStore().dispatch(SystemInfoActions.gotBlockchainInfo(blockchainInfo))
         return Promise.resolve()
       })
@@ -301,14 +253,13 @@ export class RpcService {
    * @memberof RpcService
    */
   getBlockchainSynchronizedPercentage(tempDate: Date) {
-    // TODO: Get the start date right after CloakCoin release - from first block!!!
-    const startDate = new Date('31 May 2014 11:52:35 GMT')
+    const startDate = new Date('3 June 2014 20:30:08 GMT')
     const nowDate = new Date()
 
     const fullTime = nowDate.getTime() - startDate.getTime()
     const remainingTime = nowDate.getTime() - tempDate.getTime()
 
-    // After 20 min we report 100% anyway
+    // Before 20 min we report 100% anyway
     if (remainingTime > 20 * 60 * 1000) {
       let dPercentage = 100 - remainingTime / fullTime * 100
       if (dPercentage < 0) {
@@ -328,20 +279,22 @@ export class RpcService {
    * @param {boolean} [isStealth]
    * @memberof RpcService
    */
-  createNewAddress(isStealth?: boolean) {
+  createNewAddress(isStealth?: boolean, label?: string) {
     const client = getClientInstance()
 
     client.command(isStealth ? 'getnewstealthaddress' : 'getnewaddress')
       .then(result => {
-        const action = OwnAddressesActions.createdOwnAddress({
+        const action = AddressBookActions.newAddressModal.addOrUpdateAddressWithData({
           address: result,
-          cloaking: false
-        });
+          name: label,
+          isEnigma: isStealth
+        },
+        true)
         getStore().dispatch(action)
         return true
       })
       .catch(error => {
-        log.debug(`An error occurred when fetching the wallet addresses: ${error}`)
+        log.debug(`An error occurred when creating the wallet address: ${error}`)
         getStore().dispatch(OwnAddressesActions.createOwnAddressFailure(error.toString()))
       })
   }
@@ -353,121 +306,72 @@ export class RpcService {
    */
   /**
    * @param receiptions Array<IReceptions>
-   * @param {boolean} isEnigma
+   * @param {boolean} isEnigmaSend
    * @returns {Observable<any>}
    * @memberof RpcService
    */
-  sendCash(receiptions, isEnigma?: boolean) {
+  sendCash(receiptions, isEnigmaSend: boolean, enigmaSendCloakers: number, enigmaSendTimeout: number, passphrase: string) {
     const client = getClientInstance()
-
-    let fromAccount = ""
-    if (isEnigma) {
-      fromAccount += "|enigma"
-    }
 
     const toPairs = {}
     receiptions.forEach(x => {
       toPairs[x.toAddress] = parseFloat(x.amountToSend.toFixed(8))
     })
 
-    const commandParameters= [
-      fromAccount,
-      toPairs
-    ]
-    
-    const command = client.command([{ method: `sendmany`, parameters: commandParameters }])
 
-    command.then(([result])=> {
-      if (typeof(result) === 'string') {
-        getStore().dispatch(SendCashActions.sendCashOperationStarted(result))
-      } else {
-        getStore().dispatch(SendCashActions.sendCashFailure(result.message))
+    if (!isEnigmaSend) {
+      const commandParameters = [
+        '*',
+        toPairs
+      ]
+
+      if (passphrase) {
+        commandParameters.push(1) // minconf
+        commandParameters.push(passphrase)
       }
-      return Promise.resolve()
-    })
-    .catch(err => {
-      console.log('rpc-err', err);
-      getStore().dispatch(SendCashActions.sendCashFailure(err.toString()))
-    })
+
+      const command = client.command([{ method: `sendcloakmany`, parameters: commandParameters }])
+
+      command.then(([result]) => {
+        if (typeof (result) === 'string') {
+          getStore().dispatch(SendCashActions.sendCashStarted(result))
+        } else {
+          getStore().dispatch(SendCashActions.sendCashFailure(result.message))
+        }
+        return Promise.resolve()
+      })
+      .catch(err => {
+        log.debug(`An error occurred when sending cash: ${JSON.stringify(err)}`)
+        getStore().dispatch(SendCashActions.sendCashFailure(err.toString()))
+      })
+    } else {
+      const commandParameters = [
+        toPairs,
+        enigmaSendCloakers,
+        1, // splits should be 1
+        enigmaSendTimeout
+      ]
+
+      if (passphrase) {
+        commandParameters.push(passphrase)
+      }
+
+      const command = client.command([{ method: `sendenigma`, parameters: commandParameters }])
+
+      command.then(([result]) => {
+        if (result === null) {
+          getStore().dispatch(SendCashActions.sendCashStarted('ENIGMA request sent'))
+        } else {
+          getStore().dispatch(SendCashActions.sendCashFailure(result.message))
+        }
+        return Promise.resolve()
+      })
+      .catch(err => {
+        log.debug(`An error occurred when sending enigma cash: ${JSON.stringify(err)}`)
+        getStore().dispatch(SendCashActions.sendCashFailure(err.toString()))
+      })
+    }
   }
-
-  /**
-   * @param {boolean} sortByGroupBalance
-   * @returns {Observable<any>}
-   * @memberof RpcService
-   */
-  getWalletAddressAndBalance(sortByGroupBalance?: boolean): Observable<any> {
-    const client = getClientInstance()
-
-    const promiseArr = [
-      this::getWalletAllPublicAddresses(client),
-      this::getWalletPublicAddressesWithUnspentOutputs(client),
-    ]
-
-    const queryPromise = Promise.all(promiseArr)
-      .then(result => {
-        let plainPublicUnspentAddresses: string[] = []
-
-        const PublicAddressesResult = result[0][0]
-        const PublicAddressesUnspendResult = result[1][0]
-
-        const publicAddressResultSet = new Set()
-
-        if (Array.isArray(PublicAddressesResult)) {
-          const publicAddresses = [] // PublicAddressesResult.map(tempValue => tempValue.address)
-          for (let index = 0; index < PublicAddressesResult.length; index += 1) {
-            publicAddressResultSet.add(PublicAddressesResult[index].address)
-            publicAddresses.push(PublicAddressesResult[index].address)
-          }
-        }
-
-        if (Array.isArray(PublicAddressesUnspendResult)) {
-          plainPublicUnspentAddresses = [] // PublicAddressesUnspendResult.map(tempValue => tempValue.address)
-          for (let index = 0; index < PublicAddressesUnspendResult.length; index += 1) {
-            if(('spendable' in PublicAddressesUnspendResult[index] && PublicAddressesUnspendResult[index].spendable)){
-              publicAddressResultSet.add(PublicAddressesUnspendResult[index].address)
-            } else {
-              const addressToRemove = PublicAddressesUnspendResult[index].address
-              publicAddressResultSet.delete(addressToRemove) // Remove any addresses that aren't spendable
-            }
-          }
-        }
-
-        const combinedAddresses = [...Array.from(publicAddressResultSet)]
-          .map(addr => ({
-            balance: Decimal('0'),
-            confirmed: false,
-            address: addr,
-            isUnspent: plainPublicUnspentAddresses.includes(addr),
-            disabled: false
-          }))
-
-        log.debug(`Fetching the balances for the combined addresses: ${combinedAddresses}`)
-        return this::getAddressesBalance(client, combinedAddresses)
-      })
-      .then(addresses => {
-        const addressList = addresses
-
-        // Show the error to user
-        const errorAddressItems = addressList.filter(tempAddressItem => tempAddressItem.balance === null && tempAddressItem.errorMessage)
-
-        if (errorAddressItems && errorAddressItems.length > 0) {
-          const errorMessages = errorAddressItems.map(tempAddressItem => `"${tempAddressItem.errorMessage}"`)
-          const uniqueErrorMessages = Array.from(new Set(errorMessages)).join(', ')
-          const errorKey = `Error fetching balances for {{errorCount}} out of {{addressCount}} addresses. Error messages included: {{errorMessages}}.`
-          toastr.error(t(`Address balance error`), t(errorKey, errorAddressItems.length, addressList.length, uniqueErrorMessages.toString()))
-        }
-
-        return addressList
-      })
-      .catch(error => {
-        log.debug(`An error occurred when fetching the wallet addresses and balances: ${error}`)
-        return []
-      })
-
-    return from(queryPromise).pipe(take(1))
-  }
-
 
   /**
    * Request own addresses with balances.
@@ -478,21 +382,33 @@ export class RpcService {
     const client = getClientInstance()
 
     const promiseArr = [
-      this::getWalletPublicAddresses(client),
-      this::getWalletStealthAddresses(client),
+      this:: getWalletPublicAddresses(client),
+      this:: getWalletStealthAddresses(client),
     ]
 
     Promise.all(promiseArr)
       .then(result => {
         const PublicAddressesResult = result[0][0]
-        const StealthAddressesResult = result[1][0]
+        const StealthAddressesResult = result[1]
 
         const addressResultSet = new Set()
 
         if (Array.isArray(PublicAddressesResult)) {
           for (let index = 0; index < PublicAddressesResult.length; index += 1) {
+            const address = PublicAddressesResult[index]
+            let foundDup = false
+            for (let item of addressResultSet.values()) {
+              if (item.address === address) {
+                foundDup = true
+                break
+              }
+            }
+            if (foundDup) {
+              log.debug(`Duplicates found when fetching the wallet public addresses: ${address}`)
+              continue
+            }
             addressResultSet.add({
-              address: PublicAddressesResult[index],
+              address,
               cloaking: false
             })
           }
@@ -500,9 +416,26 @@ export class RpcService {
 
         if (Array.isArray(StealthAddressesResult)) {
           for (let index = 0; index < StealthAddressesResult.length; index += 1) {
+            let address = StealthAddressesResult[index]
+            const cloaking = address.indexOf(' - Cloaking') > 0
+            const addressEnd = address.indexOf(' -')
+            if (addressEnd > 0) {
+              address = address.substr(0, addressEnd)
+            }
+            let foundDup = false
+            for (let item of addressResultSet.values()) {
+              if (item.address === address) {
+                foundDup = true
+                break
+              }
+            }
+            if (foundDup) {
+              log.debug(`Duplicates found when fetching the wallet stealth addresses: ${address}`)
+              continue
+            }
             addressResultSet.add({
-              address: StealthAddressesResult[index]['address'],
-              cloaking: StealthAddressesResult[index]['label'] === 'Cloaking'
+              address,
+              cloaking
             })
           }
         }
@@ -520,47 +453,85 @@ export class RpcService {
   }
 
   /**
-   * @param {string} transactionId
+   * Request cloaking info.
+   *
    * @memberof RpcService
    */
-  getTransactionDetails(transactionId: string) {
+  requestCloakingInfo() {
     const client = getClientInstance()
-    const queryPromise = client.command([{ method: 'gettransaction', parameters: [transactionId] }])
 
-    return from(queryPromise).pipe(
-      map(results => results[0]),
-      map(result => {
-        if (result.name === 'RpcError') {
-          return result.message
-        }
-
-        const tempObj = {}
-        Object.keys(result.details[0]).reduce((accumulator, key) => {
-          const modified = { ...accumulator }
-
-          if (key === 'amount') {
-            modified[`details[0].${key}`] = Decimal(result.details[0][`${key}`])
-          } else {
-            modified[`details[0].${key}`] = result.details[0][`${key}`]
+    client.command('getcloakinginfo')
+      .then(result => {
+        if (result && typeof (result) === 'object') {
+          const cloakingInfo = {
+            accepted: result.accepted,
+            signed: result.signed,
+            refused: result.refused,
+            expired: result.expired,
+            completed: result.completed,
+            earning: Decimal(result.earning)
           }
 
-          return modified
-        }, tempObj)
+          getStore().dispatch(EnigmaStatsActions.gotCloakingInfo(cloakingInfo))
+          return true
+        }
 
-        const detailResult = { ...result, amount: Decimal(result.amount), ...tempObj }
-        delete detailResult.details
-        delete detailResult.vjoinsplit
-        delete detailResult.walletconflicts
+        if (result.message) {
+          throw new Error(result.message)
+        }
 
-        return detailResult
-      }),
-      catchError(error => {
-        log.debug(`An error occurred while fetching transcation details: ${error}`)
-        return of(error.message)
+        return false
       })
-    )
+      .catch(error => {
+        log.debug(`An error occurred when fetching the cloaking info: ${JSON.stringify(error)}`)
+        getStore().dispatch(EnigmaStatsActions.getCloakingInfoFailure(error.toString()))
+      })
   }
-  
+
+  /**
+   * Request cloaking requests.
+   *
+   * @memberof RpcService
+   */
+  requestCloakingRequests() {
+    const client = getClientInstance()
+
+    client.command('listcloakingrequests')
+      .then(result => {
+        if (Array.isArray(result)) {
+          const cloakingRequests = result.map(req => ({
+            version: req.version,
+            initiator: req.initiator,
+            timeInitiated: req.timeinitiated,
+            amount: Decimal(req.amount),
+            participantsRequired: req.participantsrequired,
+            txid: (req.txid && req.txid !== '0') ? req.txid : '',
+            mine: req.mine,
+            timeBroadcasted: req.timebroadcasted,
+            expiresInMs: req.expiresinms,
+            aborted: req.aborted,
+            autoRetry: req.autoretry,
+            retryCount: req.retrycount,
+            participants: req.participants || [],
+            signers: req.signers || []
+          }))
+
+          getStore().dispatch(EnigmaStatsActions.gotCloakingRequests(cloakingRequests))
+          return true
+        }
+
+        if (result.message) {
+          throw new Error(result.message)
+        }
+
+        return false
+      })
+      .catch(error => {
+        log.debug(`An error occurred when fetching the cloaking requests: ${JSON.stringify(error)}`)
+        getStore().dispatch(EnigmaStatsActions.getCloakingRequestsFailure(error.toString()))
+      })
+  }
+
   /**
    * @param {boolean} [enable]
    * @returns {Promise<any>}
@@ -587,7 +558,7 @@ export class RpcService {
    * @returns {Observable}
    */
   backupWallet(filePath) {
-    return this::exportFileWithMethod('backupwallet', filePath)
+    return this:: exportFileWithMethod('backupwallet', filePath)
   }
 
 
@@ -598,11 +569,118 @@ export class RpcService {
 	 */
   stop() {
     const client = getClientInstance()
+    const detachDatabaseAtShutdown = config.get('newOptions.detachDatabaseAtShutdown', false)
+    if (detachDatabaseAtShutdown) {
+      return client.command('stop', 1)
+    }
     return client.command('stop')
   }
 
+  /**
+   * Run a RPC command.
+   *
+   * @memberof RpcService
+   */
+  runCommand(command) {
+    const client = getClientInstance()
+
+    client.command('rpccommand', command)
+      .then((result) => {
+        if (typeof result !== 'string') {
+          result = JSON.stringify(result)
+        }
+        getStore().dispatch(DebugActions.gotCommandResponse(result))
+        return true
+      })
+      .catch(error => {
+        const strErr = `An error occurred when running command: ${JSON.stringify(error)}`
+        getStore().dispatch(DebugActions.gotCommandResponse(strErr))
+      })
+  }
+
+  /**
+   * Avoid circular dependency in types.js
+   *
+	 * @returns {SettingsActions}
+	 * @memberof ChildProcessService
+	 */
+  getSettingsActions() {
+    const settingsReducerModule = require('~/reducers/settings/settings.reducer')
+    return settingsReducerModule.SettingsActions
+  }
+
+  getRpcEnigmaObservable({ onSuccess, onFailure, action$ }) {
+    const actions = this.getSettingsActions()
+
+    const observable = race(
+      action$.pipe(
+        ofType(actions.enableEnigmaCompleted),
+        take(1),
+        mergeMap(() => onSuccess)
+      ),
+      action$.pipe(
+        ofType(actions.enableEnigmaFailed),
+        take(1),
+        switchMap(() => onFailure)
+      )
+    )
+
+    return observable
+  }
+
+  enableEnigma(isEnigmaEnable: boolean,
+    enigmaReserveBalance?: number,
+    isEnigmaAutoRetry?: boolean,
+    isCloakShieldEnigmaTransactions?: boolean,
+    isCloakShieldNonEnigmaTransactions?: boolean,
+    cloakShieldRoutes?: number,
+    cloakShieldNodes?: number,
+    cloakShieldHops?: number) {
+      
+    const client = getClientInstance()
+
+    const parameters = [
+      isEnigmaEnable
+    ]
+    if (enigmaReserveBalance !== undefined && enigmaReserveBalance !== null) {
+      parameters.push(enigmaReserveBalance)
+      if (isEnigmaAutoRetry !== undefined && isEnigmaAutoRetry !== null) {
+        parameters.push(isEnigmaAutoRetry)
+        if (isCloakShieldEnigmaTransactions !== undefined && isCloakShieldEnigmaTransactions !== null) {
+          parameters.push(isCloakShieldEnigmaTransactions)
+          if (isCloakShieldNonEnigmaTransactions !== undefined && isCloakShieldNonEnigmaTransactions !== null) {
+            parameters.push(isCloakShieldNonEnigmaTransactions)
+            if (cloakShieldRoutes !== undefined && cloakShieldRoutes !== null) {
+              parameters.push(cloakShieldRoutes)
+              if (cloakShieldNodes !== undefined && cloakShieldNodes !== null) {
+                parameters.push(cloakShieldNodes)
+                if (cloakShieldHops !== undefined && cloakShieldHops !== null) {
+                  parameters.push(cloakShieldHops)
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    const command = client.command([{ method: `enableenigma`, parameters }])
+
+    command.then(([result]) => {
+      if (result) {
+        getStore().dispatch(SettingsActions.enableEnigmaFailed(JSON.stringify(result)))
+      } else {
+        getStore().dispatch(SettingsActions.enableEnigmaCompleted(isEnigmaEnable))
+      }
+      return true
+    })
+    .catch(err => {
+      log.debug(`An error occurred when changing enigma: ${JSON.stringify(err)}`)
+      getStore().dispatch(SettingsActions.enableEnigmaFailed(err.toString()))
+    })
+  }
+
 }
-  
+
 /**
  * @returns {Promise<any>}
  * @memberof RpcService
@@ -628,7 +706,7 @@ function getWalletPublicAddresses(client: Client): Promise<any> {
  */
 // eslint-disable-next-line no-unused-vars
 function getWalletStealthAddresses(client: Client): Promise<any> {
-  return client.command([{ method: 'liststealthaddresses', parameters: ['1'] }])
+  return client.command('liststealthaddresses')
 }
 
 /**
@@ -641,15 +719,6 @@ function getWalletAllPublicAddresses(client: Client): Promise<any> {
 }
 
 /**
- * @param {Client} client
- * @returns {Promise<any>}
- * @memberof RpcService
- */
-function getWalletPublicAddressesWithUnspentOutputs(client: Client): Promise<any> {
-  return client.command([{ method: 'listunspent', parameters: [0] }])
-}
-
-/**
  * Private method. Returns public transactions array.
  *
  * @param {Client} client
@@ -658,10 +727,10 @@ function getWalletPublicAddressesWithUnspentOutputs(client: Client): Promise<any
  */
 async function getPublicTransactionsPromise(client: Client) {
   const command = [
-    { method: 'listtransactions', parameters: ['', 200] }
+    { method: 'listtransactions', parameters: ['*', 200] }
   ]
 
-  const noAddressMessage = t(`E address is not listed in the wallet`)
+  const noAddressMessage = t(`No address`)
   const publicAddressMessage = t(`C (Public)`)
 
   return client.command(command)
@@ -669,15 +738,22 @@ async function getPublicTransactionsPromise(client: Client) {
     .then(result => {
       if (Array.isArray(result)) {
         return result.map(
-          originalTransaction => ({
-            type: `${publicAddressMessage}`,
-            category: originalTransaction.category,
-            confirmations: originalTransaction.confirmations,
-            amount: Decimal(originalTransaction.amount),
-            timestamp: originalTransaction.time,
-            destinationAddress: originalTransaction.address ? originalTransaction.address : `[ ${noAddressMessage} ]`,
-            transactionId: originalTransaction.txid
-          })
+          originalTransaction => {
+            let address = originalTransaction.account ? originalTransaction.account : originalTransaction.address
+            if (address === undefined || address === null) {
+              address = ''
+            }
+            return {
+              type: `${publicAddressMessage}`,
+              category: originalTransaction.category,
+              confirmations: originalTransaction.confirmations,
+              amount: Decimal(originalTransaction.amount),
+              timestamp: originalTransaction.time,
+              destinationAddress: address || `[ ${noAddressMessage} ]`,
+              isStealthAddress: ValidateAddressService.isStealthAddress(address),
+              transactionId: originalTransaction.txid
+            }
+          }
         )
       }
 
@@ -716,7 +792,7 @@ function applyAddressBookNamesToTransactions(transactionsPromise) {
             modified.transactions = result.transactions.map((transaction: Transaction) => {
               const matchedRecord = (
                 addressBookRecords
-                .find(record => record.address === transaction.destinationAddress)
+                  .find(record => record.address === transaction.destinationAddress)
               )
               return matchedRecord ? ({ ...transaction, destinationAddress: matchedRecord.name }) : transaction
             })
@@ -728,69 +804,7 @@ function applyAddressBookNamesToTransactions(transactionsPromise) {
       take(1)
     )
 
-    return observable
-}
-
-/**
- * Private method. Gets addresses balances in a batch request.
- *
- * @param {Client} client
- * @param {AddressRow[]} addressRows
- * @returns {Promise<any>}
- * @memberof RpcService
- */
-function getAddressesBalance(client: Client, addressRows: AddressRow[]): Promise<any> {
-  const commands: Object[] = []
-  
-  addressRows.forEach(address => {
-    const confirmedCmd = { method: 'z_getbalance', parameters: [address.address] }
-    const unconfirmedCmd = { method: 'z_getbalance', parameters: [address.address, 0] }
-    commands.push(confirmedCmd, unconfirmedCmd)
-  })
-
-  const promise = client.command(commands)
-    .then(balances => {
-
-      const addresses = addressRows.map((address, index) => {
-
-        const confirmedBalance = balances[index * 2]
-        const unconfirmedBalance = balances[index * 2 + 1]
-
-        if (typeof(confirmedBalance) === 'object' || typeof(unconfirmedBalance) === 'object') {
-          return {
-            ...address,
-            balance: null,
-            confirmed: false,
-            errorMessage: confirmedBalance.message || unconfirmedBalance.message
-          }
-        }
-
-        const isConfirmed = confirmedBalance === unconfirmedBalance
-        const displayBalance = isConfirmed ? confirmedBalance : unconfirmedBalance
-
-        return {
-          ...address,
-          balance: Decimal(displayBalance),
-          confirmed: isConfirmed
-        }
-      })
-
-      return addresses
-    })
-    .catch(err => {
-      log.debug(`An error occurred while fetching an address balances: ${err}`)
-
-      const addresses = addressRows.map(address => ({
-        ...address,
-        balance: null,
-        confirmed: false,
-        errorMessage: err.toString()
-      }))
-
-      return addresses
-    })
-
-  return promise
+  return observable
 }
 
 /**
@@ -804,7 +818,7 @@ function exportFileWithMethod(method, filePath) {
   return from(
     client.command(method, filePath.concat('.dat'))
       .then((result) => {
-        if (result && typeof(result) === 'object' && result.name === 'RpcError') {
+        if (result && typeof (result) === 'object' && result.name === 'RpcError') {
           throw new Error(result.message)
         }
         return true;

@@ -3,16 +3,15 @@
 
 .newAddress {
   position: relative;
-  width: 80%;
+  width: 500px;
   height: auto;
   padding: 30px 30px;
   text-align: center;
   background-color: $BASE_COLOR_DARK_BLUE;
   
   p {
-    font-size: 20px;
+    font-size: 1.2rem;
     margin: 0;
-    margin-bottom: 10px;
     text-align: left;
   }
 
@@ -30,6 +29,14 @@
     }
   }
 
+  .address {
+    margin-bottom: 8px;
+  }
+
+  .addressLabel {
+    margin-bottom: 15px;
+  }
+
   input {
     height: 30px;
   }
@@ -39,11 +46,8 @@
   }
 
   button {
-    cursor: pointer;
-    width: 110px;
-    height: 28px;
     background-color: $SEND_COIN_BUTTON_COLOR;
-    border: none;
+    border-color: $SEND_COIN_BUTTON_COLOR;
     color: white;
   }
 }

@@ -3,8 +3,9 @@ import { clipboard } from 'electron'
 import cn from 'classnames'
 
 import { translate } from '~/i18next.config'
-import RoundedInput from './NewRoundedInput'
+import RoundedInput from './RoundedInput'
 import styles from './BorderlessButton.scss'
+import pasteImg from '~/assets/images/main/paste.png'
 
 
 const t = translate('other')
@@ -19,8 +20,7 @@ export default class RoundedInputWithPaste extends RoundedInput {
         role="button"
         tabIndex={0}
       >
-        <div className={cn('icon', styles.icon)} />
-        <div>{t(`Paste`)}</div>
+        <img src={pasteImg} alt={t(`Paste`)}/>
       </div>
     )
   }

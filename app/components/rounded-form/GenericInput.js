@@ -13,6 +13,7 @@ export type GenericInputProps = {
   labelClassName?: string,
   inputClassName?: string,
   addonClassName?: string,
+  rightLabel?: boolean,
 	label?: string,
 	onChange?: value => void,
   error?: string | null,
@@ -54,10 +55,10 @@ export default class GenericInput extends GenericControl {
   }
 
 	/**
-	 * @param {string} value
+	 * @param {string | boolean} value
 	 * @memberof GenericInput
 	 */
-  changeValue(value: string) {
+  changeValue(value: string | boolean) {
     this.setState({ value })
 
 		if (this.props.onChange) {
@@ -66,8 +67,12 @@ export default class GenericInput extends GenericControl {
   }
 
 	onChangeHandler(event) {
-		event.stopPropagation()
-    this.changeValue(event.target.value)
+    event.stopPropagation()
+    if (event.target.type === 'checkbox') {
+      this.changeValue(event.target.checked)
+    } else {
+      this.changeValue(event.target.value)
+    }
 	}
 
   renderLabel() {
@@ -90,6 +95,7 @@ export default class GenericInput extends GenericControl {
           className={cn(
             this.props.className,
             genericStyles.container,
+            this.props.type === 'checkbox' ? genericStyles.checkbox : '',
             this.customContainerClassName,
             {
               [genericStyles.hasError]: Boolean(this.props.error),
@@ -98,7 +104,7 @@ export default class GenericInput extends GenericControl {
           )}
         >
 
-        {this.props.label &&
+        {!this.props.rightLabel && this.props.label &&
           <div className={cn(this.props.labelClassName, genericStyles.label)}>
             {this.renderLabel()}
           </div>
@@ -107,6 +113,12 @@ export default class GenericInput extends GenericControl {
         <div className={cn(this.props.inputClassName, genericStyles.input)}>
           {this.renderInput()}
         </div>
+
+        {this.props.rightLabel && this.props.label &&
+          <div className={cn(this.props.labelClassName, genericStyles.label, genericStyles.rightLabel)}>
+            {this.renderLabel()}
+          </div>
+        }
 
         <div className={cn(this.props.addonClassName, genericStyles.addon)}>
           {this.renderAddon()}

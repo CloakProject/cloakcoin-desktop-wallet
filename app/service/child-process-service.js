@@ -170,6 +170,8 @@ export class ChildProcessService {
 
     const childProcess = this::spawnProcess(processName, args, spawnOptions)
 
+    getStore().dispatch(actions.childProcessStarting(processName))
+
     childProcessInfo.instance = childProcess
     childProcessInfo.shutdown = shutdownFunction
 
@@ -337,7 +339,7 @@ export class ChildProcessService {
           reject(new Error(t(`Unexpected error occurred`)))
         })
 
-      }, 100)
+      }, 3000)
 
       setTimeout(() => {
         if (interval !== null) {

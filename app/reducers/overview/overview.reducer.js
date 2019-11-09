@@ -10,27 +10,33 @@ export type Transaction = {
 	amount?: Decimal,
 	timestamp?: number,
 	destinationAddress?: string,
+	isStealthAddress?: boolean,
 	transactionId?: string
 }
 
-export type Balances = {
+export type BalancesInfo = {
 	balance?: Decimal,
-	unconfirmedBalance?: Decimal
+	balanceChangesIn7Days?: Decimal,
+	reward?: Decimal,
+	rewardEstimation: number,
+	value?: Decimal,
+	valueChangesIn7Days: Decimal
+}
+
+export type Price = {
+	time: number,
+	price: Decimal
 }
 
 export type OverviewState = {
-	balances?: Balances,
 	transactions?: Array<Transaction>,
-	transactionDetails: object
+	prices?: Array<Price>,
+	price?: number | null
 }
 
 export const OverviewActions = createActions(
 	{
 		EMPTY: undefined,
-
-		GET_WALLET_INFO: undefined,
-		GOT_WALLET_INFO: (balances: Balances) => balances,
-		GET_WALLET_INFO_FAILURE: (errorMessage: string) => ({ errorMessage }),
 
     GET_TRANSACTION_DATA_FROM_WALLET: undefined,
 		GOT_TRANSACTION_DATA_FROM_WALLET: (transactions: Array<Transaction>) => transactions,
@@ -40,9 +46,13 @@ export const OverviewActions = createActions(
 		MAIN_WINDOW_MINIMIZE: undefined,
 		MAIN_WINDOW_MAXIMIZE: undefined,
 
-    GET_TRANSACTION_DETAILS: (transactionId: string) => ({ transactionId }),
-		GOT_TRANSACTION_DETAILS: (transactionDetails: object) => ({ transactionDetails }),
-		GET_TRANSACTION_DETAILS_FAILED: undefined,
+		GET_PRICE_CHART: undefined,
+		GOT_PRICE_CHART: (prices: Array<Price>) => prices,
+		GET_PRICE_CHART_FAILED: undefined,
+
+		GET_LATEST_PRICE: undefined,
+		GOT_LATEST_PRICE: (price: number) => price,
+		GET_LATEST_PRICE_FAILED: undefined,
 	},
 	{
 		prefix: 'APP/OVERVIEW'
@@ -50,23 +60,28 @@ export const OverviewActions = createActions(
 )
 
 export const OverviewReducer = handleActions({
-  [OverviewActions.gotWalletInfo]: (state, action) => ({
-    ...state,
-    balances: action.payload
-	}),
-
   [OverviewActions.gotTransactionDataFromWallet]: (state, action) => ({
     ...state,
     transactions: action.payload
   }),
 
-  [OverviewActions.gotTransactionDetails]: (state, action) => ({
+  [OverviewActions.gotPriceChart]: (state, action) => ({
     ...state,
-    transactionDetails: action.payload.transactionDetails
+    prices: action.payload
   }),
 
-  [OverviewActions.getTransactionDetailsFailed]: state => ({
+  [OverviewActions.getPriceChartFailed]: state => ({
     ...state,
-    transactionDetails: {}
+    prices: []
+	}),
+
+	[OverviewActions.gotLatestPrice]: (state, action) => ({
+    ...state,
+    price: action.payload
   }),
+
+  [OverviewActions.getLatestPriceFailed]: state => ({
+    ...state,
+    price: null
+	}),
 }, preloadedState)

@@ -10,6 +10,7 @@ import TransactionsList from '~/components/transactions/TransactionsList'
 import styles from './transaction-cash.scss'
 import HLayout from '~/assets/styles/h-box-layout.scss'
 import VLayout from '~/assets/styles/v-box-layout.scss'
+import Decimal from 'decimal.js'
 
 
 type Props = {
@@ -29,7 +30,7 @@ class TransactionCash extends Component<Props> {
     super(props);
     this.state = {
       address: '',
-			amount: 0,
+			amount: Decimal(0),
 			period: -1,
 			category: 'all|all'
     }

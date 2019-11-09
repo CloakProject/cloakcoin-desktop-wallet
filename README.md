@@ -1,12 +1,11 @@
-﻿# CloakCoin Desktop Wallet V3.0
+# Cloak-Wallet
 
 ### An `Electron` native client app for `cloak`, cloned from [electron-react-boilerplate](https://github.com/chentsulin/electron-react-boilerplate) which  based on [React](https://facebook.github.io/react/), [Redux](https://github.com/reactjs/redux), [React Router](https://github.com/reactjs/react-router), [Webpack](http://webpack.github.io/docs/), [React Transform HMR](https://github.com/gaearon/react-transform-hmr) for rapid application development.
 
-## Getting Started
+<hr><br>
 
+## Install
 
-
-### Installation
 ```bash
 cd cloak-wallet
 yarn
@@ -15,10 +14,7 @@ yarn
 
 <hr><br>
 
-1. Navigate to the directory you cloned the repo into.
-2. Enter `npm install`
-
-### Running
+## Run
 
 Start the app in the `dev` environment. This starts the renderer process in [**hot-module-replacement**](https://webpack.js.org/guides/hmr-react/) mode and starts a webpack dev server that sends hot updates to the renderer process:
 
@@ -87,9 +83,6 @@ DEBUG_PROD=true npm run package
 ```
 <hr><br>
 
-### Testing
-
-
 ## Application icons
 Use the following gist to generate new icons from one 1024x1024 image with transparency:
 https://gist.github.com/iwuvjhdva/b6329f82a445cc563b143bf014f0c112
@@ -127,12 +120,6 @@ For an example app that uses this boilerplate and packages native dependencies, 
 
 <hr><br>
 
-### Contributing
 
-You can add new languages here, and contribute to the translation of existing languages.
-
-New languages are usually added when they reach 80% or more completion, and not removed from the client unless they fall below 60% for several releases.
-
-### License
-This project is licensed under the MIT License. 
-
+## Static Type Checking
+This project comes with Flow support out of the box! You can annotate your code with types, [get Flow errors as ESLint errors](https://github.com/amilajack/eslint-plugin-flowtype-errors), and get [type errors during runtime](https://github.com/codemix/flow-runtime) during development. Types are completely optional.

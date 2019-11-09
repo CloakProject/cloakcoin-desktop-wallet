@@ -5,22 +5,31 @@ import cn from 'classnames'
 
 import styles from './TransactionModal.scss'
 import fingerImg from '~/assets/images/main/send/finger.png';
+import {
+  RoundedInput,
+  RoundedInputWithCopy,
+} from '~/components/rounded-form'
 
 type Props = {
-  t: any,
+  t: any
 }
 
 /**
- * @class AddressModal
+ * @class TransactionModal
  * @extends {Component<Props>}
  */
 class TransactionModal extends Component<Props> {
   props: Props
   
 	render() {
-    const { t, isvisible, onClose, txId } = this.props
-    if (!isvisible) {
+    const { t, isVisible, onClose, txId } = this.props
+    if (!isVisible) {
       return null
+    }
+
+    let { canCopyTxId } = this.props
+    if (canCopyTxId === undefined || canCopyTxId === null) {
+      canCopyTxId = true
     }
 
 		return (
@@ -33,11 +42,20 @@ class TransactionModal extends Component<Props> {
             onClick={onClose}
             onKeyDown={() => {}}
           />
-          <img src={fingerImg} alt="finger" />
-          <p>TX ID</p>
-          <div className={styles.transactionId}>
-            {txId}
-          </div>
+          <img className={cn(styles.finger)} src={fingerImg} alt="finger" />
+          <p>{t('TX ID')}</p>
+          {canCopyTxId ? (
+            <RoundedInputWithCopy
+              className={styles.transactionId}
+              readOnly={true}
+              defaultValue={txId}
+            />) : (
+            <RoundedInput
+              className={styles.transactionId}
+              readOnly={true}
+              defaultValue={txId}
+            />
+          )}
         </div>
       </div>
 		)

@@ -2,14 +2,16 @@
 
 .container {
   // Change to this value after moving all the inputs to the new system: height: 1.65rem;
-  height: 1.54rem;
+  height: 2.2rem;
 
   display: flex;
   overflow: visible;
   text-align: left;
 
-  border: 1px solid $BASE_COLOR_BORDER_GRAY;
+  border: 1px solid $BASE_COLOR_INPUT_COLOR;
   border-radius: 0.2rem;
+
+  background-color: $BASE_COLOR_INPUT_COLOR;
 
   > div {
     display: flex;
@@ -32,26 +34,35 @@
   position: relative;
 }
 
+.checkbox {
+  background-color: transparent;
+  border: 0px;
+  border-radius: 0rem;
+}
+
 .input {
   width: 100%;
   overflow: hidden;
 }
 
 .label {
-  color: $BASE_COLOR_BUTTON_FONT_GRAY;
+  color: white;
 
-  font-size: 0.61rem;
+  font-size: 1.2rem;
   font-weight: 100;
 
   padding-left: 0.4rem;
   padding-right: 0.67rem;
-  border-right: 1px solid $BASE_COLOR_BORDER_GRAY;
 
   user-select: none;
   cursor: default;
 
-  text-transform: uppercase;
   white-space: nowrap;
+}
+
+.rightLabel {
+  padding-left: 0.67rem;
+  padding-right: 0.4rem;
 }
 
 .addon {
@@ -64,7 +75,8 @@
 .error {
   padding: 2px 6px;
   color: $BASE_COLOR_LIGHT_RED;
-  font-size: 0.6rem;
+  font-size: 1rem;
   height: 0.75rem;
   white-space: nowrap;
+  text-align: left;
 }

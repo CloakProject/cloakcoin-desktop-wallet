@@ -15,7 +15,6 @@ import HLayout from '~/assets/styles/h-box-layout.scss'
 import VLayout from '~/assets/styles/v-box-layout.scss'
 
 import { SystemInfoState } from '~/reducers/system-info/system-info.reducer'
-import { OptionsState } from '~/reducers/options/options.reducer'
 import statusImg from '~/assets/images/main/settings/status.png';
 import encryptWalletImg from '~/assets/images/main/settings/encrypt-wallet.png';
 import encryptedWalletImg from '~/assets/images/main/settings/encrypted-wallet.png';
@@ -28,8 +27,7 @@ import backupWalletImg from '~/assets/images/main/settings/backup-wallet.png';
 
 type Props = {
   t: any,
-  systemInfo: SystemInfoState,
-  options: OptionsState
+  systemInfo: SystemInfoState
 }
 
 /**
@@ -63,7 +61,7 @@ class Settings extends Component<Props> {
   }
 
   isEnigmaOn() {
-    return this.props.options.enigmaEnabled
+    return this.props.systemInfo.blockchainInfo.enigma
   }
 
 	render() {
@@ -81,52 +79,49 @@ class Settings extends Component<Props> {
     ]
 
 		return (
-			<div className={cn(styles.layoutContainer, HLayout.hBoxChild, VLayout.vBoxContainer)}>
-				<div className={cn(styles.settingsContainer, VLayout.vBoxChild, HLayout.hBoxContainer)}>
-          <div className={styles.leftSide}>
-            <div className={cn(styles.networkStatus, this.isNetworkActive() ? styles.active : '')}>
-              {this.isNetworkActive() && (<p>{t('Connected')} / {this.props.systemInfo.blockchainInfo.connections}</p>)}
-              {!this.isNetworkActive() && (<p>{t('Disconnected')}</p>)}
-            </div>
-            <div className={styles.settingItems}>
-              {
-                settingItems.map(item => {
-                  if (item.inactive) {
-                    return null
-                  }
-                  return (
-                    <div
-                      className={cn(styles.item, styles.borderTop, this.state.settingId === item.label ? styles.active : '' )}
-                      key={item.label}
-                      onClick={() => this.onChooseSetting(item.label)}
-                    >
-                      <img src={item.icon} alt="setting icon" />
-                      <p>{t(item.label)}</p>
-                    </div>  
-                  )})
-              }
-            </div>
+      <div className={cn(styles.settingsContainer, VLayout.vBoxChild, HLayout.hBoxContainer)}>
+        <div className={styles.leftSide}>
+          <div className={cn(styles.networkStatus, this.isNetworkActive() ? styles.active : '')}>
+            {this.isNetworkActive() && (<p>{t('Connected')} / {this.props.systemInfo.blockchainInfo.connections}</p>)}
+            {!this.isNetworkActive() && (<p>{t('Disconnected')}</p>)}
           </div>
-          <div className={styles.rightSide}>
-            {this.state.settingId === 'Status' && <Status />}
-            {this.state.settingId === 'Encrypt wallet' && <EncryptWallet />}
-            {this.state.settingId === 'Encrypted wallet' && <EncryptWallet />}
-            {this.state.settingId === 'Lock wallet' && <LockWallet />}
-            {this.state.settingId === 'Unlock wallet' && <LockWallet />}
-            {this.state.settingId === 'Change passphrase' && <ChangePassphrase />}
-            {this.state.settingId === 'Enable Enigma' && <DisableEnigma />}
-            {this.state.settingId === 'Disable Enigma' && <DisableEnigma />}
-            {this.state.settingId === 'Backup wallet' && <BackupWallet />}
+          <div className={styles.settingItems}>
+            {
+              settingItems.map(item => {
+                if (item.inactive) {
+                  return null
+                }
+                return (
+                  <div
+                    className={cn(styles.item, styles.borderTop, this.state.settingId === item.label ? styles.active : '' )}
+                    key={item.label}
+                    onClick={() => this.onChooseSetting(item.label)}
+                  >
+                    <img src={item.icon} alt="setting icon" />
+                    <p>{t(item.label)}</p>
+                  </div>  
+                )})
+            }
           </div>
-				</div>
-			</div>
+        </div>
+        <div className={styles.rightSide}>
+          {this.state.settingId === 'Status' && <Status />}
+          {this.state.settingId === 'Encrypt wallet' && <EncryptWallet />}
+          {this.state.settingId === 'Encrypted wallet' && <EncryptWallet />}
+          {this.state.settingId === 'Lock wallet' && <LockWallet />}
+          {this.state.settingId === 'Unlock wallet' && <LockWallet />}
+          {this.state.settingId === 'Change passphrase' && <ChangePassphrase />}
+          {this.state.settingId === 'Enable Enigma' && <DisableEnigma />}
+          {this.state.settingId === 'Disable Enigma' && <DisableEnigma />}
+          {this.state.settingId === 'Backup wallet' && <BackupWallet />}
+        </div>
+      </div>
 		)
 	}
 }
 
 const mapStateToProps = state => ({
-  systemInfo: state.systemInfo,
-  options: state.options
+  systemInfo: state.systemInfo
 })
 
 export default connect(mapStateToProps, null)(translate('settings')(Settings))

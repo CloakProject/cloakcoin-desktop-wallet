@@ -81,7 +81,7 @@ class ReceiveCash extends Component<Props> {
 	}
 
 	render() {
-    const { t } = this.props
+		const { t } = this.props
     
 		return (
 			<div className={[styles.receiveCashContainer, VLayout.vBoxChild, HLayout.hBoxContainer].join(' ')}>
@@ -112,6 +112,7 @@ class ReceiveCash extends Component<Props> {
               {
 								this.props.ownAddresses.addresses &&
 								this.props.ownAddresses.addresses
+									.slice()
 									.sort((a, b) => this.getAddressLabel(a).toLowerCase().localeCompare(this.getAddressLabel(b).toLowerCase()))
 									.map(item => (
 										<div

@@ -1,9 +1,9 @@
 import { remote } from 'electron'
 import cn from 'classnames'
 import React from 'react'
-import RoundedInput, { RoundedInputProps } from './NewRoundedInput'
+import RoundedInput, { RoundedInputProps } from './RoundedInput'
 
-import parentStyles from './NewRoundedInput.scss'
+import parentStyles from './RoundedInput.scss'
 import styles from './OpenFileInput.scss'
 
 

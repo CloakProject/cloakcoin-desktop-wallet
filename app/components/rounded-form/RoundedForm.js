@@ -17,6 +17,7 @@ type Props = {
   schema: object,
   options?: object,
   onValidate?: (errors: object) => void,
+  defaultValues?: object,
   important?: boolean,
   children: any
 }
@@ -30,15 +31,15 @@ class RoundedForm extends Component<Props> {
 	 */
   constructor(props) {
     super(props)
-    this.defaultValues = {}
+    this.defaultValues = props.defaultValues || {}
   }
 
 	/**
 	 * @memberof RoundedForm
 	 */
   componentDidMount() {
-    if (!this.props.roundedForm[this.props.id]) {
-      this.props.actions.updateFields(this.props.id, this.defaultValues, false)
+    if (!this.props.roundedForm[this.props.id] || this.props.defaultValues) {
+      this.props.actions.updateFields(this.props.id, this.props.defaultValues, false)
     }
   }
 

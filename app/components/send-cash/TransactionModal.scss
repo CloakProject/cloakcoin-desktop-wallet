@@ -3,7 +3,7 @@
 
 .txAddress {
   position: relative;
-  width: 80%;
+  width: 800px;
   height: auto;
   padding: 30px 30px;
   text-align: center;
@@ -11,7 +11,11 @@
   
   img {
     opacity: 0.3;
-    margin-bottom: 20px;
+    height: 30px;
+  }
+
+  .finger {
+    height: 120px;
   }
 
   p {
@@ -36,8 +40,13 @@
     margin-top: 20px;
     padding: 20px;
     background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
-    color: $BASE_COLOR_LIGHT_GREEN;
     font-size: 20px;
+    border: none;
+
+    input {
+      color: $BASE_COLOR_LIGHT_GREEN;
+      text-align: center;
+    }
   }
 }
 

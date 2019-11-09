@@ -26,6 +26,25 @@ export const RoundedFormActions = createActions(
 	}
 )
 
+const updateField = (state, action) => {
+  const newState = {
+    ...state,
+    [action.payload.formId]: {
+      ...state[action.payload.formId],
+      fields: {
+        ...state[action.payload.formId].fields,
+        [action.payload.field]: action.payload.value
+      }
+    }
+  }
+  if (newState[action.payload.formId] &&
+    newState[action.payload.formId].fields &&
+    action.payload.value === undefined) {
+    delete newState[action.payload.formId].fields[action.payload.field]
+  }
+  return newState
+}
+
 export const RoundedFormReducer = handleActions({
   [RoundedFormActions.clear]: (state, action) => {
     const newState = {...state}
@@ -43,16 +62,7 @@ export const RoundedFormReducer = handleActions({
       isValid: action.payload.isValid
     }
   }),
-  [RoundedFormActions.updateField]: (state, action) => ({
-    ...state,
-    [action.payload.formId]: {
-      ...state[action.payload.formId],
-      fields: {
-        ...state[action.payload.formId].fields,
-        [action.payload.field]: action.payload.value
-      }
-    }
-  }),
+  [RoundedFormActions.updateField]: (state, action) => updateField(state, action),
   [RoundedFormActions.updateErrors]: (state, action) => ({
     ...state,
     [action.payload.formId]: {

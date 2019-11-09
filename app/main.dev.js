@@ -13,17 +13,19 @@
 import * as fs from 'fs'
 import path from 'path'
 import config from 'electron-settings'
-import { app, ipcMain, BrowserWindow } from 'electron'
+import { app, ipcMain, BrowserWindow, globalShortcut } from 'electron'
 import log from 'electron-log'
+import AutoLaunch from 'auto-launch'
 
 import { i18n } from './i18next.config'
-import { getOS, getIsExitForbidden, getAppDataPath, getInstallationPath, getChildProcessesGlobal, stopChildProcesses } from './utils/os'
+import { getOS, getIsExitForbidden, getAppDataPath, getResourcesPath, getChildProcessesGlobal, stopChildProcesses } from './utils/os'
 import { CloakService } from './service/cloak-service-main'
 import { FetchLdbService } from './service/fetch-ldb-service'
-import MenuBuilder from './menu'
+// import MenuBuilder from './menu'
 
 
-let isExiting = false
+let isAbleToQuit = false
+let isInitializing = true
 
 // For the module to be imported in main, dirty, remove
 const cloak = new CloakService()
@@ -36,7 +38,7 @@ if (!fs.existsSync(appDataPath)) {
 }
 
 log.transports.file.maxSize = 5 * 1024 * 1024
-log.transports.file.file = path.join(appDataPath, 'reswallet.log')
+log.transports.file.file = path.join(appDataPath, 'cloakwallet.log')
 
 let mainWindow = null
 
@@ -116,140 +118,219 @@ checkAndCreateWalletAppFolder()
 // Uncomment this line to make the app working in Parallels Desktop
 // app.disableHardwareAcceleration()
 
-/**
- * Add event listeners...
- */
-
-app.on('window-all-closed', () => {
-  // Closing main application window just hides it on Macs
-  if (getOS() !== 'macos') {
-    app.quit()
+const shouldQuit = app.makeSingleInstance(() => {
+  // Someone tried to run a second instance, we should focus our window.
+  if (mainWindow) {
+    if (!mainWindow.isVisible()) mainWindow.show()
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.focus()
   }
 })
 
-app.on('ready', async () => {
-  app.on('activate', () => {
+if (shouldQuit) {
+  app.quit()
+} else {
+  const options = config.get('options', {})
+  config.set('newOptions', options)
+
+  /**
+   * Add event listeners...
+   */
+  
+  app.on('window-all-closed', () => app.quit())
+
+  app.on('ready', async () => {
+    app.on('activate', () => {
+      if (getOS() === 'macos' && mainWindow) {
+        mainWindow.show()
+      }
+    })
+
+    app.on('before-quit', event => {
+      // Closing a window just hides it on Macs
+      if (getOS() === 'macos' && getIsExitForbidden(mainWindow)) {
+        event.preventDefault()
+        return
+      }
+
+      log.info(`Killing all child processes...`)
+      stopChildProcesses()
+      log.info(`Done`)
+    })
+
+    globalShortcut.register('F11', () => {
+      if (!isInitializing && mainWindow) {
+        mainWindow.setFullScreen(!mainWindow.isFullScreen())
+      }
+    })
+
+    if (
+      process.env.NODE_ENV === 'development' ||
+      process.env.DEBUG_PROD === 'true'
+    ) {
+      await installExtensions()
+    }
+
+    let iconFileName = 'icon.png'
     if (getOS() === 'macos') {
-      mainWindow.show()
-    }
-  })
-
-  app.on('before-quit', event => {
-    isExiting = true
-
-    // Closing a window just hides it on Macs
-    if (getOS() === 'macos' && getIsExitForbidden(mainWindow)) {
-      event.preventDefault()
-      return
+      iconFileName = 'icon.icns'
+    } else if (getOS() === 'windows') {
+      iconFileName = 'icon.ico'
     }
 
-    log.info(`Killing all child processes...`)
-    stopChildProcesses()
-    log.info(`Done`)
-  })
+    mainWindow = new BrowserWindow({
+      ...getWindowSize(),
+      show: false,
+      frame: false,
+      backgroundColor: '#1d2440',
+      icon: path.join(getResourcesPath(), 'resources', `${iconFileName}`),
+      webPreferences: {
+        nodeIntegration: true
+      }
+    })
 
-  if (
-    process.env.NODE_ENV === 'development' ||
-    process.env.DEBUG_PROD === 'true'
-  ) {
-    await installExtensions()
-  }
+    mainWindow.setMenu(null)
 
-  let iconFileName = 'icon.png'
-  if (getOS() === 'macos') {
-    iconFileName = 'icon.icns'
-  } else if (getOS() === 'windows') {
-    iconFileName = 'icon.ico'
-  }
+    // const menuBuilder = new MenuBuilder(mainWindow)
 
-  mainWindow = new BrowserWindow({
-    ...getWindowSize(),
-    show: false,
-    frame: false,
-    backgroundColor: '#1d2440',
-    icon: path.join(getInstallationPath(), 'resources', `${iconFileName}`),
-    webPreferences: {
-      nodeIntegration: true
+    i18n.on('loaded', () => {
+      const language = config.get('options.language', 'default')
+      i18n.changeLanguage(language === 'default' ? 'en' : language)
+      i18n.off('loaded')
+    })
+
+    // i18n.on('languageChanged', () => {
+    //   menuBuilder.buildMenu()
+    // })
+
+    ipcMain.on('change-language', (event, code) => {
+      i18n.changeLanguage(code)
+    })
+
+    ipcMain.on('change-startup', (event, isStartup) => {
+      const execPath = process.argv[0]
+      
+      log.info(`Running process info:`, process.argv)
+      log.info(`Registering startup:`, execPath)
+      
+      const appStartup = new AutoLaunch({
+        name: 'CloakWallet',
+        path: execPath,
+      })
+
+      appStartup.isEnabled()
+        .then(isEnabled => {
+            if (isEnabled === isStartup) {
+              log.warn(isEnabled ? `Already registered as startup` : `Not registered as startup`)
+              return Promise.resolve()
+            }
+            return isStartup ? appStartup.enable() : appStartup.disable()
+        })
+        .then(() => {
+          return Promise.resolve()
+        })
+        .catch(err => {
+          log.debug(`Error registering as startup: ${err}`)
+        })
+    })
+
+    ipcMain.on('use-app', async () => {
+      isInitializing = false
+    })
+
+    ipcMain.on('force-quit', async () => {
+      isAbleToQuit = true
+      mainWindow.close()
+    })
+
+    global.isParametersPresenceConfirmed = await fetchLdb.checkPresence({calculateChecksums: false})
+
+    ipcMain.on('fetch-ldb', async () => {
+      await fetchLdb.fetch(mainWindow)
+    })
+
+    ipcMain.on('able-to-quit', async () => {
+      isAbleToQuit = true
+    })
+
+    // eslint-disable-next-line
+    mainWindow.eval = global.eval = function () {
+      throw new Error(`Sorry, this app does not support window.eval().`)
     }
-  })
 
-  const menuBuilder = new MenuBuilder(mainWindow)
+    mainWindow.loadURL(`file://${__dirname}/app.html`)
 
-  i18n.on('loaded', () => {
-    i18n.changeLanguage(config.get('language', 'en'))
-    i18n.off('loaded')
-  })
+    // Uncomment for debugging in prod mode
+    // mainWindow.webContents.openDevTools({detached: true});
 
-  i18n.on('languageChanged', () => {
-    menuBuilder.buildMenu()
-  })
+    // Showing the window if DOM finished loading and the content has been rendered
 
-  ipcMain.on('change-language', (event, code) => {
-    i18n.changeLanguage(code)
-  })
+    let isReadyToShow = false
+    let isDomFinishedLoading = false
 
-  global.isParametersPresenceConfirmed = await fetchLdb.checkPresence({calculateChecksums: false})
-
-  ipcMain.on('fetch-ldb', async () => {
-    await fetchLdb.fetch(mainWindow)
-  })
-
-  // eslint-disable-next-line
-  mainWindow.eval = global.eval = function () {
-    throw new Error(`Sorry, this app does not support window.eval().`)
-  }
-
-  mainWindow.loadURL(`file://${__dirname}/app.html`)
-
-  // Uncomment for debugging in prod mode
-  mainWindow.webContents.openDevTools({detached: true});
-
-  // Showing the window if DOM finished loading and the content has been rendered
-
-  let isReadyToShow = false
-  let isDomFinishedLoading = false
-
-  const showMainWindow = () => {
-      mainWindow.show()
-      mainWindow.focus()
-  }
-
-  mainWindow.once('ready-to-show', () => {
-    isReadyToShow = true
-    if (isDomFinishedLoading) {
-      showMainWindow()
+    const showMainWindow = () => {
+        mainWindow.show()
+        mainWindow.focus()
     }
-  })
 
-  mainWindow.webContents.on('did-finish-load', () => {
-    isDomFinishedLoading = true
-    if (isReadyToShow) {
-      showMainWindow()
-    }
-  })
+    mainWindow.once('ready-to-show', () => {
+      isReadyToShow = true
+      if (isDomFinishedLoading) {
+        showMainWindow()
+      }
+    })
 
-  ipcMain.on('resize', () => {
-    const windowSize = getWindowSize(true)
-    mainWindow.setResizable(windowSize.resizable)
-    mainWindow.setMinimumSize(windowSize.minWidth, windowSize.minHeight)
-    mainWindow.setSize(windowSize.width, windowSize.height)
-  })
+    mainWindow.webContents.on('did-finish-load', () => {
+      isDomFinishedLoading = true
+      if (isReadyToShow) {
+        showMainWindow()
+      }
+    })
 
-  mainWindow.on('close', event => {
-    if (getOS() === 'macos') {
+    mainWindow.webContents.on('enter-full-screen', event => {
+      if (isInitializing) {
+        event.preventDefault()
+      }
+    })
 
-      if (!isExiting) {
+    mainWindow.webContents.on('enter-html-full-screen', event => {
+      if (isInitializing) {
+        event.preventDefault()
+      }
+    })
+
+    ipcMain.on('resize', () => {
+      const windowSize = getWindowSize(true)
+      mainWindow.setResizable(windowSize.resizable)
+      mainWindow.setMinimumSize(windowSize.minWidth, windowSize.minHeight)
+      mainWindow.setSize(windowSize.width, windowSize.height)
+    })
+
+    mainWindow.on('close', event => {
+      if (isInitializing && !isAbleToQuit) {
+        event.preventDefault()
+        return
+      }
+
+      if (isInitializing && isAbleToQuit) {
+        return
+      }
+
+      if (getIsExitForbidden(mainWindow)) {
+        event.preventDefault()
+      }
+
+      const closeToTray = config.get('options.closeToTray', false)
+
+      if (closeToTray && !isAbleToQuit) {
         event.preventDefault()
         mainWindow.hide()
       }
+    })
 
-    } else if (getIsExitForbidden(mainWindow)) {
-      event.preventDefault()
-    }
+    mainWindow.on('closed', () => {
+      mainWindow = null
+    })
+
   })
-
-  mainWindow.on('closed', () => {
-    mainWindow = null
-  })
-
-})
+}

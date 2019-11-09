@@ -1,0 +1,34 @@
+{
+  "Main": "Main",
+  "Network": "Network",
+  "Window": "Window",
+  "Display": "Display",
+  "Enigma / CloakShield": "Enigma / CloakShield",
+  "Ok": "Ok",
+  "Cancel": "Cancel",
+  "Apply": "Apply",
+
+  "Start CloakCoin on system login": "Start CloakCoin on system login",
+  "Detach databases at shutdown": "Detach databases at shutdown",
+
+  "Map port using UPnp": "Map port using UPnp",
+  "Connect through SOCKS proxy": "Connect through SOCKS proxy",
+  "Proxy IP": "Proxy IP",
+  "Proxy Port": "Proxy Port",
+  "SOCKS version": "SOCKS version",
+
+  "Minimize to the tray instead of the taskbar": "Minimize to the tray instead of the taskbar",
+  "Minimize on close": "Minimize on close",
+
+  "User interface language": "User interface language",
+  "Default": "Default",
+  "Units to show amounts in": "Units to show amounts in",
+
+  "Enigma reserve balance %": "Enigma reserve balance %",
+  "Enable Enigma auto-retry": "Enable Enigma auto-retry",
+  "Use CloakShield for Enigma transactions": "Use CloakShield for Enigma transactions",
+  "Use CloakShield for non-Enigma transactions": "Use CloakShield for non-Enigma transactions",
+  "CloakShield min. routes": "CloakShield min. routes",
+  "CloakShield min. nodes": "CloakShield min. nodes",
+  "CloakShield min. hops": "CloakShield min. hops"
+}

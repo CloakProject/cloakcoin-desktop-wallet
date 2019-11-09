@@ -1,14 +1,9 @@
 @import "~/assets/styles/vars.scss";
 
 .select_box{
-    height: 30px;
     position: relative;
     display: inline;
     overflow: hidden;
-}
-
-.select_box:nth-child(6) {
-    margin-right: 20px;
 }
 
 .select_box:after{
@@ -19,11 +14,12 @@
     border-top: 6px solid white;
     position: absolute;
     top: 30%;
-    right: 3px;
+    right: 0px;
     content: "";
     z-index: 100;
     pointer-events: none;
 }
+
 .select_box select{
     width: auto;
     border: 0;
@@ -31,5 +27,8 @@
     z-index: 99;
     background: none;
     color: $BASE_COLOR_LIGHT_GREEN;
-    font-size: 20px;
+    font-size: 1.3rem;
+    outline: none;
+    -webkit-appearance: none;
+    padding-right: 15px;
 }

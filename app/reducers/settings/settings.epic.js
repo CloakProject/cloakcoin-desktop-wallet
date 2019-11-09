@@ -76,13 +76,13 @@ const lockWalletEpic = (action$: ActionsObservable<Action>, state$) => action$.p
 
 const unlockWalletEpic = (action$: ActionsObservable<Action>, state$) => action$.pipe(
 	ofType(SettingsActions.unlockWallet),
-  switchMap(() => {
+  switchMap((action) => {
     const { passphrase } = state$.value.roundedForm.settingsUnlockWallet.fields
 
-    const observable = from(rpc.sendWalletPassword(passphrase, 9999999)).pipe(
+    const observable = from(rpc.sendWalletPassword(passphrase, 9999999, action.payload.isMintOnly)).pipe(
       switchMap(() => {
         toastr.success(t(`Wallet unlocked`))
-        return of(SettingsActions.unlockWalletCompleted())
+        return of(SettingsActions.unlockWalletCompleted(action.payload.isMintOnly))
       }),
       catchError(err => {
         let errorMessage
@@ -127,23 +127,34 @@ const changePassphraseEpic = (action$: ActionsObservable<Action>, state$) => act
   })
 )
 
-const updateLanguageEpic = (action$: ActionsObservable<Action>) => action$.pipe(
-	ofType(SettingsActions.updateLanguage),
-  map(action => {
-    i18n.changeLanguage(action.payload.code)
-    config.set('language', action.payload.code)
-    ipcRenderer.send('change-language', action.payload.code)
-    return SettingsActions.empty()
-  })
+const enableEnigmaEpic = (action$: ActionsObservable<Action>, state$) => action$.pipe(
+  ofType(SettingsActions.enableEnigma),
+  tap((action) => rpc.enableEnigma(action.payload.isEnable)),
+  mapTo(SettingsActions.empty())
+)
+
+const enableEnigmaCompletedEpic = (action$: ActionsObservable<Action>, state$) => action$.pipe(
+  ofType(SettingsActions.enableEnigmaCompleted),
+  tap((action) => {
+    toastr.success(action.payload.isEnabled ? t(`Enigma enabled.`) : t(`Enigma disabled.`))
+	}),
+  mapTo(SettingsActions.empty())
+)
+
+const enableEnigmaFailedEpic = (action$: ActionsObservable<Action>, state$) => action$.pipe(
+  ofType(SettingsActions.enableEnigmaFailed),
+  tap((action) => {
+    console.log(action.payload)
+    toastr.error(action.payload.errorMessage)
+	}),
+  mapTo(SettingsActions.empty())
 )
 
 const kickOffChildProcessesEpic = (action$: ActionsObservable<Action>, state$) => action$.pipe(
 	ofType(SettingsActions.kickOffChildProcesses),
   flatMap(() => {
 		const settingsState = state$.value.settings
-    let observables = of(SettingsActions.startLocalNode())
-    
-    return observables
+    return of(SettingsActions.startLocalNode())
   })
 )
 
@@ -188,47 +199,40 @@ const stopLocalNodeEpic = (action$: ActionsObservable<Action>, state$) => action
 const initiateWalletBackupEpic = (action$: ActionsObservable<Action>) => action$.pipe(
 	ofType(SettingsActions.initiateWalletBackup),
   mergeMap(() => {
-    const title = t(`Backup resistance wallet to a file`)
+    const showSaveDialogObservable = bindCallback(remote.dialog.showSaveDialog.bind(remote.dialog))
+    
+    const title = t(`Backup cloakcoin wallet to a file`)
     const params = {
       title,
       defaultPath: remote.app.getPath('documents'),
       message: title,
       nameFieldLabel: t(`File name:`),
-      filters: [{ name: t(`Wallet files`),  extensions: ['dat'] }]
+      filters: [{ name: t(`Wallet files`) }]
     }
 
-    remote.dialog.showSaveDialog(null, params, (filePath) => {
-      if (filePath) {
-        rpc.backupWallet(filePath).pipe(
-          switchMap(() => {
-            toastr.success(t(`Wallet backup succeeded.`))
-            return of(SettingsActions.empty())
-          }),
-          catchError(err => {
-            toastr.error(t(`Unable to backup the wallet`), err.message)
-            return of(SettingsActions.empty())
-          }))
-      } else {
-        of(SettingsActions.empty())
-      }
-    });
+    const observable = showSaveDialogObservable(params).pipe(
+      switchMap(([filePath]) => (
+        filePath
+          ? of(SettingsActions.backupWallet(filePath))
+          : of(SettingsActions.backingupWalletCancelled())
+      )),
+      catchError(() => of(SettingsActions.backingupWalletFailed())))
 
-    const reason = t(`We're going to backup the wallet`)
-    return getEnsureLoginObservable(reason, null, action$)
+    return observable
   })
 )
 
 const backupWalletEpic = (action$: ActionsObservable<Action>) => action$.pipe(
 	ofType(SettingsActions.backupWallet),
   mergeMap(action => {
-    rpc.backupWallet(action.payload.filePath).pipe(
+    return rpc.backupWallet(action.payload.filePath).pipe(
       switchMap(() => {
         toastr.success(t(`Wallet backup succeeded.`))
-        return of(SettingsActions.empty())
+        return of(SettingsActions.backingupWalletCompleted())
       }),
       catchError(err => {
-        toastr.error(t(`Unable to backup the wallet`), err.message)
-        return of(SettingsActions.empty())
+        toastr.error(t(`Unable to backup the wallet.`), err.message)
+        return of(SettingsActions.backingupWalletFailed())
       })
   )})
 )
@@ -322,13 +326,7 @@ const childProcessFailedEpic = (action$: ActionsObservable<Action>, state$) => a
     const errorMessage = t(`Process {{processName}} has failed.`, { processName: action.payload.processName })
     toastr.error(t(`Child process failure`), `${errorMessage}\n${action.payload.errorMessage}`)
   }),
-	map((action) => {
-    // if (action.payload.processName === 'NODE') {
-    //     return SettingsActions.disableMiner()
-    // }
-
-    return SettingsActions.empty()
-  })
+  mapTo(SettingsActions.empty())
 )
 
 const childProcessMurderFailedEpic = (action$: ActionsObservable<Action>) => action$.pipe(
@@ -341,7 +339,6 @@ const childProcessMurderFailedEpic = (action$: ActionsObservable<Action>) => act
 )
 
 export const SettingsEpics = (action$, state$) => merge(
-  updateLanguageEpic(action$, state$),
 	kickOffChildProcessesEpic(action$, state$),
   toggleLocalNodeEpic(action$, state$),
 	startLocalNodeEpic(action$, state$),
@@ -351,6 +348,9 @@ export const SettingsEpics = (action$, state$) => merge(
   lockWalletEpic(action$, state$),
   unlockWalletEpic(action$, state$),
   changePassphraseEpic(action$, state$),
+  enableEnigmaEpic(action$, state$),
+  enableEnigmaCompletedEpic(action$, state$),
+  enableEnigmaFailedEpic(action$, state$),
   initiateWalletBackupEpic(action$, state$),
   initiateWalletRestoreEpic(action$, state$),
   backupWalletEpic(action$, state$),

@@ -4,6 +4,9 @@ import QRCode from 'qrcode.react'
 import cn from 'classnames'
 
 import styles from './QRCodeModal.scss'
+import {
+  RoundedInputWithCopy,
+} from '~/components/rounded-form'
 
 /**
  * @class QRCodeModal
@@ -11,8 +14,8 @@ import styles from './QRCodeModal.scss'
  */
 class QRCodeModal extends Component<Props> {
 	render() {
-    const { isvisible, value, onClose } = this.props
-    if (!isvisible) {
+    const { isVisible, value, onClose } = this.props
+    if (!isVisible) {
       return null
     }
 
@@ -29,6 +32,11 @@ class QRCodeModal extends Component<Props> {
           <div className={styles.qrCode}>
             <QRCode value={value} size={300} />
           </div>
+          <RoundedInputWithCopy
+            className={styles.qrValue}
+            readOnly={true}
+            defaultValue={value}
+          />
         </div>
       </div>
 		)

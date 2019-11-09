@@ -110,6 +110,10 @@ export class FetchLdbService {
       dispatch(actions.downloadFailed(errorMessage))
     })
 
+    ipcRenderer.on('fetch-ldb-extract-failed', (event, errorMessage) => {
+      dispatch(actions.extractFailed(errorMessage))
+    })
+
     ipcRenderer.send('fetch-ldb')
   }
 
@@ -125,7 +129,6 @@ export class FetchLdbService {
 		this.completedBytes = 0
     this.downloadItems = new Set()
 
-    console.log("in fetch");
     try {
       await this::fetchOrThrowError()
     } catch(err) {
@@ -159,11 +162,8 @@ async function fetchOrThrowError() {
   this::downloadComplete()
 }
 
-function downloadDoneCallback(state, downloadItem, resolve, reject) {
+function downloadDoneCallback(state, fileName, resolve, reject) {
   let error = null
-
-  this.completedBytes += downloadItem.downloadedBytes
-  const fileName = downloadItem.downloadedFileName
 
   const removeListener = () => {
     if (!this.mainWindow.isDestroyed()) {
@@ -203,11 +203,15 @@ function downloadDoneCallback(state, downloadItem, resolve, reject) {
 function registerDownloadListener(resolve, reject) {
   this.downloadListener = (e, downloadItem) => {
     const savePath = path.join(this.getLdbFolder(), downloadItem.getFilename())
+    const requiredExtract = savePath.toLowerCase().endsWith('.zip')
 
     downloadItem.setSavePath(savePath)
 
     this.downloadItems.add(downloadItem)
     this.totalBytes += downloadItem.getTotalBytes()
+    if (requiredExtract) {
+      this.totalBytes += downloadItem.getTotalBytes()
+    }
 
     // It seems that Chrome doesn't perform error handling, came up with this check:
     if (downloadItem.getTotalBytes() === 0) {
@@ -217,37 +221,49 @@ function registerDownloadListener(resolve, reject) {
     downloadItem.on('updated', () => this::downloadUpdatedCallback())
 
     downloadItem.on('done', (event, state) => {
-      const downloadInfo = {
-        downloadedBytes: downloadItem.getTotalBytes(),
-        downloadedFileName: downloadItem.getFilename()
-      };
-      this::downloadUpdatedCallback()
-      this.downloadItems.delete(downloadItem)
+      const downloadedFileName = downloadItem.getFilename()
+
+      this::downloadFinishedCallback(downloadItem)
 
       // Extract doenloaded zip file
-      if (savePath.toLowerCase().endsWith('.zip')) {
+      if (requiredExtract) {
         const ldbFolder = this.getLdbFolder()
         const destTmpPath = path.join(ldbFolder, 'ldbtemp')
         fs.removeSync(destTmpPath);
 
-        extract(savePath, {dir: destTmpPath}, (err) => {
-          if (err) {
-            log.info(`Ldb file ${savePath} extract failed`)
-            return;
-          }
-
-          // Move extracted files to Ldb folder
-          fs.moveSync(path.join(destTmpPath, 'txleveldb'), path.join(ldbFolder, 'txleveldb'), {overwrite: true});
-          fs.moveSync(path.join(destTmpPath, 'blk0001.dat'), path.join(ldbFolder, 'blk0001.dat'), {overwrite: true});
-          fs.moveSync(path.join(destTmpPath, 'peers.dat'), path.join(ldbFolder, 'peers.dat'), {overwrite: true});
-          // fs.moveSync(path.join(destTmpPath, 'zip_10MB'), path.join(ldbFolder, 'zip_10MB'), {overwrite: true});
-          
-          // Remove tmp files
-          fs.removeSync(destTmpPath);
-          fs.removeSync(savePath);
-
-          this::downloadDoneCallback(state, downloadInfo, resolve, reject)
-        })
+        extract(savePath,
+          {
+            dir: destTmpPath,
+            onEntry: this::extractUpdatedCallback
+          },
+          (errExtract) => {
+            try {
+              if (errExtract) {
+                throw errExtract
+              }
+  
+              // Move extracted files to Ldb folder
+              fs.moveSync(path.join(destTmpPath, 'txleveldb'), path.join(ldbFolder, 'txleveldb'), {overwrite: true})
+              fs.moveSync(path.join(destTmpPath, 'blk0001.dat'), path.join(ldbFolder, 'blk0001.dat'), {overwrite: true})
+              fs.moveSync(path.join(destTmpPath, 'peers.dat'), path.join(ldbFolder, 'peers.dat'), {overwrite: true})
+              // fs.moveSync(path.join(destTmpPath, 'zip_10MB'), path.join(ldbFolder, 'zip_10MB'), {overwrite: true})
+              
+              // Remove tmp files
+              fs.removeSync(destTmpPath)
+              fs.removeSync(savePath)
+  
+              this::downloadDoneCallback(state, downloadedFileName, resolve, reject)
+            } catch(err) {
+              if (this.mainWindow.isDestroyed()) {
+                log.error(`Ldb file ${savePath} extract failed.`)
+                log.error(err.toString())
+              } else {
+                this.mainWindow.webContents.send('fetch-ldb-extract-failed', err.message)
+              }
+            }
+          })
+      } else {
+        this::downloadDoneCallback(state, downloadedFileName, resolve, reject)
       }
      
     })
@@ -269,6 +285,17 @@ function downloadUpdatedCallback() {
       totalBytes: this.totalBytes,
     })
   }
+}
+
+function downloadFinishedCallback(downloadItem) {
+  this.downloadItems.delete(downloadItem)
+  this.completedBytes += downloadItem.getTotalBytes()
+}
+
+function extractUpdatedCallback(entry, zipFile) {
+  this.completedBytes += entry.compressedSize
+
+  this::downloadUpdatedCallback()
 }
 
 function downloadLdbFiles() {

@@ -3,28 +3,21 @@
 .button {
   cursor: pointer;
 
-  padding: 0.54rem 0.625rem;
+  padding: 0.2rem 2rem;
 
-  background-color: transparent;
-  border: 1px solid $BASE_COLOR_BORDER_GRAY;
-  color: $BASE_COLOR_BUTTON_FONT_GRAY;
+  background-color: $BASE_BUTTON_BACKGROUND_COLOR;
+  border: 1px solid $BASE_BUTTON_BACKGROUND_COLOR;
+  color: $BASE_BUTTON_COLOR;
 
-  border-radius: 5rem;
+  border-radius: 0.1rem;
   user-select: none;
   outline: none;
 
-  font-size: 0.6rem;
+  font-family: 'Abel';
+  font-size: 1.4rem;
   font-weight: 300;
-  text-transform: uppercase;
 
   position: relative;
-
-  &.important {
-    background-color: $BASE_COLOR_PURPLE;
-    border: 1px solid $BASE_COLOR_PURPLE;
-    font-weight: 500;
-    color: $BASE_COLOR_WHITE;
-  }
 
   &.large {
     padding: 0.7rem 3rem;
@@ -41,7 +34,7 @@
   .glyph {
     top: 50%;
     transform: translateY(-50%);
-    color: $BASE_COLOR_WHITE;
+    color: $BASE_BUTTON_COLOR;
     position: absolute;
     left: 0;
 
@@ -50,7 +43,7 @@
         position: absolute;
         left: 0.6rem;
         top: -0.42rem;
-        font-size: 0.9rem;
+        font-size: 1.8rem;
         font-weight: 600;
         content: '\e900';
       }

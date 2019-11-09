@@ -10,7 +10,6 @@ import RpcPolling from '~/components/rpc-polling/rpc-polling'
 import { getOS } from '~/utils/os'
 import { ChildProcessService } from '~/service/child-process-service'
 import { SystemInfoActions, SystemInfoState } from '~/reducers/system-info/system-info.reducer'
-import { OptionsState } from '~/reducers/options/options.reducer'
 import { getStore } from '~/store/configureStore'
 import { State } from '~/reducers/types'
 
@@ -50,8 +49,7 @@ type Props = {
   t: any,
   i18n: any,
 	systemInfo: SystemInfoState,
-	settings: SettingsState,
-	options: OptionsState
+	settings: SettingsState
 }
 
 class SystemInfo extends Component<Props> {
@@ -106,7 +104,7 @@ class SystemInfo extends Component<Props> {
   }
 
   isEnigmaOn() {
-    return this.props.options.enigmaEnabled &&
+    return this.props.systemInfo.blockchainInfo.enigma &&
             this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage >= 100 &&
             this.isShielded()
   }
@@ -218,7 +216,7 @@ class SystemInfo extends Component<Props> {
           {this.isCloakServiceRunning() && this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage < 100 && 
             (<div className={styles.statusColumnWrapper}>
 						  <div className={styles.statusColoumnTitle}>{t(`Synchronizing`)}</div>
-						  <div className={styles.statusColoumnValue}>{this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage}%</div>
+						  <div className={styles.statusColoumnValue}>{this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage.toFixed(2)}%</div>
             </div>)}
           {this.isCloakServiceRunning() && this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage >= 100 && 
             (<div className={styles.statusColoumnTitleSuccess}>{t(`Cloak Service Running`)}</div>)}
@@ -259,8 +257,7 @@ class SystemInfo extends Component<Props> {
 
 const mapStateToProps = (state: State) => ({
 	systemInfo: state.systemInfo,
-  settings: state.settings,
-  options: state.options
+  settings: state.settings
 })
 
 export default connect(mapStateToProps, null)(translate('other')(SystemInfo))

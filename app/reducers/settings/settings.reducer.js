@@ -1,13 +1,12 @@
 // @flow
+import { ipcRenderer } from 'electron'
 import { createActions, handleActions } from 'redux-actions'
 
 import { preloadedState } from '../preloaded.state'
 import { ChildProcessName, ChildProcessStatus } from '~/service/child-process-service'
 
 export type SettingsState = {
-  isStatusModalOpen: boolean,
-  childProcessesStatus: { [ChildProcessName]: ChildProcessStatus },
-  language: string
+  childProcessesStatus: { [ChildProcessName]: ChildProcessStatus }
 }
 
 export const SettingsActions = createActions(
@@ -22,33 +21,37 @@ export const SettingsActions = createActions(
     LOCK_WALLET_COMPLETED: undefined,
     LOCK_WALLET_FAILED: undefined,
 
-    UNLOCK_WALLET: undefined,
-    UNLOCK_WALLET_COMPLETED: undefined,
+    UNLOCK_WALLET: (isMintOnly: boolean) => ({ isMintOnly }),
+    UNLOCK_WALLET_COMPLETED: (isMintOnly: boolean) => ({ isMintOnly }),
     UNLOCK_WALLET_FAILED: undefined,
 
     CHANGE_PASSPHRASE: undefined,
     CHANGE_PASSPHRASE_COMPLETED: undefined,
     CHANGE_PASSPHRASE_FAILED: undefined,
 
-    UPDATE_LANGUAGE: (code: string) => ({ code }),
+    ENABLE_ENIGMA: (isEnable: boolean) => ({ isEnable }),
+    ENABLE_ENIGMA_COMPLETED: (isEnabled: boolean) => ({ isEnabled }),
+    ENABLE_ENIGMA_FAILED: (errorMessage: string = '') => ({ errorMessage }),
 
-    OPEN_STATUS_MODAL: undefined,
-    CLOSE_STATUS_MODAL: undefined,
+    INITIATE_WALLET_BACKUP: undefined,
+    BACKUP_WALLET: filePath => ({filePath}),
+    BACKINGUP_WALLET_COMPLETED: undefined,
+    BACKINGUP_WALLET_FAILED: undefined,
+    BACKINGUP_WALLET_CANCELLED: undefined,
+
+    INITIATE_WALLET_RESTORE: undefined,
+    RESTORE_WALLET: filePath => ({filePath}),
+    RESTORING_WALLET_FAILED: (errorMessage: string = '') => ({ errorMessage }),
+    RESTORING_WALLET_SUCCEEDED: undefined,
 
     TOGGLE_LOCAL_NODE: undefined,
     START_LOCAL_NODE: undefined,
     RESTART_LOCAL_NODE: undefined,
     STOP_LOCAL_NODE: undefined,
 
-    INITIATE_WALLET_BACKUP: undefined,
-    BACKUP_WALLET: filePath => ({filePath}),
-    INITIATE_WALLET_RESTORE: undefined,
-    RESTORE_WALLET: filePath => ({filePath}),
-    RESTORING_WALLET_FAILED: (errorMessage: string = '') => ({ errorMessage }),
-    RESTORING_WALLET_SUCCEEDED: undefined,
-
     KICK_OFF_CHILD_PROCESSES: undefined,
 
+    CHILD_PROCESS_STARTING: processName => ({ processName }),
     CHILD_PROCESS_STARTED: processName => ({ processName }),
     CHILD_PROCESS_FAILED: (processName, errorMessage) => ({ processName, errorMessage }),
     CHILD_PROCESS_RESTART_FAILED: (processName, errorMessage) => ({ processName, errorMessage }),
@@ -67,8 +70,8 @@ const getChildProcessUpdateFinishedState = (state, action, processStatus: ChildP
 }
 
 const getChildProcessUpdateFailedState = (state, action, processStatus: ChildProcessStatus, isEnabled) => {
+  ipcRenderer.send('able-to-quit')
   const newState = getChildProcessUpdateFinishedState(state, action, processStatus)
-
   return newState
 }
 
@@ -77,87 +80,113 @@ export const SettingsReducer = handleActions(
     // Encrypt Wallet
     [SettingsActions.encryptWallet]: state => ({
       ...state,
-      isWalletEncrypting: true,
-      isWalletEncrypted: false
+      isWalletEncrypting: true
     }),
 
     [SettingsActions.encryptWalletCompleted]: state => ({
       ...state,
-      isWalletEncrypting: false,
-      isWalletEncrypted: true
+      isWalletEncrypting: false
     }),
 
     [SettingsActions.encryptWalletFailed]: state => ({
       ...state,
-      isWalletEncrypting: false,
-      isWalletEncrypted: false
+      isWalletEncrypting: false
     }),
 
     // Lock Wallet
     [SettingsActions.lockWallet]: state => ({
       ...state,
-      isWalletLocking: true,
-      isWalletLocked: false
+      isWalletLocking: true
     }),
 
     [SettingsActions.lockWalletCompleted]: state => ({
       ...state,
-      isWalletLocking: false,
-      isWalletLocked: true
+      isWalletLocking: false
     }),
 
     [SettingsActions.lockWalletFailed]: state => ({
       ...state,
-      isWalletLocking: false,
-      isWalletLocked: false
+      isWalletLocking: false
     }),
 
     // Unlock Wallet
     [SettingsActions.unlockWallet]: state => ({
       ...state,
-      isWalletUnlocking: true,
-      isWalletLocked: true
+      isWalletUnlocking: true
     }),
 
     [SettingsActions.unlockWalletCompleted]: state => ({
       ...state,
-      isWalletUnlocking: false,
-      isWalletLocked: false
+      isWalletUnlocking: false
     }),
 
     [SettingsActions.unlockWalletFailed]: state => ({
       ...state,
-      isWalletUnlocking: false,
-      isWalletLocked: true
+      isWalletUnlocking: false
     }),
 
     // Change Passphrase
     [SettingsActions.changePassphrase]: state => ({
       ...state,
-      isPassphraseChanging: true
+      isPassphraseChanging: true,
+      isPassphraseChanged: false
     }),
 
     [SettingsActions.changePassphraseCompleted]: state => ({
       ...state,
-      isPassphraseChanging: false
+      isPassphraseChanging: false,
+      isPassphraseChanged: true
     }),
 
     [SettingsActions.changePassphraseFailed]: state => ({
       ...state,
-      isPassphraseChanging: false
+      isPassphraseChanging: false,
+      isPassphraseChanged: false
     }),
 
-    // Language
-    [SettingsActions.updateLanguage]: (state, action) => ({
-      ...state, language: action.payload.code
+    // Enable Enigma
+    [SettingsActions.enableEnigma]: state => ({
+      ...state,
+      isEnigmaChanging: true,
+      isEnigmaChanged: false
     }),
 
-    // Status Modal
-    [SettingsActions.openStatusModal]: state => ({
-      ...state, isStatusModalOpen: true
+    [SettingsActions.enableEnigmaCompleted]: state => ({
+      ...state,
+      isEnigmaChanging: false,
+      isEnigmaChanged: true
     }),
-    [SettingsActions.closeStatusModal]: state => ({
-      ...state, isStatusModalOpen: false
+
+    [SettingsActions.enableEnigmaFailed]: state => ({
+      ...state,
+      isEnigmaChanging: false,
+      isEnigmaChanged: false
+    }),
+
+    // Backup Wallet
+    [SettingsActions.initiateWalletBackup]: state => ({
+      ...state,
+      isWalletBackingup: true
+    }),
+
+    [SettingsActions.backupWallet]: state => ({
+      ...state,
+      isWalletBackingup: true
+    }),
+
+    [SettingsActions.backingupWalletCompleted]: state => ({
+      ...state,
+      isWalletBackingup: false
+    }),
+
+    [SettingsActions.backingupWalletFailed]: state => ({
+      ...state,
+      isWalletBackingup: false
+    }),
+
+    [SettingsActions.backingupWalletCancelled]: state => ({
+      ...state,
+      isWalletBackingup: false
     }),
 
     // Local Node
@@ -175,6 +204,9 @@ export const SettingsReducer = handleActions(
     }),
 
     // Child process updates
+    [SettingsActions.childProcessStarting]: (state, action) => (
+      getChildProcessUpdateFinishedState(state, action, 'STARTING')
+    ),
     [SettingsActions.childProcessStarted]: (state, action) => (
       getChildProcessUpdateFinishedState(state, action, 'RUNNING')
     ),

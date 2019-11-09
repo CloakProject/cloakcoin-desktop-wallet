@@ -1,7 +1,7 @@
 import React from 'react'
 import cn from 'classnames'
 
-import RoundedInput, { RoundedInputProps } from './NewRoundedInput'
+import RoundedInput, { RoundedInputProps } from './RoundedInput'
 import styles from './RoundedTextArea.scss'
 
 

@@ -24,11 +24,13 @@ export const FetchLdbActions = createActions(
     EMPTY: undefined,
 
     FETCH: undefined,
+    FETCH_PROMPT: undefined,
     STATUS: (message: string) => ({ message }),
 
     DOWNLOAD_PROGRESS: (receivedBytes: number, totalBytes: number) => ({ receivedBytes, totalBytes }),
     DOWNLOAD_COMPLETE: undefined,
     DOWNLOAD_FAILED: (errorMessage: string) => ({ errorMessage }),
+    EXTRACT_FAILED: (errorMessage: string) => ({ errorMessage }),
   },
   {
     prefix: 'APP/FETCH_LDB'
@@ -84,8 +86,15 @@ export const FetchLdbReducer = handleActions(
     }),
     [FetchLdbActions.downloadFailed]: (state, action) => ({
       ...state,
-      progressRate: 0,
+      // progressRate: 0,
       statusMessage: t(`Download failed`),
+      startedAt: null,
+      errorMessage: action.payload.errorMessage
+    }),
+    [FetchLdbActions.extractFailed]: (state, action) => ({
+      ...state,
+      // progressRate: 0,
+      statusMessage: t(`Extract failed`),
       startedAt: null,
       errorMessage: action.payload.errorMessage
     })

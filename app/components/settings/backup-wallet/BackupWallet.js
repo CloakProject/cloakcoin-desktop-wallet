@@ -5,6 +5,7 @@ import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
 import { translate } from 'react-i18next'
 import cn from 'classnames'
+import { RoundedButton } from '~/components/rounded-form'
 import { SettingsActions, SettingsState } from '~/reducers/settings/settings.reducer'
 import styles from './BackupWallet.scss'
 import backupImg from '~/assets/images/main/settings/backup-wallet-icon.png';
@@ -24,14 +25,17 @@ class BackupWallet extends Component<Props> {
 		return (
       <div className={cn(styles.backupContainer, this.props.className)}>
         <div className={styles.backupPage}>
-          <img src={backupImg} alt="enigma icon" />
-          <p>{ t('Backup file') }</p>
-          <button type="button"
-             onClick={this.props.actions.initiateWalletBackup}
-             disabled={this.props.settings.childProcessesStatus.NODE !== 'RUNNING'}
+          <img className={styles.statusImg} src={backupImg} alt="enigma icon" />
+          <p>{ t('Press the button to create a backup file of your wallet') }</p>
+          <p>{ t('Make sure you store it in a safe place') }</p>
+          <RoundedButton
+            onClick={this.props.actions.initiateWalletBackup}
+            important
+            spinner={this.props.settings.isWalletBackingup}
+            disabled={this.props.settings.isWalletBackingup || this.props.settings.childProcessesStatus.NODE !== 'RUNNING'}
           >
             {t(`Backup wallet`)}
-          </button>
+          </RoundedButton>
         </div>
       </div>
     )
@@ -39,7 +43,6 @@ class BackupWallet extends Component<Props> {
 }
 
 const mapStateToProps = state => ({
-  systemInfo: state.systemInfo,
 	settings: state.settings
 })
 

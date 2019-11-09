@@ -27,6 +27,7 @@ import VLayout from '~/assets/styles/v-box-layout.scss'
 const overviewPopupMenuId = 'overview-row-popup-menu-id'
 const transactionsPollingInterval = 30.0
 const priceChartPollingInterval = 60.0
+const latestPricePollingInterval = 60.0
 
 type Props = {
   t: any,
@@ -111,6 +112,16 @@ class Overview extends Component<Props> {
           }}
         />
 
+        <RpcPolling
+          interval={latestPricePollingInterval}
+          criticalChildProcess="NODE"
+          actions={{
+            polling: OverviewActions.getLatestPrice,
+            success: OverviewActions.gotLatestPrice,
+            failure: OverviewActions.getLatestPriceFailed
+          }}
+        />
+
 				{ /* Route content */}
 				<div className={cn(styles.overviewContainer, VLayout.vBoxChild, HLayout.hBoxContainer)}>
           <div className={cn(HLayout.hBoxChild, VLayout.vBoxContainer)}>
@@ -129,7 +140,7 @@ class Overview extends Component<Props> {
                   onRowContextMenu={(e, transactionId) => this.props.popupMenu.show(overviewPopupMenuId, transactionId, e.clientY, e.clientX)}
                 />
               </div>
-              <PriceChart prices={this.props.overview.prices}/>
+              <PriceChart price={this.props.overview.price} prices={this.props.overview.prices}/>
             </div>
 
           </div>

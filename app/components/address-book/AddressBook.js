@@ -7,17 +7,15 @@ import React, { Component } from 'react'
 import { toastr } from 'react-redux-toastr'
 import cn from 'classnames'
 import styles from './AddressBook.scss'
-import DropdownSelect from '~/components/dropdown-select/DropdownSelect'
 import NewAddressModal from '~/components/address-book/NewAddressModal'
 import QRCodeModal from '~/components/address-book/QRCodeModal'
 import HLayout from '~/assets/styles/h-box-layout.scss'
 import VLayout from '~/assets/styles/v-box-layout.scss'
 import addressbookImg from '~/assets/images/main/addressbook/addressbook.png';
+import { RoundedButton } from '~/components/rounded-form'
 
 type Props = {
-  t: any
-  // actions: object,
-	// popupMenu: object,
+	t: any
 }
 
 /**
@@ -25,27 +23,34 @@ type Props = {
  * @extends {Component<Props>}
  */
 export class AddressBook extends Component<Props> {
-	props: Props
+  props: Props
+  
 	/**
 	 * @memberof AddressBook
 	 */
-
-	 constructor(props) {
-		 super(props);
-		 this.state = {
-			 selectedAddress: null,
-			 isNewAddressVisible: false,
-			 isQRcodeVisible: false,
-			 isEnigma: false,
-		 }
-	 }
-
-	componentDidMount() {
-    this.props.actions.loadAddressBook()
+	constructor(props) {
+		super(props);
+		this.state = {
+			selectedAddress: null,
+			isNewStealthAddress: false,
+			isQRcodeVisible: false
+		}
 	}
 
-	handleAddressBook = record => {
-		this.setState({selectedAddress: record});
+	componentDidUpdate(prevProps) {
+		if (prevProps.addressBook.records !== this.props.addressBook.records) {
+			// eslint-disable-next-line react/no-did-update-set-state
+			this.setState({ selectedAddress: null })
+		}
+	}
+
+	handleSelectAddress = record => {
+		this.setState({ selectedAddress: record });
+	}
+
+	handleNewAddress = (isStealth = false) => {
+		this.setState({ isNewStealthAddress: isStealth })
+		this.props.actions.openNewAddressModal()
 	}
 
 	removeAddress = () => {
@@ -53,7 +58,7 @@ export class AddressBook extends Component<Props> {
 			this.props.actions.confirmAddressRemoval(this.state.selectedAddress)
 		}
 	}
-	
+
 	handleCopy = () => {
 		if (this.state.selectedAddress) {
 			clipboard.writeText(this.state.selectedAddress.address)
@@ -61,67 +66,102 @@ export class AddressBook extends Component<Props> {
 		}
 	}
 
+	handleShowQrCode = () => {
+		if (this.state.selectedAddress) {
+			this.setState({ isQRcodeVisible: true })
+		}
+	}
+
+	getAddressBookRecords() {
+		return this.props.addressBook.records
+			.sort((a, b) => {
+        const i1 = this.props.addressBook.isDescending ? b : a
+        const i2 = this.props.addressBook.isDescending ? a : b
+        const valueName = this.props.addressBook.sortedHeader === 'address' ? 'address' : 'name'
+        return i1[valueName].toLowerCase().localeCompare(i2[valueName].toLowerCase())
+      })
+  }
+  
+  getHeaderStyle(header: string) {
+    const sorted = header === this.props.addressBook.sortedHeader
+    return cn(
+      styles.header,
+      sorted ? styles.sorted : '',
+      this.props.addressBook.isDescending ? styles.descending : styles.ascending
+    )
+  }
+
+  sortAddressBook(header: string) {
+    const isDescending = header === this.props.addressBook.sortedHeader ? !this.props.addressBook.isDescending : false
+    this.props.actions.sortAddressBook(header, isDescending)
+  }
+
+
 	render() {
 		const { t } = this.props
 		return (
 			<div className={[styles.addressBookContainer, VLayout.vBoxChild, HLayout.hBoxContainer].join(' ')}>
 				<NewAddressModal
-					isvisible={this.state.isNewAddressVisible}
-					isEnigma={this.state.isEnigma}
-					onClose={() => this.setState({isNewAddressVisible: false})} 
-					isOwnAddress={false}
+					isVisible={this.props.addressBook.newAddressModal.isVisible}
+					isStealth={this.state.isNewStealthAddress}
+					onClose={this.props.newAddressModalActions.close}
 				/>
-				{ this.state.selectedAddress && <QRCodeModal isvisible={this.state.isQRcodeVisible} value={this.state.selectedAddress.address} onClose={() => this.setState({isQRcodeVisible: false})} /> }
+				{this.state.selectedAddress && <QRCodeModal isVisible={this.state.isQRcodeVisible} value={this.state.selectedAddress.address} onClose={() => this.setState({ isQRcodeVisible: false })} />}
 				<div className={styles.addressBookWrapper}>
 					<div className={styles.leftSide}>
-						<img src={addressbookImg} alt="img" />
+						<img className={styles.statusImg} src={addressbookImg} alt="img" />
 						<p>{t('ADDRESS BOOK')}</p>
 					</div>
 					<div className={styles.rightSide}>
-            <div className={styles.addressFilterContainer}>
-              <div className={styles.labelFilter}>
-                <DropdownSelect options={[{value: 'Label', label: 'Label'}]} />
-              </div>
-              <div className={styles.addressFilter}>
-                <DropdownSelect options={[{value: 'Address', label: 'Address'}]} />
-              </div>
-            </div>
+						<div className={styles.addressFilterContainer}>
+              <div
+                className={this.getHeaderStyle('label')}
+                onClick={() => this.sortAddressBook('label')}
+              >
+                {t('Label')}
+							</div>
+              <div
+                className={this.getHeaderStyle('address')}
+                onClick={() => this.sortAddressBook('address')}
+              >
+                {t('Address')}
+							</div>
+						</div>
 						<div className={styles.addressBook}>
-							{this.props.addressBook.records.map(record => (
-								<div
-									key={record.name}
-									className={cn((this.state.selectedAddress && this.state.selectedAddress.name === record.name) ? styles.active: '', record.isEnigma ? styles.enigmaAddress : styles.cloakAddress)}
-									onClick={() => this.handleAddressBook(record)}
-								>
-									<p>{record.name}</p>
-									<p>{record.address}</p>
-								</div>
-								))
-							}
+							{this.getAddressBookRecords()
+								.map(record => (
+									<div
+										key={record.name}
+										className={cn((this.state.selectedAddress && this.state.selectedAddress.name === record.name) ? styles.active : '', record.isEnigma ? styles.enigmaAddress : styles.cloakAddress)}
+										onClick={() => this.handleSelectAddress(record)}
+									>
+										<p>{record.name}</p>
+										<p>{record.address}</p>
+									</div>
+								))}
 						</div>
 					</div>
 				</div>
 				<div className={styles.addressBookButtons}>
-					<button	type="button" onClick={() => this.setState({isNewAddressVisible: true, isEnigma: false})}>
+					<RoundedButton className={styles.newCloakAddress} type="button" onClick={() => this.handleNewAddress()}>
 						{t(`New address`)}
-					</button>
-					<button	type="button" onClick={() => this.setState({isNewAddressVisible: true, isEnigma: true})}>
+					</RoundedButton>
+					<RoundedButton className={styles.newStealthAddress} type="button" onClick={() => this.handleNewAddress(true)}>
 						{t(`New ENIGMA address`)}
-					</button>
-					<button	type="button" onClick={this.handleCopy}>
+					</RoundedButton>
+					<RoundedButton className={styles.copyAddress} type="button" onClick={() => this.handleCopy()}>
 						{t(`Copy address`)}
-					</button>
-					<button	type="button" onClick={() => this.setState({isQRcodeVisible: true})}>
+					</RoundedButton>
+					<RoundedButton className={styles.showQrCode} type="button" onClick={() => this.handleShowQrCode()}>
 						{t(`Show QR code`)}
-					</button>
-					<button	type="button">
-						{t(`Verify message`)}
-					</button>
-          <button	type="button" onClick={this.removeAddress}>
+					</RoundedButton>
+					<RoundedButton className={styles.delete} type="button" onClick={() => this.removeAddress()}>
 						{t(`Delete`)}
-					</button>
+					</RoundedButton>
 				</div>
 			</div>
 		)
 	}
 }
+
+export default AddressBook;

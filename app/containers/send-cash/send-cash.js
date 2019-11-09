@@ -21,6 +21,7 @@ import {
 } from '~/components/rounded-form'
 import DropdownSelect from '~/components/dropdown-select/DropdownSelect'
 import TransactionModal from '~/components/send-cash/TransactionModal'
+import PassphrasePrompt from '~/components/send-cash/PassphrasePrompt'
 import { SendCashActions, SendCashState } from '~/reducers/send-cash/send-cash.reducer'
 import { SystemInfoState } from '~/reducers/system-info/system-info.reducer'
 import { OptionsState } from '~/reducers/options/options.reducer'
@@ -67,7 +68,7 @@ class SendCash extends Component<Props> {
       this.props.sendCash.receptionUnits.forEach(u => {
 				this.toggleAmountUnit(u.id, this.getDefaultAmountUnit())
 			})
-    }
+		}
   }
 
 	getValidationSchema() {
@@ -170,7 +171,7 @@ class SendCash extends Component<Props> {
   }
 
 	toggleEnigmaSend() {
-		if (!this.isAbleToEnigmaSend()) {
+		if (!this.isAbleToSend() || !this.isAbleToEnigmaSend()) {
 			return
 		}
 		this.props.actions.toggleEnigmaSend(!this.isEnigmaSend())
@@ -185,10 +186,23 @@ class SendCash extends Component<Props> {
 	}
 
 	sendCash() {
-		this.setState({isTxModalVisible: true})
+		if (this.isWalletLocked()) {
+			this.setState({isPassphrasePromptVisible: true})
+		} else {
+			this.doSendCash('')
+		}
+	}
+
+	doSendCash(passphrase) {
+		this.setState({isTxModalVisible: true, isPassphrasePromptVisible: false})
 		this.props.actions.sendCash(this.isAbleToEnigmaSend() && this.isEnigmaSend(),
 																this.props.sendCash.enigmaSendCloakers,
-																this.props.sendCash.enigmaSendTimeout)
+																this.props.sendCash.enigmaSendTimeout,
+																passphrase)
+	}
+
+	cancelSendCash() {
+		this.setState({isPassphrasePromptVisible: false})
 	}
 
 	closeTransactionModal() {
@@ -197,17 +211,18 @@ class SendCash extends Component<Props> {
 	}
 
 	isWalletLocked() {
-    return this.props.systemInfo.blockchainInfo.unlockedUntil !== null && this.props.systemInfo.blockchainInfo.unlockedUntil.getTime() < Date.now()
+		return this.props.systemInfo.blockchainInfo.unlockedMintOnly ||
+					(this.props.systemInfo.blockchainInfo.unlockedUntil !== null && this.props.systemInfo.blockchainInfo.unlockedUntil.getTime() < Date.now())
   }
 
 	isAbleToEnigmaSend() {
-		return this.props.options.enigmaEnabled &&
+		return this.props.systemInfo.blockchainInfo.enigma &&
 						this.props.systemInfo.blockchainInfo.anons >= 5 &&
 						this.props.systemInfo.blockchainInfo.blockchainSynchronizedPercentage >= 100
 	}
 
 	isAbleToSend() {
-		return !this.props.sendCash.isSendingCash && !this.isWalletLocked()
+		return !this.props.sendCash.isSendingCash/* && !this.isWalletLocked()*/
 	}
 
 	isEnigmaSend() {
@@ -316,7 +331,8 @@ class SendCash extends Component<Props> {
 		return (
 			<div className={[styles.sendCashContainer, VLayout.vBoxChild, HLayout.hBoxContainer].join(' ')}>
 				<div className={styles.sendCashWrapper}>
-					<TransactionModal isVisible={this.state.isTxModalVisible && sendCash.transactionId} txId={sendCash.transactionId} onClose={() => this.closeTransactionModal()} />
+					<TransactionModal isVisible={this.state.isTxModalVisible && sendCash.transactionId} txId={sendCash.transactionId} canCopyTxId={!this.isEnigmaSend()} onClose={() => this.closeTransactionModal()} />
+					<PassphrasePrompt isVisible={this.state.isPassphrasePromptVisible} onOk={(passphrase) => this.doSendCash(passphrase)} onCancel={() => this.cancelSendCash()}/>
 					<RoundedForm
 						className={styles.form}
 						id="sendCash"

@@ -2,7 +2,7 @@
 /* eslint-disable no-unused-vars */
 // @flow
 
-import { remote } from 'electron'
+import { remote, ipcRenderer } from 'electron'
 import React from 'react'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux';
@@ -15,6 +15,7 @@ import WelcomePage from './get-started/WelcomePage'
 import TitleBarButtons from '~/components/title-bar-buttons/TitleBarButtons'
 import NaviBar from './navigation/navi-bar'
 import Options from './options/options'
+import Debug from './debug/debug'
 import SystemInfo from './system-info/system-info'
 import Overview from './overview/overview'
 import SendCash from './send-cash/send-cash'
@@ -22,13 +23,16 @@ import ReceiveCash from './receive-cash/receive-cash'
 import transactionCash from './transaction-cash/transaction-cash'
 import EnigmaStats from './enigma-stats/enigma-stats'
 import Settings from './settings/settings'
+import About from './about/about'
 
 import AddressBookPage from './AddressBookPage'
 
 import { getStore } from '../store/configureStore'
 import { AuthState } from '~/reducers/auth/auth.reducer'
 import { GetStartedState } from '~/reducers/get-started/get-started.reducer'
-import { OptionsActions, OptionsState } from '~/reducers/options/options.reducer'
+import { OptionsActions } from '~/reducers/options/options.reducer'
+import { DebugActions } from '~/reducers/debug/debug.reducer'
+import { AboutActions } from '~/reducers/about/about.reducer'
 
 import styles from './App.scss'
 import HLayout from '../assets/styles/h-box-layout.scss'
@@ -37,8 +41,9 @@ import VLayout from '../assets/styles/v-box-layout.scss'
 type Props = {
   auth: AuthState,
   getStarted: GetStartedState,
-  options: OptionsState,
-  optionsActions: OptionsActions
+  optionsActions: OptionsActions,
+  debugActions: DebugActions,
+  aboutActions: AboutActions
 }
 
 const {Tray, Menu} = remote
@@ -64,8 +69,16 @@ class App extends React.Component<Props> {
     this.props.optionsActions.openOptions()
   }
 
+  showDebug() {
+    this.props.debugActions.openDebug()
+  }
+
+  showAbout() {
+    this.props.aboutActions.openAbout()
+  }
+
   exitApp() {
-    remote.getCurrentWindow().close()
+    ipcRenderer.send('force-quit')
   }
 
   getGetStartedContent() {
@@ -84,10 +97,8 @@ class App extends React.Component<Props> {
   getMainContent() {
     if (tray === null) {
       let iconFileName = 'icon.png'
-      if (getOS() === 'macos') {
-        iconFileName = 'icon.icns'
-      } else if (getOS() === 'windows') {
-        iconFileName = 'icon.ico'
+      if (getOS() !== 'windows') {
+        iconFileName = 'icons/16x16.png'
       }
 
       const basePath = getResourcesPath()
@@ -97,6 +108,9 @@ class App extends React.Component<Props> {
       const contextMenu = Menu.buildFromTemplate([
         { label: 'Show/Hide', click: () => this.showHideApp() },
         { label: 'Options...', click: () => this.showOptions() },
+        { label: 'Debug...', click: () => this.showDebug() },
+        { type: 'separator' },
+        { label: 'About...', click: () => this.showAbout() },
         { type: 'separator' },
         { label: 'Exit', click: () => this.exitApp() }
       ])
@@ -110,6 +124,8 @@ class App extends React.Component<Props> {
           <TitleBarButtons />
 					<NaviBar />
           <Options />
+          <Debug />
+          <About />
 					<div className={cn(styles.layoutContent)}>
 						<Switch>
 							<Route exact path="/" render={() => (<Redirect to="/overview" />)} />
@@ -156,7 +172,9 @@ class App extends React.Component<Props> {
 }
 
 const mapDispatchToProps = dispatch => ({
-  optionsActions: bindActionCreators(OptionsActions, dispatch)
+  optionsActions: bindActionCreators(OptionsActions, dispatch),
+  debugActions: bindActionCreators(DebugActions, dispatch),
+  aboutActions: bindActionCreators(AboutActions, dispatch)
 })
 
 export default connect(state => state, mapDispatchToProps)(App)

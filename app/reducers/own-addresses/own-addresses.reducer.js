@@ -1,8 +1,6 @@
 // @flow
-import { Decimal } from 'decimal.js'
 import { createActions, handleActions } from 'redux-actions'
 import { preloadedState } from '../preloaded.state'
-import { SystemInfoActions } from '../system-info/system-info.reducer'
 
 export type AddressRow = {
 	address: string,
@@ -10,8 +8,7 @@ export type AddressRow = {
 }
 
 export type OwnAddressesState = {
-  addresses?: AddressRow[],
-  latestNewAdddress?: AddressRow
+  addresses?: AddressRow[]
 }
 
 export const OwnAddressesActions = createActions(
@@ -23,7 +20,6 @@ export const OwnAddressesActions = createActions(
     GET_OWN_ADDRESSES_FAILURE:  (errorMessage: string) => ({ errorMessage }),
 
     CREATE_ADDRESS: (isStealth: boolean) => ({ isStealth }),
-    CREATED_OWN_ADDRESS: (newAddress: AddressRow) => ({ newAddress }),
     CREATE_OWN_ADDRESS_FAILURE:  (errorMessage: string) => ({ errorMessage }),
   },
   {
@@ -38,11 +34,5 @@ export const OwnAddressesReducer = handleActions(
     }),
     [OwnAddressesActions.getOwnAddressesFailure]: state => ({
       ...state, addresses: []
-    }),
-    [OwnAddressesActions.createdOwnAddress]: (state, action) => ({
-      ...state, latestNewAdddress: action.payload.newAddress
-    }),
-    [OwnAddressesActions.createOwnAddressFailure]: state => ({
-      ...state, latestNewAdddress: null
     }),
   }, preloadedState)

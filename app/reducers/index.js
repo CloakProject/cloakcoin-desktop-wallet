@@ -16,7 +16,11 @@ import { OverviewReducer } from './overview/overview.reducer'
 import { OwnAddressesReducer } from './own-addresses/own-addresses.reducer'
 import { SendCashReducer } from './send-cash/send-cash.reducer'
 import { SettingsReducer } from './settings/settings.reducer'
+import { OptionsReducer } from './options/options.reducer'
 import { AddressBookReducer } from './address-book/address-book.reducer'
+import { EnigmaStatsReducer } from './enigma-stats/enigma-stats.reducer'
+import { DebugReducer } from './debug/debug.reducer'
+import { AboutReducer } from './about/about.reducer'
 
 // Epics
 import { AuthEpic } from './auth/auth.epic'
@@ -28,7 +32,10 @@ import { OverviewEpics } from './overview/overview.epic'
 import { SystemInfoEpics } from './system-info/system-info.epic'
 import { SendCashEpics } from './send-cash/send-cash.epic'
 import { SettingsEpics } from './settings/settings.epic'
+import { OptionsEpics } from './options/options.epic'
 import { AddressBookEpics } from './address-book/address-book.epic'
+import { EnigmaStatsEpics } from './enigma-stats/enigma-stats.epic'
+import { DebugEpics } from './debug/debug.epic'
 
 const rootReducer = combineReducers({
   toastr: toastrReducer,
@@ -44,7 +51,11 @@ const rootReducer = combineReducers({
 	ownAddresses: OwnAddressesReducer,
 	sendCash: SendCashReducer,
 	addressBook: AddressBookReducer,
-	settings: SettingsReducer
+	enigmaStats: EnigmaStatsReducer,
+	settings: SettingsReducer,
+	options: OptionsReducer,
+	debug: DebugReducer,
+	about: AboutReducer
 })
 
 const rootEpic = combineEpics(
@@ -57,7 +68,10 @@ const rootEpic = combineEpics(
 	OwnAddressesEpics,
 	SendCashEpics,
 	AddressBookEpics,
-	SettingsEpics
+	EnigmaStatsEpics,
+	SettingsEpics,
+	OptionsEpics,
+	DebugEpics
 )
 
 export default { rootReducer, rootEpic }

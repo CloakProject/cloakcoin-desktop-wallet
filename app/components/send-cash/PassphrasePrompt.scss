@@ -1,0 +1,35 @@
+@import "~/assets/styles/vars.scss";
+@import "~/assets/styles/modal.scss";
+
+.passphrasePrompt {
+  position: relative;
+  width: 600px;
+  height: auto;
+  padding: 30px 30px;
+  text-align: left;
+  background-color: $BASE_COLOR_DARK_BLUE;
+
+  .passphrase {
+    margin-top: 5px;
+  }
+
+  .actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    width: 100%;
+
+    button {
+      width: 120px;
+      font-family: 'Open Sans Condensed';
+      font-size: 1.2rem;
+      margin: 0px 10px;
+    }
+
+    .cancelButton {
+        background-color: $BASE_COLOR_INPUT_COLOR;
+        border-color: $BASE_COLOR_INPUT_COLOR;
+        margin-right: 0px;
+    }
+  }
+}

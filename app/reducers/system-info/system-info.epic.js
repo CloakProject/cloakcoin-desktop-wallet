@@ -23,20 +23,6 @@ function suppressRpcWarmupError(action, callable) {
   }
 }
 
-const getDaemonInfoEpic = (action$: ActionsObservable<Action>) => action$.pipe(
-  ofType(SystemInfoActions.getDaemonInfo.toString()),
-  tap(() => rpcService.requestDaemonInfo()),
-  mapTo(SystemInfoActions.empty())
-)
-
-const getDaemonInfoFailureEpic = (action$: ActionsObservable<Action>) => action$.pipe(
-  ofType(SystemInfoActions.getDaemonInfoFailure.toString()),
-  tap((action) => {
-    suppressRpcWarmupError(action, () => toastr.error(action.payload.errorMessage))
-  }),
-  mapTo(SystemInfoActions.empty())
-)
-
 const getBlockchainInfoEpic = (action$: ActionsObservable<Action>) => action$.pipe(
   ofType(SystemInfoActions.getBlockchainInfo.toString()),
   tap(() => rpcService.requestBlockchainInfo()),
@@ -70,8 +56,6 @@ const openInstallationFolderEpic = (action$: ActionsObservable<Action>) => actio
 export const SystemInfoEpics = (action$, state$) => merge(
   openWalletInFileManagerEpic(action$, state$),
   openInstallationFolderEpic(action$, state$),
-  getDaemonInfoEpic(action$, state$),
-  getDaemonInfoFailureEpic(action$, state$),
   getBlockchainInfoEpic(action$, state$),
   getBlockchainInfoFailureEpic(action$, state$),
 )

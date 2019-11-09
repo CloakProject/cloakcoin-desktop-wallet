@@ -1,49 +1,56 @@
 @import "~/assets/styles/vars.scss";
 
 .priceChart {
-    .chartWrapper {
-        width: 100% !important;
-        height: 100% !important;
-        margin-top: 50px;
+  .chartWrapper {
+    width: 100% !important;
+    height: 100% !important;
+    margin-top: 45px;
 
-        text {
-            fill: white;
-        }
+    text {
+      fill: white;
     }
+  }
 
-    .customTooltip {
-        padding: 2px 5px;
-        border: 1px solid white;
-        opacity: 0.5;
-        top: 0 !important;
+  .customTooltip {
+    padding: 2px 5px;
+    border: 1px solid white;
+    opacity: 0.5;
+    top: 0 !important;
 
-        p {
-            margin-top: 0px;
-            margin-bottom: 0px;
-        }
+    p {
+      margin-top: 0px;
+      margin-bottom: 0px;
     }
+  }
 }
 
 .chartContainer {
-    width: calc(50% - 10px);
-    margin-left: 10px;
-    background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
-    padding: 20px 20px;
+  width: calc(50% - 10px);
+  margin-left: 10px;
+  background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
+  padding: 15px 15px;
 
-    .chartTitle {
-      display: flex;
-      font-size: 20px;
-      
-      div {
-        flex: 1;
+  .chartTitle {
+    display: flex;
+    font-size: 1.4rem;
+    
+    div {
+      flex: 1;
+    }
+
+    .currecyValue {
+      text-align: right;
+
+      .btc {
+        font-size: 1.5rem;
+        opacity: 0.5;
       }
 
-      .currecyValue {
-        text-align: right;
-
-        span {
-          opacity: 0.5;
-        }
+      .usd {
+        margin-left: 15px;
+        font-size: 1.5rem;
+        color: $BASE_COLOR_RED;
       }
     }
   }
+}

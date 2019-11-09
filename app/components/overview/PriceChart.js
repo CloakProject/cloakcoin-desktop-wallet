@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import { translate } from 'react-i18next'
 import cn from 'classnames'
+import { truncateAmount } from '~/utils/decimal'
 import styles from './PriceChart.scss'
 
 // const data = [
@@ -36,9 +37,9 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload[0]) {
     return (
       <div className={cn(styles.customTooltip)}>
-        <p className="label">{`€${payload[0].value.toFixed(2)}`}</p>
+        <p className="label">{`$${payload[0].value.toFixed(2)}`}</p>
       </div>
-    );
+    )
   }
 
   return null;
@@ -49,68 +50,35 @@ class CustomizedAxisTick extends React.PureComponent {
     const {
       x, y, stroke, payload,
     } = this.props;
-    if (!payload.value) {
+    if (!payload || !payload.value) {
       return null;
     }
     return (
       <g transform={`translate(${x},${y})`}>
         <text x={0} y={0} dy={16} textAnchor="end" fill="#666">{payload.value}</text>
       </g>
-    );
+    )
   }
 }
 
 class PriceChart extends Component<Props> {
   props: Props
+
   constructor(props) {
     super(props);
     this.state = {
       width: 460,
-      height: 200,
-      data: [],
-      latest: 0
+      height: 200
     }
   }
 
   componentWillMount() {
-    this.updateDimensions();
-    fetch("https://api.coingecko.com/api/v3/coins/cloakcoin/market_chart?vs_currency=eur&days=210")
-    .then(response => response.json())
-    .then(data => {
-      console.log("data",data)
-      let month = ''; 
-      const months = [];
-      month = moment(data.prices[0][0]).format('MMM');
-      months.push(month);
-      let price = { name: moment(data.prices[0][0]).format('MMM'), price: data.prices[0][1] || 0 };
-      this.setState({
-        data: [...this.state.data, price]
-      })
-      for (let i = 0; i < data.prices.length; i+=1 ) {
-        month = moment(data.prices[i][0]).format('MMM')
-        if (!months.includes(month)) {
-          months.push(month);
-          price = { name: month, price: data.prices[i][1] || 0 };
-        } 
-        else {
-          price = { name: null, price: data.prices[i][1] || 0 };
-        }
-        this.setState({
-          data: [...this.state.data, price]
-        })
-      }
-      this.setState({
-        latest: price.price
-      })
-      return data;
-    })
-    .catch(err => {
-      console.log('err', err);
-    })
+    window.addEventListener("resize", this.updateDimensions)
+    this.updateDimensions()
   }
 
-  componentDidMount() {
-    window.addEventListener("resize", e => this.updateDimensions(e));
+  componentWillUnmount() {
+    window.removeEventListener("resize", this.updateDimensions)
   }
 
   updateDimensions = e => {
@@ -122,6 +90,38 @@ class PriceChart extends Component<Props> {
       this.setState({ width: (e.target.innerWidth - 120) / 2, height: (e.target.innerHeight - 550) })
     }
   }
+
+  getLatestPriceInBtc() {
+    return (typeof this.props.price === 'number') ?
+              this.props.price :
+              `~`
+  }
+
+  getLatestPriceInUsd() {
+    return (Array.isArray(this.props.prices) && this.props.prices.length > 0) ?
+              truncateAmount(this.props.prices[this.props.prices.length - 1].price) :
+              `~`
+  }
+
+  getPriceChartData() {
+    const prices = []
+    const months = []
+    if (Array.isArray(this.props.prices)) {
+      for (let i = 0; i < this.props.prices.length; i+=1 ) {
+        const month = moment(this.props.prices[i].time).format('MMM')
+        let price
+        if (!months.includes(month)) {
+          months.push(month);
+          price = { name: month, price: this.props.prices[i].price || 0 };
+        } 
+        else {
+          price = { name: null, price: this.props.prices[i].price || 0 };
+        }
+        prices.push(price)
+      }
+    }
+    return prices;
+  }
   
 	render() {
     const { t } = this.props
@@ -131,7 +131,8 @@ class PriceChart extends Component<Props> {
         <div className={cn(styles.chartTitle)} >
           <div>{t(`Exchange`)}</div>
           <div className={cn(styles.currecyValue)}>
-            <span>{this.state.latest} €</span>
+            <span className={cn(styles.btc)}>{this.getLatestPriceInBtc()} BTC</span>
+            <span className={cn(styles.usd)}>${this.getLatestPriceInUsd()}</span>
           </div>
         </div>
         <div className={cn(styles.priceChart)}>
@@ -139,7 +140,7 @@ class PriceChart extends Component<Props> {
             className={cn(styles.chartWrapper)}
             width={this.state.width}
             height={this.state.height}
-            data={this.state.data}
+            data={this.getPriceChartData()}
             margin={{
               top: 0, right: 0, left: 0, bottom: 0,
             }}
@@ -153,7 +154,7 @@ class PriceChart extends Component<Props> {
             <CartesianGrid vertical={false} />
             <XAxis dataKey="name" axisLine={false} tickLine={false} interval={0} tick={<CustomizedAxisTick />} />
             <YAxis orientation="right" axisLine={false} />
-            <Tooltip content={<CustomTooltip />} isAnimationActive={false} />
+            <Tooltip content={<CustomTooltip />} isAnimationActive={false} position={{y: -35}} />
             <Area type="monotone" dataKey="price" stroke="false" fillOpacity={0.8} fill="url(#colorUv)" />
           </AreaChart>
         </div>
