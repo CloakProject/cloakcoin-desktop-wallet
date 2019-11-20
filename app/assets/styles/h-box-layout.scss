@@ -1,0 +1,23 @@
+// Horizontal Box Layout
+.hBoxContainer {
+    // Use FlexBox layout
+    display: flex;
+
+    flex-direction: row;
+
+    // Align all items in different mode:
+    // "stretch"    -- All items got equal height which is default
+    // "flex-start" -- All items align from top (and got actually height of the content)
+    // "center"     -- All items align from top (and got actually height of the content)
+    // "flex-end"   -- All items align from top (and got actually height of the content)
+    align-items: stretch;
+
+    // This flag control how the items align in `another direction`, same values with `align-items`
+    justify-content: start;
+}
+
+.hBoxChild {
+    // In FlexBox layout, `flex` controls how much percent the element will use, `1` is hte baseline, it will
+    // take all the space (like `width: 100%` in 'row' mode, or `height: 100%` in 'column' mode).
+    flex: 1;
+}

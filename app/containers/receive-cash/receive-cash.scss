@@ -1,0 +1,122 @@
+@import "~/assets/styles/vars.scss";
+@import "~/assets/styles/generic-component.scss";
+
+.receiveCashContainer {    
+    height: calc(100% - 105px);
+    display: flex;
+    flex-direction: column;
+    background-color: $TRANSACTION_LIST_BACKGROUND_COLOR;
+    margin: 30px 60px;
+    padding: 30px;
+
+    .receiveCashWrapper {
+        width: 100%;
+        height: calc(100% - 40px);
+        display: flex;
+
+        p {
+            margin-top: 0px;
+            margin-bottom: 0px;
+            font-size: 1.4rem;
+        }
+
+        .leftSide {
+            width: 160px;
+            text-align: center;
+
+            .statusImg {
+                width: 85px;
+                opacity: 0.2;
+            }
+
+            p:nth-child(2) {
+                color: $BASE_COLOR_LIGHT_GREEN;
+                margin-top: 15px;
+            }
+        }
+
+        .rightSide {
+            width: calc(100% - 160px);
+            box-sizing: border-box;
+            padding: 0px 10px 0px 60px;
+
+            &>p:nth-child(1) {
+                color: rgba(255, 255, 255, 0.3);
+                margin-bottom: 35px;
+                font-size: 1.2rem;
+                padding: 0px 5px;
+            }
+
+            .receiveAddress {
+                height: calc(100% - 120px);
+                overflow: auto;
+
+                p {
+                    font-size: 1.4rem;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+        
+                p:nth-child(1) {
+                    width: 35%;
+                }
+        
+                p:nth-child(2) {
+                    width: 60%;
+                }
+
+                div {
+                    cursor: pointer;
+                    display: flex;
+                    padding: 5px 8px;
+                    font-size: 1.2rem;
+                    border-bottom: 1px solid $TRANSACTION_HEADER_TABLE_COLOR;
+
+                    &>p:nth-child(2) {
+                        flex: 1;
+                        text-align: right;
+                        word-break: break-all;
+                        padding-left: 20px;
+                    }
+                }
+
+                .active {
+                    border-top: 1px solid $TRANSACTION_HEADER_TABLE_COLOR;
+                    border-bottom: 1px solid $TRANSACTION_HEADER_TABLE_COLOR;
+                    background-color: $RECEIVE_COIN_RECEIVE_ADDRESS_BG_COLOR;
+                    opacity: 0.8;
+                    color: $BASE_COLOR_GREEN;
+                    font-weight: bold;
+                }
+            }
+        }
+    }
+
+    .receiveButtons {
+        width: 100%;
+        display: flex;
+        padding: 0px 0px;
+        justify-content: flex-end;
+
+        button {
+            margin-left: 20px;
+            padding-left: 20px;
+            padding-right: 20px;
+            min-width: 130px;
+            font-size: 1rem;
+        }
+
+        .copyAddress, .showQrCode {
+            background-color: $SEND_COIN_BUTTON_COLOR;
+            border-color: $SEND_COIN_BUTTON_COLOR;
+            color: white;
+        }
+
+        .delete {
+            background-color: $BASE_COLOR_RED;
+            border-color: $BASE_COLOR_RED;
+            color: white;
+        }
+    }
+}

@@ -1,0 +1,139 @@
+/*
+Only put color, opacity, layout related (border, border-radius) here, DO NOT put any "screen size sensitive" vars here!
+*/
+
+$BASE_FONT_FAMILY: 'Abel', Arial, Helvetica, Helvetica Neue, serif;
+$BASE_FONT_SIZE: 1.2rem;
+
+$BASE_COLOR_PURPLE: rgb(163, 103, 240);
+$BASE_COLOR_BACKGROUND_PURPLE: #433a71;
+$BASE_COLOR_BORDER_PURPLE: #7557b4;
+$BASE_COLOR_GRAY: rgb(55, 80, 98);
+$BASE_COLOR_GRAY_2: rgb(37, 44, 73);
+$BASE_COLOR_GRAY_3: rgb(47, 55, 88);
+$BASE_COLOR_BORDER_GRAY: rgb(68, 75, 106);
+$BASE_COLOR_BORDER_BLUE: #272c47;
+$BASE_COLOR_BUTTON_FONT_GRAY: rgb(163, 172, 199);
+$BASE_COLOR_WHITE: rgb(238, 238, 241);
+$BASE_COLOR_DARK_BLUE: #0f1927;
+$BASE_COLOR_DARK_BLUE_2:rgb(21, 26, 53);
+$BASE_COLOR_DARK_BLUE_3:rgb(31, 39, 70);
+$BASE_COLOR_FONT_GRAY: rgb(90, 98, 131);
+$BASE_COLOR_FONT_GRAY_2: #a4abc7;
+$BASE_BACKGROUND_COLOR_DARK_BLUE: #10142c;
+$BASE_COLOR_SHADOW: rgba(28, 35, 62, .75);
+
+$BASE_COLOR_BLACK: #000;
+$BASE_COLOR_GREEN: #8bc433;
+$BASE_COLOR_RED: #ff4200;
+$BASE_COLOR_LIGHT_WHITE: #fff;
+$BASE_COLOR_LIGHT_GREEN: #98c14d;
+$BASE_COLOR_LIGHT_RED: $BASE_COLOR_RED;
+$BASE_COLOR_LIGHT_BLUE: #009ed8;
+$BASE_COLOR_PERSIMMON_COLOR: #ec5228;
+$BASE_COLOR_TOOLBAR_COLOR: #252c49;
+$BASE_COLOR_INPUT_COLOR: #778595;
+
+$BASE_COLOR_INFO: #45abcd;
+$BASE_COLOR_SUCCESS: #68c934;
+$BASE_COLOR_ERROR: #9e170e;
+$BASE_COLOR_WARNING: #ff9800;
+
+$BASE_BUTTON_BACKGROUND_COLOR: #a1bf5e;
+$BASE_BUTTON_COLOR: $BASE_COLOR_BLACK;
+
+/*** Uniform List ***/
+$UNIFORM_LIST_SEPARATOR_COLOR: rgb(49, 56, 88);
+
+/*** Toastr ***/
+$TOASTR_SUCCESS: $BASE_COLOR_SUCCESS;
+$TOASTR_WARNING: $BASE_COLOR_WARNING;
+$TOASTR_INFO: $BASE_COLOR_INFO;
+$TOASTR_ERROR: $BASE_COLOR_ERROR;
+
+/*** Title Bar Buttons ***/
+$TITLE_BAR_BUTTONS_CLOSE_COLOR: rgb(255, 97, 87);
+$TITLE_BAR_BUTTONS_MINIMIZE_COLOR: rgb(255, 190, 46);
+$TITLE_BAR_BUTTONS_MAXIMIZE_COLOR: rgb(40, 201, 63);
+
+/*** Popup Menu ***/
+$POPUP_MENU_CONTAINER_WIDTH: 12rem;
+$POPUP_MENU_BACKGROUND_COLOR: $BASE_COLOR_GRAY_2;
+$POPUP_MENU_FONT_COLOR: #dadce4;
+$POPUP_MENU_SHADOW_COLOR: $BASE_COLOR_SHADOW;
+
+/*** Navigation Bar ***/
+$NAVI_BAR_CONTAINER_WIDTH: 12.55rem;
+$NAVI_BAR_BACKGROUND_COLOR: rgb(21, 26, 51);
+$NAVI_BAR_ITEM_FONT_COLOR: $BASE_COLOR_FONT_GRAY;
+$NAVI_BAR_ITEM_FONT_ACTIVE_COLOR: $BASE_COLOR_WHITE;
+$NAVI_BAR_ITEM_ICON_COLOR: $BASE_COLOR_FONT_GRAY;
+$NAVI_BAR_ITEM_ICON_ACTIVE_COLOR: rgb(6, 121, 170);
+
+/*** System Info Bar ***/
+$SYSTEM_INFO_BAR_HEIGHT: 5.05rem;
+$SYSTEM_INFO_BAR_BACKGROUND_COLOR: $BASE_COLOR_GRAY_2;
+$SYSTEM_INFO_BAR_TITLE_FONT_COLOR: $BASE_COLOR_GRAY;
+$SYSTEM_INFO_BAR_BODY_FONT_COLOR: $BASE_COLOR_WHITE;
+$SYSTEM_INFO_ICON_HINT_COLOR: rgb(255, 97, 87);
+
+/*** Overview - Balance ***/
+$BALANCE_TITLE_FONT_COLOR: #EEEEEE;
+$BALANCE_VALUE_UNCONFIRMED_COLOR: rgb(255, 97, 87);
+$BALANCE_BACKGROUND_IMAGE: linear-gradient(45deg, rgba(0, 158, 216, 1.0) 10%, rgba(164, 104, 241, 1.0));
+$BALANCE_VALUE_CARD_COLOR: #202936;
+$BALANCE_VALUE_TEXT_COLOR: #94c840;
+// ------------------------------------------------------------------------------------------------------
+// Overview - Transaction List
+// ------------------------------------------------------------------------------------------------------
+$TRANSACTION_LIST_BACKGROUND_COLOR: #142231;
+$TRANSACTION_LIST_HEADER_FONT_COLOR: $BASE_COLOR_FONT_GRAY;
+$TRANSACTION_LIST_BODY_FONT_COLOR: $BASE_COLOR_WHITE;
+$TRANSACTION_LIST_BODY_ICON_COLOR: rgb(67, 75, 109);
+$TRANSACTION_LIST_BODY_SEPARATOR_COLOR: rgb(49, 56, 88);
+
+$TRANSACTION_POPUP_MENU_BACKGROUND_COLOR: $BASE_COLOR_GRAY_2;
+$TRANSACTION_POPUP_MENU_FONT_COLOR: #dadce4;
+$TRANSACTION_POPUP_MENU_SHADOW_COLOR: rgba(28, 35, 62, .75);
+
+// ------------------------------------------------------------------------------------------------------
+// Own addresses
+// ------------------------------------------------------------------------------------------------------
+$OWN_ADDRESSES_DROPDOWN_MENU_BACKGROUND_COLOR: $BASE_COLOR_GRAY_2;
+
+
+ // ------------------------------------------------------------------------------------------------------
+// Send cash
+// ------------------------------------------------------------------------------------------------------
+$SEND_COIN_RADIO_COLOR: #2b3743;
+$SEND_COIN_RADIO_ACTIVE_COLOR: #ff2300;
+$SEND_COIN_BUTTON_COLOR: #3c5060;
+// ------------------------------------------------------------------------------------------------------
+// Receive cash
+$RECEIVE_COIN_TEXT_COLOR: #b4d434;
+$RECEIVE_COIN_RECEIVE_ADDRESS_BG_COLOR: #223140;
+// ------------------------------------------------------------------------------------------------------
+// Transactions cash
+$TRANSACTION_HEADER_TABLE_COLOR: #577d32;
+//-------------------------------------------------------------------------------------------------------
+// Address book
+// ------------------------------------------------------------------------------------------------------
+// ENIGMA STATS
+$ENIGMA_STATS_INFO_BACKGROUND_COLOR: #101c2a;
+$ENIGMA_STATS_INFO_BOUND_COLOR: #4e702f;
+$ENIGMA_STATS_TX_ID_SEE_BUTTON_COLOR: #2d4558;
+// ------------------------------------------------------------------------------------------------------
+// Settings
+$SETTINGS_ITEM_ACTIVE_COLOR: #253240;
+$SETTINGS_ITEM_ACTIVE_RIGHT_BAR_COLOR: #62707c;
+$SETTINGS_CONTENT_BACKGROUND_COLOR: #192330;
+//-------------------------------------------------------------------------------------------------------
+
+$ADDRESS_BOOK_LIST_BACKGROUND_COLOR: rgb(29, 36, 64);
+$ADDRESS_BOOK_LIST_HEADER_FONT_COLOR: $BASE_COLOR_FONT_GRAY;
+$ADDRESS_BOOK_LIST_BODY_FONT_COLOR: $BASE_COLOR_WHITE;
+$ADDRESS_BOOK_LIST_BODY_ICON_COLOR: rgb(67, 75, 109);
+$ADDRESS_BOOK_LIST_BODY_SEPARATOR_COLOR: rgb(49, 56, 88);
+$ADDRESS_BOOK_NEW_ADDRESS_DIALOG_SHADOW_COLOR: rgba(28, 35, 62, .75);
+$ADDRESS_BOOK_LIST_POPUP_MENU_BACKGROUND_COLOR: $BASE_COLOR_GRAY_2;
+$ADDRESS_BOOK_LIST_POPUP_MENU_FONT_COLOR: #dadce4;

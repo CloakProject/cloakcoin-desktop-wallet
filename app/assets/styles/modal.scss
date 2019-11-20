@@ -1,0 +1,49 @@
+@import "~/assets/styles/vars.scss";
+
+.overlay {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  background-color: rgba(21, 26, 53, 0.6);
+  -webkit-app-region: drag;
+  z-index: 999;
+}
+
+.container {
+  position: absolute;
+  height: 26.875rem;
+  height: 24.5rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 0.35rem;
+  background: $BASE_COLOR_DARK_BLUE_3;
+  z-index: 1000;
+  -webkit-app-region: no-drag;
+  -webkit-filter: none;
+  box-shadow: 0.3125rem 0.3125rem 3.6875rem -0.125rem $BASE_COLOR_SHADOW;
+}
+
+.closeButton {
+  outline: none;
+
+  &.closeButton:before {
+    float: right;
+    font-size: 0.57rem;
+    cursor: pointer;
+    position: relative;
+    content: "\e906";
+    left: 0.7rem;
+    top: -0.5rem;
+  }
+}
+
+.title {
+  font-size: 1.05rem;
+  font-weight: 100;
+  margin-bottom: 1.75rem;
+  user-select: none;
+  cursor: default;
+}

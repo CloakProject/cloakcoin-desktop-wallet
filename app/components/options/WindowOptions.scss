@@ -1,0 +1,28 @@
+.container {
+    padding-top: 90px;
+
+    .checkboxGroup {
+        margin-left: 100px;
+        margin-right: 100px;
+        background: #222935;
+        border-radius: 5px;
+        padding: 10px 30px;
+    
+        > div {
+            > div > div {
+                &:first-child {
+                    border-bottom: 1px solid #657f43;
+                }
+                &:last-child {
+                    display: none;
+                }
+            }
+    
+            &:last-child {
+                > div > div:first-child {
+                    border-bottom: 0;
+                }
+            }
+        }
+    }
+}

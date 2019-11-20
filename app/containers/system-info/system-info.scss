@@ -1,0 +1,96 @@
+@import "~/assets/styles/generic-component.scss";
+@import "~/assets/styles/vars.scss";
+
+.systemInfoContainer {
+    padding: 0px 60px;
+    align-items: center !important;
+
+    min-height: $SYSTEM_INFO_BAR_HEIGHT;
+    height: $SYSTEM_INFO_BAR_HEIGHT;
+    min-width: 46rem;
+
+    background-color: $BASE_COLOR_DARK_BLUE;
+    display: flex;
+
+    .statusContainer {
+        display: flex;
+    }
+}
+
+.statusColumnWrapper {
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;    
+}
+
+.statusColoumnTitle {
+    font-size: 1.2rem;
+    color: $BASE_COLOR_LIGHT_WHITE;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.statusColoumnTitleSuccess {
+    font-size: 1.2rem;
+    color: $BASE_COLOR_GREEN;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.statusColoumnTitleWarning {
+    font-size: 1.2rem;
+    color: $BASE_COLOR_WARNING;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.statusColoumnTitleError {
+    font-size: 1.2rem;
+    color: $BASE_COLOR_RED;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.statusColoumnValue {
+    font-size: 1.2rem;
+    color: $BASE_COLOR_LIGHT_WHITE;
+    font-weight: bold;
+}
+
+.nodeStatusContainer {
+  .nodeStatusIcon {
+    background: transparent !important;
+  }
+}
+
+.statusButtonsContainer {
+    display: flex;
+    align-items: center;
+
+    img {
+        height: 25px;
+        margin-left: 15px;
+    }
+
+    .connectionsContainer {
+        display: flex;
+        align-items: flex-end;        
+        margin-left: 14px;
+
+        img {
+            height: unset;
+            width: 5px;
+            margin-left: 1px;
+        }
+    }
+}
+
+.walletInFileManagerButton {
+    @include roundedButton();
+}
+
+.installationFolderButton {
+    @include roundedButton();
+
+    margin-left: 1rem;
+}

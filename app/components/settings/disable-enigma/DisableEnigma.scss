@@ -1,0 +1,41 @@
+@import "~/assets/styles/vars.scss";
+
+.enigmaContainer {
+    text-align: center;
+
+    .enigmaPage {
+        .statusImg {
+            width: 85px;
+            opacity: 0.3;
+            margin-bottom: 40px;
+        }
+
+        p {
+            margin-bottom: 30px;
+            font-size: 1.4rem;
+        }
+
+        .disabledTitle {
+            color: $BASE_COLOR_RED;
+        }
+
+        .enableTitle {
+            color: $BASE_COLOR_LIGHT_GREEN;
+        }
+
+        .enigmaDisableBtn {
+            background-color: $BASE_COLOR_RED;
+            border-color: $BASE_COLOR_RED;
+            color: white;
+        }
+
+        .enigmaEnableBtn {
+            background-color: $BASE_COLOR_LIGHT_GREEN;
+            color: rgba(0, 0, 0, 0.8);
+        }
+
+        button {
+            margin-top: 60px;
+        }
+    }
+}

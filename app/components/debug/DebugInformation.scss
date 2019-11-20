@@ -1,0 +1,70 @@
+@import "~/assets/styles/vars.scss";
+
+.container {
+    padding: 0 60px 0 20px;
+
+    .group {
+        margin-top: 22px;
+        display: flex;
+
+        .header {
+            display: flex;
+            justify-content: flex-end;
+            width: 140px;
+            padding-top: 15px;
+        }
+    
+        .body {
+            background: #222935;
+            border-radius: 5px;
+            margin-left: 20px;
+            padding: 15px 40px;
+            flex: 1;
+
+            .item {
+                display: flex;
+                padding: 3px 0px;
+        
+                p {
+                    margin-top: 0px;
+                    margin-bottom: 0px;
+                    font-size: 18px;
+                }
+        
+                p:nth-child(2) {
+                    flex: 1;
+                    text-align: right;
+                }
+                
+                input {
+                    opacity: 0.5;
+                    margin-right: 8px;
+                    user-select: none;
+                    cursor: default;
+                }
+            }
+        
+            .borderBottom {
+                border-bottom: 1px solid #446031;
+            }
+        }
+    }
+
+    .actions {
+        margin-top: 30px;
+        display: flex;
+        justify-content: flex-end;
+
+        button {
+            font-family: 'Open Sans Condensed';
+            font-size: 1.2rem;
+            margin: 0px 10px;
+        }
+
+        .closeButton {
+            background-color: $BASE_COLOR_INPUT_COLOR;
+            border-color: $BASE_COLOR_INPUT_COLOR;
+            margin-right: 0px;
+        }
+    }
+}

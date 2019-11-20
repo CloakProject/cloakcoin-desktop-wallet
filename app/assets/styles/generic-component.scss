@@ -1,0 +1,51 @@
+@import "./vars.scss";
+
+// ------------------------------------------------------------------------------------------------------
+// Generic rounded button
+// ------------------------------------------------------------------------------------------------------
+@mixin roundedButton($activeStyle: false) {
+  cursor: pointer;
+  padding: 0.5rem 1.2rem;
+
+  @if $activeStyle {
+    background-color: $BASE_COLOR_GREEN;
+    border: 1px solid $BASE_COLOR_GREEN;
+    color: $BASE_COLOR_BLACK;
+  } @else {
+    background-color: $BASE_COLOR_GRAY;
+    border: 1px solid $BASE_COLOR_GRAY;
+    color: $BASE_COLOR_LIGHT_WHITE;
+  }
+
+  border-radius: 0.2rem;
+
+  font-size: 0.9rem;
+  font-weight: 300;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  position: relative;
+
+  img {
+    width: 1.2rem;
+    position: absolute;
+    left: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+
+// ------------------------------------------------------------------------------------------------------
+// Generic rounded input
+// ------------------------------------------------------------------------------------------------------
+@mixin roundedInput() {
+
+}

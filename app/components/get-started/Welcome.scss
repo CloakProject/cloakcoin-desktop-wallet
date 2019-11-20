@@ -1,0 +1,75 @@
+@import "~/assets/styles/vars.scss";
+
+.splash_container {
+  text-align: center;
+  margin-top: -30px;
+  font-family: 'Open Sans Condensed';
+
+  &::before {
+    content: ' ';
+    position: absolute;
+    width: 100%;
+    height: 100vh;
+    background: url('../../assets/images/about/splash_bottom_bg.png');
+    background-size: 101%;
+    background-position: -8px, center;
+    right: 0;
+    bottom: 0;
+  }
+
+  .logo_img {
+    width: 242px;
+    margin-top: 10px;
+  }
+
+  .enigma_brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 25px;
+    font-size: 1.5rem;
+
+    img {
+      width: 214px;
+      margin-left: 26px;
+      margin-top: 5px;
+    }
+  }
+
+  .cloak_core {
+    margin-top: 38px;
+    margin-bottom: 14px;
+    font-size: 3.7rem;
+    font-weight: bolder;
+  }
+
+  .wallet_version {
+    max-width: 320px;
+    font-size: 1.9rem;
+    margin: 0 auto;
+    margin-bottom: 6px;
+    line-height: 1;
+  }
+
+  .enigma_version {
+    max-width: 320px;
+    font-size: 1.9rem;
+    margin: 0 auto;
+    line-height: 1;
+    margin-bottom: 35px;
+  }
+
+  .copy_right {
+    max-width: 320px;
+    font-size: 1.4rem;
+    line-height: 1;
+    margin: 0 auto;
+    margin-bottom: 5px;
+  }
+
+  .prepairing_status {
+    margin-top: 35px;
+    font-size: 1.6rem;
+    color: $BASE_COLOR_PERSIMMON_COLOR;
+  }
+}

@@ -1,0 +1,53 @@
+@import "~/assets/styles/vars.scss";
+@import "~/assets/styles/modal.scss";
+
+.newAddress {
+  position: relative;
+  width: 500px;
+  height: auto;
+  padding: 30px 30px;
+  text-align: center;
+  background-color: $BASE_COLOR_DARK_BLUE;
+  
+  p {
+    font-size: 1.2rem;
+    margin: 0;
+    text-align: left;
+  }
+
+  .modalClose {
+    position: absolute;
+    right: 10px;
+    top: 5px;
+    font-weight: bold;
+    outline: none;
+    cursor: pointer;
+
+    &:before {
+      content: "\e906";
+      font-size: 0.57rem;
+    }
+  }
+
+  .address {
+    margin-bottom: 8px;
+  }
+
+  .addressLabel {
+    margin-bottom: 15px;
+  }
+
+  input {
+    height: 30px;
+  }
+
+  .error {
+      color: $BASE_COLOR_ERROR;
+  }
+
+  button {
+    background-color: $SEND_COIN_BUTTON_COLOR;
+    border-color: $SEND_COIN_BUTTON_COLOR;
+    color: white;
+  }
+}

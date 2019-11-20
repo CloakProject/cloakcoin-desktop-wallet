@@ -1,0 +1,18 @@
+@import "~/assets/styles/vars.scss";
+
+.dropdownButton {
+  color: $BASE_COLOR_WHITE;
+  outline: none;
+  position: relative;
+  cursor: pointer;
+
+  &:before {
+    content: '\e90e';
+    font-size: 0.9rem;
+    font-weight: 600;
+    position: absolute;
+    right: -0.1rem;
+    top: -0.4rem;
+  }
+}
+

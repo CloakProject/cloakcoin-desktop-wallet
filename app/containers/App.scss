@@ -1,0 +1,28 @@
+:global {
+  @import '../assets/styles/toastr/index.scss';
+}
+
+@import "../assets/styles/full-screen.scss";
+@import "../assets/styles/vars.scss";
+
+.appContainer {
+  @include full-screen();
+  background-color: $BASE_COLOR_DARK_BLUE;
+}
+
+.contentContainer {
+  height: calc(100% - 50px);
+  margin-top: 50px;
+  padding: 0px;
+
+  .layoutContent {
+    position: absolute;
+    width: 100%;
+    height: calc(100% - 230px);
+    top: 150px;
+  }
+}
+
+.routeContentContainer {
+  background-color: $BASE_COLOR_DARK_BLUE;
+}
