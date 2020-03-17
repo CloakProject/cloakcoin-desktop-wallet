@@ -191,7 +191,7 @@
     "i18next-scanner": "^2.9.1",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^25.0.0",
-    "minimist": "^1.2.0",
+    "minimist": "^1.2.2",
     "node-sass": "^4.11.0",
     "npm-logical-tree": "^1.2.1",
     "prettier": "^1.15.3",
