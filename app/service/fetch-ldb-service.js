@@ -57,7 +57,7 @@ export class FetchLdbService {
     return ldbFolder
   }
 
-  getLdbServingFiles(): string {
+  getLdbServingFiles() {
     const ldbFolder = this.getLdbFolder()
 
     const ldbServingFiles = [
