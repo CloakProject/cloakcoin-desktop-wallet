@@ -57,12 +57,14 @@ export class FetchLdbService {
     return ldbFolder
   }
 
-  getLdbServingFile(): string {
+  getLdbServingFiles() {
     const ldbFolder = this.getLdbFolder()
 
-    const ldbServingFile = path.join(ldbFolder, 'blk0001.dat')
-
-    return ldbServingFile
+    const ldbServingFiles = [
+      path.join(ldbFolder, 'blk0001.dat'),
+      path.join(ldbFolder, 'blk0002.dat'),
+    ];
+    return ldbServingFiles
   }
 
 	/**
@@ -83,10 +85,17 @@ export class FetchLdbService {
 
     log.info(`The ldb directory ${ldbFolder} exists`)
 
-    const ldbServingFile = this.getLdbServingFile()
+    const ldbServingFiles = this.getLdbServingFiles()
+    let hasError = false
 
-    if (!fs.pathExistsSync(ldbServingFile)) {
-      log.info(`The ldb file ${ldbServingFile} does not exist`)
+    ldbServingFiles.forEach(ldbServingFile => {
+      if (!fs.pathExistsSync(ldbServingFile)) {
+        log.info(`The ldb file ${ldbServingFile} does not exist`)
+        hasError = true
+      }
+    })
+
+    if (hasError) {
       return false
     }
 
@@ -245,6 +254,7 @@ function registerDownloadListener(resolve, reject) {
               // Move extracted files to Ldb folder
               fs.moveSync(path.join(destTmpPath, 'txleveldb'), path.join(ldbFolder, 'txleveldb'), {overwrite: true})
               fs.moveSync(path.join(destTmpPath, 'blk0001.dat'), path.join(ldbFolder, 'blk0001.dat'), {overwrite: true})
+              fs.moveSync(path.join(destTmpPath, 'blk0002.dat'), path.join(ldbFolder, 'blk0002.dat'), {overwrite: true})
               fs.moveSync(path.join(destTmpPath, 'peers.dat'), path.join(ldbFolder, 'peers.dat'), {overwrite: true})
               // fs.moveSync(path.join(destTmpPath, 'zip_10MB'), path.join(ldbFolder, 'zip_10MB'), {overwrite: true})
               
@@ -292,7 +302,7 @@ function downloadFinishedCallback(downloadItem) {
   this.completedBytes += downloadItem.getTotalBytes()
 }
 
-function extractUpdatedCallback(entry, zipFile) {
+function extractUpdatedCallback(entry) {
   this.completedBytes += entry.compressedSize
 
   this::downloadUpdatedCallback()

@@ -1,13 +1,12 @@
 {
   "name": "cloak-wallet",
   "productName": "CloakWallet",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "CloakCoin desktop wallet",
   "main": "./main.prod.js",
   "author": {
-    "name": "growlot",
-    "email": "growlot.71@gmail.com",
-    "url": "https://github.com/growlot/cloak-desktop-wallet"
+    "name": "anorakthagreat",
+    "email": "anorakthagreat@gmail.com"
   },
   "scripts": {
     "electron-rebuild": "node -r babel-register ../internals/scripts/ElectronRebuild.js",

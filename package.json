@@ -1,7 +1,7 @@
 {
   "name": "cloak-wallet",
   "productName": "Cloak Wallet",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "CloakCoin desktop wallet",
   "scripts": {
     "i18n": "node -r babel-register internals/scripts/I18n.js",
@@ -12,7 +12,7 @@
     "dev": "cross-env START_HOT=1 node -r babel-register ./internals/scripts/CheckPortInUse.js && cross-env START_HOT=1 npm run start-renderer-dev",
     "electron-rebuild": "electron-rebuild --parallel --force --types prod,dev,optional --module-dir app",
     "flow": "flow",
-    "flow-typed": "rimraf flow-typed/npm && NODE_OPTIONS=--max_old_space_size=10000 flow-typed install --overwrite || true",
+    "flow-typed": "rimraf flow-typed/npm && cross-env NODE_OPTIONS=--max_old_space_size=10000 flow-typed install --overwrite || true",
     "lint": "cross-env NODE_ENV=development eslint --cache --format=node_modules/eslint-formatter-pretty .",
     "lint-fix": "npm run --silent lint -- --fix; exit 0",
     "lint-styles": "stylelint app/*.css app/components/*.css --syntax scss",
@@ -100,16 +100,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/growlot/cloak-desktop-wallet.git"
+    "url": "git+https://github.com/CloakProject/cloakcoin-desktop-wallet.git"
   },
   "author": {
-    "name": "growlot",
-    "email": "growlot.71@gmail.com",
-    "url": "https://github.com/growlot/cloak-desktop-wallet"
+    "name": "anorakthagreat",
+    "email": "anorakthagreat@gmail.com"
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/growlot/cloak-desktop-wallet/issues"
+    "url": "https://github.com/CloakProject/cloakcoin-desktop-wallet/issues"
   },
   "keywords": [
     "cloak",
@@ -156,7 +155,7 @@
     "babel-register": "^6.26.0",
     "chalk": "^2.4.2",
     "concurrently": "^3.6.1",
-    "cross-env": "^5.2.0",
+    "cross-env": "^7.0.3",
     "cross-spawn": "^6.0.5",
     "css-loader": "^0.28.11",
     "detect-port": "^1.3.0",
