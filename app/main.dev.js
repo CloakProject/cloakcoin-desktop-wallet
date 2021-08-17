@@ -12,6 +12,7 @@
  */
 import * as fs from 'fs'
 import path from 'path'
+import url from 'url'
 import config from 'electron-settings'
 import { app, ipcMain, BrowserWindow, globalShortcut } from 'electron'
 import log from 'electron-log'
@@ -118,16 +119,9 @@ checkAndCreateWalletAppFolder()
 // Uncomment this line to make the app working in Parallels Desktop
 // app.disableHardwareAcceleration()
 
-const shouldQuit = app.makeSingleInstance(() => {
-  // Someone tried to run a second instance, we should focus our window.
-  if (mainWindow) {
-    if (!mainWindow.isVisible()) mainWindow.show()
-    if (mainWindow.isMinimized()) mainWindow.restore()
-    mainWindow.focus()
-  }
-})
+const gotTheLock = app.requestSingleInstanceLock()
 
-if (shouldQuit) {
+if (!gotTheLock) {
   app.quit()
 } else {
   const options = config.get('options', {})
@@ -136,7 +130,15 @@ if (shouldQuit) {
   /**
    * Add event listeners...
    */
-  
+   app.on('second-instance', () => {
+    // Someone tried to run a second instance, we should focus our window.
+    if (mainWindow) {
+      if (!mainWindow.isVisible()) mainWindow.show()
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+    }
+  })
+
   app.on('window-all-closed', () => app.quit())
 
   app.on('ready', async () => {
@@ -184,9 +186,7 @@ if (shouldQuit) {
       frame: false,
       backgroundColor: '#1d2440',
       icon: path.join(getResourcesPath(), 'resources', `${iconFileName}`),
-      webPreferences: {
-        nodeIntegration: true
-      }
+      webPreferences: { nodeIntegration: true, contextIsolation: false, enableRemoteModule: true }
     })
 
     mainWindow.setMenu(null)
@@ -226,9 +226,7 @@ if (shouldQuit) {
             }
             return isStartup ? appStartup.enable() : appStartup.disable()
         })
-        .then(() => {
-          return Promise.resolve()
-        })
+        .then(() => Promise.resolve())
         .catch(err => {
           log.debug(`Error registering as startup: ${err}`)
         })
@@ -258,7 +256,14 @@ if (shouldQuit) {
       throw new Error(`Sorry, this app does not support window.eval().`)
     }
 
-    mainWindow.loadURL(`file://${__dirname}/app.html`)
+    // TODO: not loading the URL properly -- FIX!!!
+    /* mainWindow.loadURL(`file://${__dirname}/app.html`) */
+
+    mainWindow.loadURL(url.format({
+      pathname: path.join(__dirname, 'app.html'),
+      protocol: 'file:',
+      slashes: true
+    }));
 
     // Uncomment for debugging in prod mode
     // mainWindow.webContents.openDevTools({detached: true});
