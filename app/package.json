@@ -1,7 +1,7 @@
 {
   "name": "cloak-wallet",
   "productName": "CloakWallet",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "CloakCoin desktop wallet",
   "main": "./main.prod.js",
   "author": {
